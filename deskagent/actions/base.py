@@ -1,14 +1,12 @@
 from abc import ABC, abstractmethod
 
 class Action(ABC):
-    _METHODS = dict()
+    _ACTIONS = dict()
 
-    def __init__(self):
-        pass
+    def __init__(self, logger):
+        self._logger = logger
 
-    def __init_subclass__(cls):
-        pass
-
+    @classmethod
     def create(self, action_name, logger):
         if action_name not in self._METHODS:
                 raise ValueError(f"This action is not defined. Available actions: {self._METHODS.keys()}")
@@ -16,7 +14,7 @@ class Action(ABC):
         return Action._METHODS[action_name](self, logger)
 
     @abstractmethod
-    def execute(self):
+    def execute(self, config):
         pass
 
 
