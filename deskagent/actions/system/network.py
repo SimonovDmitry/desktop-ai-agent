@@ -1,150 +1,163 @@
 from deskagent.actions.base import Action
+from deskagent.actions.result import ActionResult
+from deskagent.actions.context import ActionContext
+from deskagent.actions.types import RiskLevel, ActionCategory
 
 
 #TODO проверить работоспособность GetNetworkStatus GetIPAddress GetHostname GetNetworkInterfaces
-
 class GetNetworkStatus(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "get_network_status"
+    description = "Get the overall network connectivity status (WiFi, Ethernet, VPN)"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
-    def execute(self, config=None):
-        res = run(['scutil', '--nwi'], capture_output=True, text=True).stdout
-        if "IPv4 network interface information" not in res:
-            return {"connected": False, "connection_type": None, "interface": None}
+    def execute(self, context):
+        try:
+            status = context.services.system.network.get_network_status()
+            return ActionResult(success=True, data=status)
 
-        lines = res.split("IPv4 network interface information")[1].splitlines()
-        iface = lines[1].split(":")[0].strip() if len(lines) > 1 else None
-
-        if not iface:
-            return {"connected": False, "connection_type": None, "interface": None}
-
-        hw = run(['networksetup', '-listallhardwareports'], capture_output=True, text=True).stdout
-        if "utun" in iface:
-            ctype = "vpn"
-        elif "Wi-Fi" in hw and iface in hw:
-            ctype = "wifi"
-        elif "Ethernet" in hw and iface in hw:
-            ctype = "ethernet"
-        else:
-            ctype = "unknown"
-
-        return {"connected": True, "connection_type": ctype, "interface": iface}
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetIPAddress(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "get_ip_address"
+    description = "Get local IP addresses for a specific interface or all active ones"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
-    def execute(self, config=None):
-        target_iface = config.get('interface') if config else None
-        addrs = psutil.net_if_addrs()
+    def execute(self, context, interface=None):
+        try:
+            ips = context.services.system.network.get_ip_address(interface)
+            return ActionResult(success=True, data=ips)
 
-        if target_iface:
-            if target_iface not in addrs:
-                return {"interface": target_iface, "addresses": []}
-            res = []
-            for addr in addrs[target_iface]:
-                if addr.family in (socket.AF_INET, socket.AF_INET6):
-                    res.append({"address": addr.address, "version": 4 if addr.family == socket.AF_INET else 6})
-            return {"interface": target_iface, "addresses": res}
-
-        all_res = []
-        for iface, addr_list in addrs.items():
-            for addr in addr_list:
-                if addr.family in (socket.AF_INET, socket.AF_INET6):
-                    all_res.append({
-                        "interface": iface,
-                        "address": addr.address,
-                        "version": 4 if addr.family == socket.AF_INET else 6
-                    })
-        return {"addresses": all_res}
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetHostname(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "get_hostname"
+    description = "Get the computer's network hostname and FQDN"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
-    def execute(self, config=None):
-        import socket
-        return {
-            "hostname": socket.gethostname(),
-            "fqdn": socket.getfqdn()
-        }
+    def execute(self, context):
+        try:
+            hostname_info = context.services.system.network.get_hostname()
+            return ActionResult(success=True, data=hostname_info)
+
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetNetworkInterfaces(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "get_network_interfaces"
+    description = "Get detailed information about all network interfaces"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
-    def execute(self, config=None):
-        hw_map = {}
-        hw_out = run(['networksetup', '-listallhardwareports'], capture_output=True, text=True).stdout
-        chunks = hw_out.split("Hardware Port: ")
-        for chunk in chunks[1:]:
-            lines = chunk.splitlines()
-            if lines:
-                port = lines[0].strip().lower()
-                dev = [l for l in lines if "Device: " in l]
-                if dev:
-                    hw_map[dev[0].split(": ")[1].strip()] = port
+    def execute(self, context):
+        try:
+            interfaces = context.services.system.network.get_network_interfaces()
+            return ActionResult(success=True, data={"interfaces": interfaces})
 
-        stats = psutil.net_if_stats()
-        addrs = psutil.net_if_addrs()
-        result = []
-
-        for name, addr_list in addrs.items():
-            itype = hw_map.get(name, "unknown")
-            if name.startswith("lo"):
-                itype = "loopback"
-            elif name.startswith("utun"):
-                itype = "vpn"
-
-            iface_data = {
-                "name": name,
-                "type": itype,
-                "status": "up" if name in stats and stats[name].isup else "down",
-                "mac_address": None,
-                "ipv4": [],
-                "ipv6": []
-            }
-
-            for addr in addr_list:
-                if addr.family == socket.AF_INET:
-                    iface_data["ipv4"].append(addr.address)
-                elif addr.family == socket.AF_INET6:
-                    iface_data["ipv6"].append(addr.address)
-                elif addr.family == getattr(socket, 'AF_LINK', -1):
-                    iface_data["mac_address"] = addr.address
-
-            result.append(iface_data)
-        return result
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
-# TODO
+# TODO: Реализовать получение публичного IP (через внешний API)
 class GetPublicIPAddress(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "get_public_ip_address"
+    description = "Get the public IP address using an external service"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
+
+    def execute(self, context):
+        try:
+            public_ip = context.services.system.network.get_public_ip_address()
+            return ActionResult(success=True, data={"public_ip": public_ip})
+
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
-#TODO
+# TODO: Реализовать получение шлюза по умолчанию
 class GetDefaultGateway(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "get_default_gateway"
+    description = "Get the default network gateway"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
+
+    def execute(self, context):
+        try:
+            gateway = context.services.system.network.get_default_gateway()
+            return ActionResult(success=True, data={"gateway": gateway})
+
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
-#TODO
+# TODO: Реализовать получение настроек DNS
 class GetDNS(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "get_dns"
+    description = "Get the current DNS server settings"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
+
+    def execute(self, context):
+        try:
+            dns_settings = context.services.system.network.get_dns()
+            return ActionResult(success=True, data={"dns": dns_settings})
+
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
-#TODO
+# TODO: Реализовать утилиту Ping
 class PingHost(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "ping_host"
+    description = "Ping a remote host to check availability and latency"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
+
+    def execute(self, context, host):
+        try:
+            ping_res = context.services.system.network.ping_host(host)
+            return ActionResult(success=True, data=ping_res)
+
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
-#TODO
+# TODO: Реализовать проверку интернет-соединения
 class CheckInternetConnection(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "check_internet_connection"
+    description = "Check if the computer has an active internet connection"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
+
+    def execute(self, context):
+        try:
+            is_connected = context.services.system.network.check_internet_connection()
+            return ActionResult(success=True, data={"internet_accessible": is_connected})
+
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

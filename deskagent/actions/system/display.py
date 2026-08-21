@@ -1,81 +1,95 @@
-
+from deskagent.actions.base import Action
+from deskagent.actions.result import ActionResult
+from deskagent.actions.context import ActionContext
+from deskagent.actions.types import RiskLevel, ActionCategory
 
 
 class SetDisplayBrightness(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "set_display_brightness"
+    description = "Set the brightness level of the display"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = True
 
-    def execute(self, config):
-        level = config.get('brightness_level', None)
+    def execute(self, context, brightness_level):
+        if not 0 <= brightness_level <= 100:
+            return ActionResult(success=False, error="Brightness must be between 0 and 100", error_code="INVALID_INPUT")
 
-        if level is None:
-            raise ValueError('Brightness level must be set')
+        try:
+            context.services.system.display.set_display_brightness(brightness_level)
+            return ActionResult(success=True, data={"brightness": brightness_level})
 
-        level = max(0, min(100, level))
-        steps = round(level / 6.25)
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
-        apple_script = f'''
-        tell application "System Events"
-            repeat 16 times
-                key code 145 -- Код клавиши "Яркость вниз"
-            end repeat
-            repeat {steps} times
-                key code 144 -- Код клавиши "Яркость вверх"
-            end repeat
-        end tell
-        '''
-
-        run(['osascript', '-e', apple_script], check=True)
 
 class GetDisplayBrightness(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "get_display_brightness"
+    description = "Get the current brightness level of the display"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
-    def execute(self, config):
-        pass #TODO: не получается рабочая реализация
+    def execute(self, context):
+        try:
+            brightness = context.services.system.display.get_display_brightness()
+            if brightness is None:
+                return ActionResult(success=False, error="Could not retrieve brightness level",
+                                    error_code="NOT_SUPPORTED")
+
+            return ActionResult(success=True, data={"brightness": brightness})
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
+
 
 class GetDisplays(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "get_displays"
+    description = "Get information about all connected displays"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
-    def execute(self, config=None):
-        screens = NSScreen.screens()
-        displays_info = []
+    def execute(self, context):
+        try:
+            displays = context.services.system.display.get_displays()
+            return ActionResult(success=True, data={"displays": displays, "count": len(displays)})
 
-        for i, screen in enumerate(screens):
-            frame = screen.frame()
-            description = screen.deviceDescription()
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
-            display_id = description.objectForKey_("NSScreenNumber")
-            is_primary = (i == 0)
-
-            if is_primary:
-                name = "Built-in Display" if len(screens) == 1 else "Primary Display"
-            else:
-                name = f"External Display {i}"
-
-            displays_info.append({"id": str(display_id), "name": name, "primary": is_primary,
-                                  "width": int(frame.size.width), "height": int(frame.size.height),
-                                  "x": int(frame.origin.x), "y": int(frame.origin.y)})
-            return displays_info
 
 class GetScreenSize(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "get_screen_size"
+    description = "Get the logical size of a specific display or the primary screen"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
-    def execute(self, config=None):
-        target_id = config.get('display_id') if config else None
-        screens = NSScreen.screens()
-        selected_screen = screens[0]
-        if target_id:
-            for screen in screens:
-                if str(screen.deviceDescription().objectForKey_("NSScreenNumber")) == str(target_id):
-                    selected_screen = screen
-                    break
-        size = selected_screen.frame().size
-        return {"width": int(size.width), "height": int(size.height)}
+    def execute(self, context, display_id=1):
+        try:
+            size = context.services.system.display.get_screen_size(display_id)
+            return ActionResult(success=True, data=size)
 
-#TODO
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
+
+
 class SetResolution(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "set_resolution"
+    description = "Change the screen resolution for a specific display"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.MEDIUM  # Смена разрешения может быть деструктивной для UI
+    requires_confirmation = True
+    reversible = True
+
+    def execute(self, context, display_id, width, height):
+        try:
+            context.services.system.display.set_resolution(display_id, width, height)
+            return ActionResult(success=True, data={"display_id": display_id, "width": width, "height": height})
+
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

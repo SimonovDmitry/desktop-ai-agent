@@ -1,183 +1,213 @@
 from deskagent.actions.base import Action
+from deskagent.actions.result import ActionResult
+from deskagent.actions.context import ActionContext
+from deskagent.actions.types import RiskLevel, ActionCategory
 
 
-class GetCPUUsage(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+class GetCPUProcesses(Action):
+    name = "get_cpu_processes"
+    description = "Get the list of top processes sorted by CPU usage"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
-    def execute(self, config):
-        cmd = "ps -eo pid,pcpu,comm -c -r | head -n 20"
-        result = run(cmd, shell=True, capture_output=True, text=True)
+    def execute(self, context):
+        try:
+            processes = context.services.system.information.get_cpu_processes()
+            return ActionResult(success=True, data={"processes": processes})
 
-        output = result.stdout.strip()
-        if not output:
-            return []
-
-        lines = output.split('\n')
-        data_lines = lines[1:]
-
-        parsed_processes = []
-
-        for line in data_lines:
-            parts = line.split(None, 2)
-
-            if len(parts) == 3:
-                parsed_processes.append({"pid": int(parts[0]), "cpu_percent": float(parts[1]), "name": parts[2]})
-
-        return parsed_processes
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
-class GetMemoryUsage(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+class GetMemoryProcesses(Action):
+    name = "get_memory_processes"
+    description = "Get the list of top processes sorted by memory usage"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
-    def execute(self, config):
-        cmd = "ps -eo pid,rss,pmem,comm -c -m | head -n 20"
-        result = run(cmd, shell=True, capture_output=True, text=True)
+    def execute(self, context):
+        try:
+            processes = context.services.system.information.get_memory_processes()
+            return ActionResult(success=True, data={"processes": processes})
 
-        output = result.stdout.strip()
-        if not output:
-            return []
-
-        lines = output.split('\n')
-        data_lines = lines[1:]
-
-        parsed_memory_list = []
-
-        for line in data_lines:
-            parts = line.split(None, 3)
-
-            if len(parts) == 4:
-                pid = parts[0]
-                rss_kb = parts[1]
-                pmem = parts[2]
-                name = parts[3]
-
-                rss_mb = round(int(rss_kb) / 1024, 1)
-
-                parsed_memory_list.append({
-                    "pid": int(pid),
-                    "memory_mb": rss_mb,
-                    "memory_percent": float(pmem),
-                    "name": name
-                })
-        return parsed_memory_list
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
-class GetDiskUsage(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+class GetDiskProcesses(Action):
+    name = "get_disk_processes"
+    description = "Get information about disk usage and heavy files/apps"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
-    def execute(self, config):
-        cmd_space = "df -h / | tail -1"
-        res_space = run(cmd_space, shell=True, capture_output=True, text=True).stdout.strip().split()
-        disk_info = {"total": res_space[1], "used": res_space[2],
-                     "free": res_space[3], "percent": res_space[4]}
+    def execute(self, context):
+        try:
+            disk_data = context.services.system.information.get_disk_processes()
+            return ActionResult(success=True, data=disk_data)
 
-        cmd_heavy = "du -sh /Applications/* ~/* 2>/dev/null | sort -rh | head -n 10"
-
-        result_heavy = run(cmd_heavy, shell=True, capture_output=True, text=True)
-        lines = result_heavy.stdout.strip().split('\n')
-
-        items = []
-        for line in lines:
-            parts = line.split('\t')
-            if len(parts) == 2:
-                size = parts[0].strip()
-                path = parts[1].strip()
-                item_type = "App" if path.startswith("/Applications") else "User File/Folder"
-                name = path.split('/')[-1]
-
-                items.append({
-                    "name": name,
-                    "size": size,
-                    "type": item_type,
-                    "full_path": path
-                })
-
-        return {"disk": disk_info, "heavy_items": items}
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetBatteryStatus(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "get_battery_status"
+    description = "Get current battery percentage and charging status"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
-    def execute(self, config):
-        result = run(['pmset', '-g', 'batt'], capture_output=True, text=True)
-        output = result.stdout
+    def execute(self, context):
+        try:
+            battery = context.services.system.information.get_battery_status()
+            return ActionResult(success=True, data=battery)
 
-
-        percent_match = re.search(r'(\d+)%', output)
-        charging_match = re.search(r'(AC|Battery) Power', output)
-
-        percentage = int(percent_match.group(1)) if percent_match else None
-
-        is_plugged = True if charging_match and charging_match.group(1) == 'AC' else False
-        print(percentage, is_plugged)
-        return {"percentage": percentage, "charging": is_plugged}
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetUptime(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "get_uptime"
+    description = "Get the system uptime and boot time"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
-    def execute(self, config=None):
-        boot_time = psutil.boot_time()
-        uptime_seconds = time.time() - boot_time
-        boot_datetime = datetime.fromtimestamp(boot_time).isoformat()
+    def execute(self, context):
+        try:
+            uptime = context.services.system.information.get_uptime()
+            return ActionResult(success=True, data=uptime)
 
-        return {
-            "seconds": int(uptime_seconds),
-            "boot_time": boot_datetime
-        }
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetCurrentTime(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "get_current_time"
+    description = "Get the current system time"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
-    def execute(self, config):
-        result = run(['date', '+%T'], capture_output=True, text=True)
-        output = result.stdout.strip()
-        return {"time": output}
+    def execute(self, context):
+        try:
+            current_time = context.services.system.information.get_current_time()
+            return ActionResult(success=True, data=current_time)
+
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetCurrentDate(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "get_current_date"
+    description = "Get the current system date"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
-    def execute(self, config):
-        result = run(['date', '+%A %B %C'], capture_output=True, text=True)
-        output = result.stdout.strip()
-        return {"date": output}
+    def execute(self, context):
+        try:
+            current_date = context.services.system.information.get_current_date()
+            return ActionResult(success=True, data=current_date)
 
-#TODO
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
+
+
+# TODO: Реализовать общую информацию о системе
 class SystemInfo(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "system_info"
+    description = "Get comprehensive system information"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
-#TODO
+    def execute(self, context):
+        try:
+            info = context.services.system.information.system_info()
+            return ActionResult(success=True, data=info)
+
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
+
+
+# TODO: Реализовать детальную информацию о процессоре
 class GetCPUInfo(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
-    def execute(self, config):
+    name = "get_cpu_info"
+    description = "Get detailed information about the CPU architecture and cores"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
+
+    def execute(self, context):
+        try:
+            cpu_info = context.services.system.information.get_cpu_info()
+            return ActionResult(success=True, data=cpu_info)
+
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
-# TODO
+# TODO: Реализовать детальную информацию о дисковом оборудовании
 class GetDiskInfo(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "get_disk_info"
+    description = "Get detailed information about physical drives"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
+
+    def execute(self, context):
+        try:
+            disk_info = context.services.system.information.get_disk_info()
+            return ActionResult(success=True, data=disk_info)
+
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
-# TODO
+# TODO: Реализовать информацию об ОС
 class GetOSInfo(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
+    name = "get_os_info"
+    description = "Get detailed information about the Operating System"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
-#TODO
+    def execute(self, context):
+        try:
+            os_info = context.services.system.information.get_os_info()
+            return ActionResult(success=True, data=os_info)
+
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
+
+
+# TODO: Реализовать информацию о текущем пользователе
 class GetUserInfo(Action):
-    def __init__(self, logger=None):
-        Action.__init__(self, logger)
-    def execute(self, config):
+    name = "get_user_info"
+    description = "Get information about the current system user"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
+    reversible = False
 
+    def execute(self, context):
+        try:
+            user_info = context.services.system.information.get_user_info()
+            return ActionResult(success=True, data=user_info)
 
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
