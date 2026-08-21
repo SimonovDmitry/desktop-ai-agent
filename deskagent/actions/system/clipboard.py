@@ -11,8 +11,9 @@ class GetClipboard(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = False
+    parameters_schema = {}
 
-    def execute(self, context):
+    def execute(self, context, parameters):
         try:
             content = context.services.system.clipboard.get_clipboard()
             if content is None:
@@ -30,15 +31,24 @@ class SetClipboard(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = True
+    parameters_schema = {
+        "text": {
+            "type": "string",
+            "required": True,
+            "description": "Text content to be placed on the clipboard"
+        }
+    }
 
-    def execute(self, context, text):
+    def execute(self, context, parameters):
+        params = parameters or {}
+        text = params.get('text')
+
         if text is None:
-            return ActionResult(success=False, error="Text content must be provided", error_code="INVALID_INPUT")
+            return ActionResult(success=False, error="Parameter 'text' is required", error_code="MISSING_PARAM")
 
         try:
             context.services.system.clipboard.set_clipboard(text)
             return ActionResult(success=True, data={"text_length": len(text)})
-
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
@@ -50,11 +60,11 @@ class CleanClipboard(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = True
+    parameters_schema = {}
 
-    def execute(self, context):
+    def execute(self, context, parameters):
         try:
             context.services.system.clipboard.clean_clipboard()
             return ActionResult(success=True, data={"cleared": True})
-
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

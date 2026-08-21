@@ -11,12 +11,12 @@ class LockScreen(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = False
+    parameters_schema = {}
 
-    def execute(self, context):
+    def execute(self, context, parameters):
         try:
             context.services.system.power.lock_screen()
             return ActionResult(success=True, data={"status": "locked"})
-
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
@@ -28,12 +28,12 @@ class SleepComputer(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = False
+    parameters_schema = {}
 
-    def execute(self, context):
+    def execute(self, context, parameters):
         try:
             context.services.system.power.sleep_computer()
             return ActionResult(success=True, data={"status": "sleeping"})
-
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
@@ -45,12 +45,12 @@ class RestartComputer(Action):
     risk_level = RiskLevel.HIGH
     requires_confirmation = True
     reversible = False
+    parameters_schema = {}
 
-    def execute(self, context):
+    def execute(self, context, parameters):
         try:
             context.services.system.power.restart_computer()
             return ActionResult(success=True, data={"status": "restarting"})
-
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
@@ -62,12 +62,12 @@ class ShutdownComputer(Action):
     risk_level = RiskLevel.HIGH
     requires_confirmation = True
     reversible = False
+    parameters_schema = {}
 
-    def execute(self, context):
+    def execute(self, context, parameters):
         try:
             context.services.system.power.shutdown_computer()
             return ActionResult(success=True, data={"status": "shutting_down"})
-
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
@@ -80,12 +80,12 @@ class LogoutComputer(Action):
     risk_level = RiskLevel.HIGH
     requires_confirmation = True
     reversible = False
+    parameters_schema = {}
 
-    def execute(self, context):
+    def execute(self, context, parameters):
         try:
             context.services.system.power.logout_computer()
             return ActionResult(success=True, data={"status": "logging_out"})
-
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
@@ -98,11 +98,11 @@ class CancelShutdownComputer(Action):
     risk_level = RiskLevel.MEDIUM
     requires_confirmation = False
     reversible = False
+    parameters_schema = {}
 
-    def execute(self, context):
+    def execute(self, context, parameters):
         try:
             context.services.system.power.cancel_shutdown_computer()
             return ActionResult(success=True, data={"status": "cancelled"})
-
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
