@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
-from deskagent.actions.context import ActionContext
+from deskagent.core.context import ActionContext
+from deskagent.actions.result import ActionResult
 from deskagent.actions.types import RiskLevel, ActionCategory
 
 
@@ -11,15 +12,8 @@ class Action(ABC):
     risk_level: RiskLevel
     requires_confirmation: bool = False
     reversible: bool = False
-    parameters: dict = {}
-
-    @classmethod
-    def create(self, action_name, logger):
-        if action_name not in self._METHODS:
-                raise ValueError(f"This action is not defined. Available actions: {self._METHODS.keys()}")
-
-        return Action._METHODS[action_name](self, logger)
+    parameters_schema: dict = {}
 
     @abstractmethod
-    def execute(self, context, parameters):
+    def execute(self, context: ActionContext, parameters: dict) -> ActionResult:
         pass

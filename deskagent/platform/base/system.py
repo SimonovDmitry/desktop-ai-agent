@@ -15,7 +15,7 @@ class SystemAudio(ABC):
         pass
 
     @abstractmethod
-    def decrease_volume(self):
+    def decrease_volume(self, step=10):
         pass
 
     @abstractmethod
@@ -61,7 +61,7 @@ class SystemDisplay(ABC):
 
     # TODO
     @abstractmethod
-    def set_resolution(self):
+    def set_resolution(self, display_id, width, height):
         pass
 
 
@@ -121,23 +121,23 @@ class SystemMouse(ABC):
         pass
 
     @abstractmethod
-    def move_mouse(self):
+    def move_mouse(self, x, y):
         pass
 
     @abstractmethod
-    def click(self):
+    def click(self, button="left"):
         pass
 
     @abstractmethod
-    def double_click(self):
+    def double_click(self, button="left"):
         pass
 
     @abstractmethod
-    def drag_mouse(self):
+    def drag_mouse(self, x1, y1, x2, y2):
         pass
 
     @abstractmethod
-    def scroll_mouse(self):
+    def scroll_mouse(self, clicks):
         pass
 
 
@@ -171,7 +171,7 @@ class SystemNetwork(ABC):
         pass
 
     @abstractmethod
-    def ping_host(self):
+    def ping_host(self, host):
         pass
 
     @abstractmethod

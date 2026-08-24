@@ -1,6 +1,5 @@
 from deskagent.actions.base import Action
 from deskagent.actions.result import ActionResult
-from deskagent.actions.context import ActionContext
 from deskagent.actions.types import RiskLevel, ActionCategory
 
 

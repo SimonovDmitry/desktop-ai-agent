@@ -37,7 +37,7 @@ class MacOSAudio(SystemAudio):
     def mute(self):
         run(["osascript", "-e", "set volume output muted true"])
 
-    def decrease_volume(self):
+    def decrease_volume(self, step=10):
         cmd = ['osascript', '-e', 'output volume of (get volume settings)']
         volume_level = check_output(cmd).decode('utf-8').strip()
         volume_new = int(volume_level) - 10
@@ -126,7 +126,7 @@ class MacOSDisplay(SystemDisplay):
         return {"width": int(size.width), "height": int(size.height)}
 
     #TODO
-    def set_resolution(self):
+    def set_resolution(self, display_id, width, height):
         pass
 
 
@@ -233,23 +233,23 @@ class MacOSMouse(SystemMouse):
         return {"x": int(loc.x), "y": int(screen_height - loc.y)}
 
     # TODO
-    def move_mouse(self):
+    def move_mouse(self, x, y):
         pass
 
     # TODO
-    def click(self):
+    def click(self, button="left"):
         pass
 
     # TODO
-    def double_click(self):
+    def double_click(self, button="left"):
         pass
 
     # TODO
-    def drag_mouse(self):
+    def drag_mouse(self, x1, y1, x2, y2):
         pass
 
     # TODO
-    def scroll_mouse(self):
+    def scroll_mouse(self, clicks):
         pass
 
 
@@ -328,7 +328,7 @@ class MacOSNetwork(SystemNetwork):
         pass
 
     # TODO
-    def ping_host(self):
+    def ping_host(self, host):
         pass
 
     # TODO

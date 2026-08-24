@@ -1,18 +1,16 @@
-
 class ActionRegistry:
-    _ACTIONS = dict()
 
     def __init__(self):
-        pass
+        self._actions = {}
 
-    def register(self, name, action_class):
-        self._ACTIONS[name] = action_class
+    def register(self, action_class):
+        self._actions[action_class.name] = action_class
 
-    def create(self, name, logger):
-        if name not in self._ACTIONS:
+    def create(self, name):
+        if name not in self._actions:
             raise ValueError(
                 f"Unknown action: {name}. "
-                f"Available actions: {list(self._ACTIONS.keys())}"
+                f"Available actions: {list(self._actions.keys())}"
             )
 
-        return self._ACTIONS[name](logger)
+        return self._actions[name]
