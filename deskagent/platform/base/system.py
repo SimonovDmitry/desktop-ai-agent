@@ -59,11 +59,6 @@ class SystemDisplay(ABC):
     def get_screen_size(self, display_id=1):
         pass
 
-    # TODO
-    @abstractmethod
-    def set_resolution(self, display_id, width, height):
-        pass
-
 
 class SystemInformation(ABC):
     @abstractmethod
@@ -179,7 +174,7 @@ class SystemNetwork(ABC):
         pass
 
 
-class SystemNotify(ABC):
+class SystemNotification(ABC):
     @abstractmethod
     def send_notification(self):
         pass

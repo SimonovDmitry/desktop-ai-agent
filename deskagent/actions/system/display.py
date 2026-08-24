@@ -105,32 +105,3 @@ class GetScreenSize(Action):
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
-
-class SetResolution(Action):
-    name = "set_resolution"
-    description = "Change the screen resolution for a specific display"
-    category = ActionCategory.SYSTEM
-    risk_level = RiskLevel.MEDIUM
-    requires_confirmation = True
-    reversible = True
-    parameters_schema = {
-        "display_id": {"type": "integer", "required": True},
-        "width": {"type": "integer", "required": True},
-        "height": {"type": "integer", "required": True}
-    }
-
-    def execute(self, context, parameters):
-        params = parameters or {}
-        display_id = params.get('display_id')
-        width = params.get('width')
-        height = params.get('height')
-
-        if any(v is None for v in (display_id, width, height)):
-            return ActionResult(success=False, error="Parameters 'display_id', 'width', and 'height' are required",
-                                error_code="MISSING_PARAM")
-
-        try:
-            context.services.system.display.set_resolution(display_id, width, height)
-            return ActionResult(success=True, data={"display_id": display_id, "width": width, "height": height})
-        except Exception as exc:
-            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

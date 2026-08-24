@@ -16,7 +16,7 @@ class GetClipboard(Action):
         try:
             content = context.services.system.clipboard.get_clipboard()
             if content is None:
-                return ActionResult(success=True, data={"content": ""}, message="Clipboard is empty")
+                return ActionResult(success=True, data={"content": ""}, error="Clipboard is empty")
 
             return ActionResult(success=True, data={"content": content})
         except Exception as exc:

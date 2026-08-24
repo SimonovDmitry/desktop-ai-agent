@@ -42,7 +42,6 @@ class SendNotification(Action):
             )
 
         try:
-            # Вызываем метод из платформенного сервиса уведомлений
             context.services.system.notify.send_notification(title, message, subtitle)
             return ActionResult(success=True, data={"title": title, "message": message, "subtitle": subtitle})
         except Exception as exc:
