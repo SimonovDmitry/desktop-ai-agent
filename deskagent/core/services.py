@@ -1,10 +1,16 @@
 from dataclasses import dataclass
 import platform
 
-from deskagent.platform.base.system import (SystemAudio, SystemClipboard, SystemDisplay, SystemInformation, SystemMouse,
-                                            SystemNetwork, SystemNotification, SystemPower)
-from deskagent.platform.macos.system import (MacOSAudio, MacOSClipboard, MacOSDisplay, MacOSInformation, MacOSMouse,
-                                             MacOSNetwork, MacOSNotification, MacOSPower)
+from deskagent.platform.base.system import (SystemAudio, SystemClipboard, SystemDisplay, SystemInformation,
+                                            SystemMouse, SystemNetwork, SystemNotification, SystemPower)
+from deskagent.platform.macos.system import (MacOSAudio, MacOSClipboard, MacOSDisplay, MacOSInformation,
+                                             MacOSMouse, MacOSNetwork, MacOSNotification, MacOSPower)
+from deskagent.platform.base.application import (ApplicationLifecycle, ApplicationInformation, ApplicationFocus,
+                                                 ApplicationPreferences, ApplicationResources, ApplicationProcesses,
+                                                 ApplicationInstances, ApplicationDocuments, ApplicationStartup)
+from deskagent.platform.macos.application import (MacOSLifecycle, MacOSInformation, MacOSFocus, MacOSInstances,
+                                                  MacOSPreferences, MacOSResources, MacOSDocuments, MacOSProcesses,
+                                                  MacOSStartup)
 
 
 @dataclass
@@ -20,7 +26,6 @@ class SystemServices:
 
 
 class MacOSSystemServices(SystemServices):
-
     def __init__(self):
         super().__init__(
             audio=MacOSAudio(),
@@ -35,8 +40,37 @@ class MacOSSystemServices(SystemServices):
 
 
 @dataclass
+class ApplicationServices:
+    lifecycle: ApplicationLifecycle
+    information: ApplicationInformation
+    focus: ApplicationFocus
+    preferences: ApplicationPreferences
+    resources: ApplicationResources
+    processes: ApplicationProcesses
+    instances: ApplicationInstances
+    documents: ApplicationDocuments
+    startup: ApplicationStartup
+
+
+class MacOSApplicationServices(ApplicationServices):
+    def __init__(self):
+        super().__init__(
+            lifecycle=MacOSLifecycle(),
+            information=MacOSInformation(),
+            focus=MacOSFocus(),
+            preferences=MacOSPreferences(),
+            resources=MacOSResources(),
+            processes=MacOSProcesses(),
+            instances=MacOSInstances(),
+            documents=MacOSDocuments(),
+            startup=MacOSStartup(),
+        )
+
+
+@dataclass
 class Services:
     system: SystemServices
+    application: ApplicationServices
 
 
 class ServicesFactory:
@@ -54,12 +88,12 @@ class ServicesFactory:
 
     @staticmethod
     def create() -> Services:
-
         platform_name = ServicesFactory.get_platform()
 
         if platform_name == "macos":
             return Services(
-                system=MacOSSystemServices()
+                system=MacOSSystemServices(),
+                application=MacOSApplicationServices()
             )
 
         raise RuntimeError(
