@@ -34,6 +34,7 @@ from deskagent.platform.macos.window import (
     MacOSArrangement, MacOSGroups, MacOSLifecycle as MacOSWindowLifecycle
 )
 
+
 @dataclass
 class SystemServices:
     audio: SystemAudio
@@ -124,7 +125,7 @@ class MacOSWindowServices(WindowServices):
 class Services:
     system: SystemServices
     application: ApplicationServices
-    window: WindowServices # Добавлено
+    window: WindowServices
 
 
 class ServicesFactory:
@@ -145,7 +146,7 @@ class ServicesFactory:
             return Services(
                 system=MacOSSystemServices(),
                 application=MacOSApplicationServices(),
-                window=MacOSWindowServices() # Добавлено
+                window=MacOSWindowServices()
             )
 
         raise RuntimeError(f"Unsupported platform: {platform_name}")
