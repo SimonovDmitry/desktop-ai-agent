@@ -15,6 +15,12 @@ from deskagent.platform.base.window import (
     WindowAppearance, WindowHierarchy, WindowDisplay, WindowArrangement,
     WindowGroups, WindowLifecycle
 )
+from deskagent.platform.base.input import (
+    InputKeyboard, InputMouse, InputShortcuts, InputHotkeys,
+    InputClipboard as InputInputClipboard,
+    InputSelection, InputState as InputInputState,
+    InputGestures, InputAutomation
+)
 from deskagent.platform.macos.system import (
     MacOSAudio, MacOSClipboard, MacOSDisplay, MacOSInformation,
     MacOSMouse, MacOSNetwork, MacOSNotification, MacOSPower
@@ -33,6 +39,11 @@ from deskagent.platform.macos.window import (
     MacOSAppearance, MacOSHierarchy, MacOSDisplay as MacOSWindowDisplay,
     MacOSArrangement, MacOSGroups, MacOSLifecycle as MacOSWindowLifecycle
 )
+from deskagent.platform.macos.input import (
+    MacOSKeyboard, MacOSMouse, MacOSShortcuts, MacOSHotkeys,
+    MacOSClipboard, MacOSSelection, MacOSState,
+    MacOSGestures, MacOSAutomation
+)
 
 
 @dataclass
@@ -46,7 +57,6 @@ class SystemServices:
     notify: SystemNotification
     power: SystemPower
 
-
 @dataclass
 class ApplicationServices:
     lifecycle: ApplicationLifecycle
@@ -58,7 +68,6 @@ class ApplicationServices:
     instances: ApplicationInstances
     documents: ApplicationDocuments
     startup: ApplicationStartup
-
 
 @dataclass
 class WindowServices:
@@ -74,6 +83,18 @@ class WindowServices:
     groups: WindowGroups
     lifecycle: WindowLifecycle
 
+@dataclass
+class InputServices:
+    keyboard: InputKeyboard
+    mouse: InputMouse
+    shortcuts: InputShortcuts
+    hotkeys: InputHotkeys
+    clipboard: InputInputClipboard
+    selection: InputSelection
+    state: InputInputState
+    gestures: InputGestures
+    automation: InputAutomation
+
 
 class MacOSSystemServices(SystemServices):
     def __init__(self):
@@ -88,7 +109,6 @@ class MacOSSystemServices(SystemServices):
             power=MacOSPower(),
         )
 
-
 class MacOSApplicationServices(ApplicationServices):
     def __init__(self):
         super().__init__(
@@ -102,7 +122,6 @@ class MacOSApplicationServices(ApplicationServices):
             documents=MacOSDocuments(),
             startup=MacOSStartup(),
         )
-
 
 class MacOSWindowServices(WindowServices):
     def __init__(self):
@@ -120,12 +139,26 @@ class MacOSWindowServices(WindowServices):
             lifecycle=MacOSWindowLifecycle()
         )
 
+class MacOSInputServices(InputServices):
+    def __init__(self):
+        super().__init__(
+            keyboard=MacOSKeyboard(),
+            mouse=MacOSMouse(),
+            shortcuts=MacOSShortcuts(),
+            hotkeys=MacOSHotkeys(),
+            clipboard=MacOSClipboard(),
+            selection=MacOSSelection(),
+            state=MacOSState(),
+            gestures=MacOSGestures(),
+            automation=MacOSAutomation()
+        )
 
 @dataclass
 class Services:
     system: SystemServices
     application: ApplicationServices
     window: WindowServices
+    input: InputServices
 
 
 class ServicesFactory:
@@ -146,7 +179,8 @@ class ServicesFactory:
             return Services(
                 system=MacOSSystemServices(),
                 application=MacOSApplicationServices(),
-                window=MacOSWindowServices()
+                window=MacOSWindowServices(),
+                input=MacOSInputServices()
             )
 
         raise RuntimeError(f"Unsupported platform: {platform_name}")

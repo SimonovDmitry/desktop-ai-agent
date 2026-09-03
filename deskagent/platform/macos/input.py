@@ -337,8 +337,8 @@ class MacOSMouse(InputMouse):
 
 
 class MacOSShortcuts(InputShortcuts):
-    def __init__(self, keyboard_service=None):
-        self.kb = keyboard_service or MacOSKeyboard()
+    def __init__(self):
+        self.kb = MacOSKeyboard()
 
     def _parse_and_execute(self, shortcut, press=True):
         keys = shortcut.lower().replace(" ", "").split('+')
@@ -424,8 +424,8 @@ class MacOSShortcuts(InputShortcuts):
 
 
 class MacOSHotkeys(InputHotkeys):
-    def __init__(self, keyboard_service=None):
-        self.kb = keyboard_service or MacOSKeyboard()
+    def __init__(self):
+        self.kb = MacOSKeyboard()
         self._hotkeys = {}
         self._listener_thread = None
         self._stop_event = threading.Event()
@@ -506,14 +506,14 @@ class MacOSHotkeys(InputHotkeys):
         return {"hotkey": hotkey, "registered": (mask, keycode) in self._hotkeys}
 
     def trigger_hotkey(self, hotkey):
-        shortcuts = MacOSShortcuts(self.kb)
+        shortcuts = MacOSShortcuts()
         return shortcuts.press_shortcut(hotkey)
 
 
 class MacOSClipboard(InputClipboard):
-    def __init__(self, keyboard_service=None):
-        self.kb = keyboard_service or MacOSKeyboard()
-        self.shortcuts = MacOSShortcuts(self.kb)
+    def __init__(self):
+        self.kb = MacOSKeyboard()
+        self.shortcuts = MacOSShortcuts()
         self.pb = NSPasteboard.generalPasteboard()
 
     def _get_system_clipboard(self):
@@ -576,7 +576,7 @@ class MacOSClipboard(InputClipboard):
 class MacOSSelection(InputSelection):
     def __init__(self):
         self.kb = MacOSKeyboard()
-        self.shortcuts = MacOSShortcuts(self.kb)
+        self.shortcuts = MacOSShortcuts()
 
     def select_all_text(self):
         self.shortcuts.press_shortcut("cmd+a")
@@ -878,7 +878,7 @@ class MacOSAutomation(InputAutomation):
         elif atype == "tap_key":
             self.kb.tap_key(action['key'])
         elif atype == "press_shortcut":
-            MacOSShortcuts(self.kb).press_shortcut(action['shortcut'])
+            MacOSShortcuts().press_shortcut(action['shortcut'])
 
     def execute_input_sequence(self, actions):
         executed = 0
