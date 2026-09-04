@@ -23,7 +23,7 @@ from deskagent.platform.base.system import (SystemAudio, SystemClipboard, System
                                             SystemMouse, SystemNetwork, SystemNotification, SystemPower)
 
 
-class MacOSAudio(SystemAudio):
+class MacOSSystemAudio(SystemAudio):
     def _clamp(self, value):
         return max(0, min(100, value))
 
@@ -51,7 +51,7 @@ class MacOSAudio(SystemAudio):
         run(["osascript", "-e", "set volume output muted false"])
 
 
-class MacOSClipboard(SystemClipboard):
+class MacOSSystemClipboard(SystemClipboard):
     def get_clipboard(self):
         pb = NSPasteboard.generalPasteboard()
         return pb.stringForType_(NSStringPboardType)
@@ -66,7 +66,7 @@ class MacOSClipboard(SystemClipboard):
         pb.clearContents()
 
 
-class MacOSDisplay(SystemDisplay):
+class MacOSSystemDisplay(SystemDisplay):
     def _get_display_services(self):
         try:
             framework = ctypes.CDLL("/System/Library/PrivateFrameworks/DisplayServices.framework/DisplayServices")
@@ -144,7 +144,7 @@ class MacOSDisplay(SystemDisplay):
         return {"width": int(screens[0].frame().size.width), "height": int(screens[0].frame().size.height)}
 
 
-class MacOSInformation(SystemInformation):
+class MacOSSystemInformation(SystemInformation):
     def get_cpu_processes(self):
         cmd = "ps -eo pid,pcpu,comm -c -r | head -n 20"
         out = run(cmd, shell=True, capture_output=True, text=True).stdout.strip()
@@ -219,7 +219,7 @@ class MacOSInformation(SystemInformation):
         }
 
 
-class MacOSMouse(SystemMouse):
+class MacOSSystemMouse(SystemMouse):
     def _post_event(self, event_type, x, y, button=kCGMouseButtonLeft):
         event = CGEventCreateMouseEvent(None, event_type, (x, y), button)
         CGEventPost(kCGHIDEventTap, event)
@@ -263,7 +263,7 @@ class MacOSMouse(SystemMouse):
         CGEventPost(kCGHIDEventTap, event)
 
 
-class MacOSNetwork(SystemNetwork):
+class MacOSSystemNetwork(SystemNetwork):
     def get_network_status(self):
         try:
             res = run(['scutil', '--nwi'], capture_output=True, text=True).stdout
@@ -391,7 +391,7 @@ class MacOSNetwork(SystemNetwork):
             return False
 
 
-class MacOSNotification(SystemNotification):
+class MacOSSystemNotification(SystemNotification):
     def send_notification(self, title, message, subtitle=None):
         notification = NSUserNotification.alloc().init()
         notification.setTitle_(title)
@@ -407,7 +407,7 @@ class MacOSNotification(SystemNotification):
                                   "is not supported by the current macOS notification backend")
 
 
-class MacOSPower(SystemPower):
+class MacOSSystemPower(SystemPower):
     def lock_screen(self):
         login_framework = ctypes.CDLL(
             "/System/Library/PrivateFrameworks/login.framework/Versions/A/login"

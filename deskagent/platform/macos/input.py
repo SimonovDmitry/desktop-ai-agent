@@ -25,7 +25,7 @@ from deskagent.platform.base.input import (
 )
 
 
-class MacOSKeyboard(InputKeyboard):
+class MacOSInputKeyboard(InputKeyboard):
     KEY_MAP = {
         'a': 0x00, 's': 0x01, 'd': 0x02, 'f': 0x03, 'h': 0x04, 'g': 0x05, 'z': 0x06, 'x': 0x07,
         'c': 0x08, 'v': 0x09, 'b': 0x0B, 'q': 0x0C, 'w': 0x0D, 'e': 0x0E, 'r': 0x0F, 'y': 0x10,
@@ -195,7 +195,7 @@ class MacOSKeyboard(InputKeyboard):
         }
 
 
-class MacOSMouse(InputMouse):
+class MacOSInputMouse(InputMouse):
     def __init__(self):
         self.event_source = Quartz.CGEventSourceCreate(Quartz.kCGEventSourceStateCombinedSessionState)
         self.BUTTON_MAP = {
@@ -336,9 +336,9 @@ class MacOSMouse(InputMouse):
         }
 
 
-class MacOSShortcuts(InputShortcuts):
+class MacOSInputShortcuts(InputShortcuts):
     def __init__(self):
-        self.kb = MacOSKeyboard()
+        self.kb = MacOSInputKeyboard()
 
     def _parse_and_execute(self, shortcut, press=True):
         keys = shortcut.lower().replace(" ", "").split('+')
@@ -423,9 +423,9 @@ class MacOSShortcuts(InputShortcuts):
         return {"application": application, "launched": True}
 
 
-class MacOSHotkeys(InputHotkeys):
+class MacOSInputHotkeys(InputHotkeys):
     def __init__(self):
-        self.kb = MacOSKeyboard()
+        self.kb = MacOSInputKeyboard()
         self._hotkeys = {}
         self._listener_thread = None
         self._stop_event = threading.Event()
@@ -506,14 +506,14 @@ class MacOSHotkeys(InputHotkeys):
         return {"hotkey": hotkey, "registered": (mask, keycode) in self._hotkeys}
 
     def trigger_hotkey(self, hotkey):
-        shortcuts = MacOSShortcuts()
+        shortcuts = MacOSInputShortcuts()
         return shortcuts.press_shortcut(hotkey)
 
 
-class MacOSClipboard(InputClipboard):
+class MacOSInputClipboard(InputClipboard):
     def __init__(self):
-        self.kb = MacOSKeyboard()
-        self.shortcuts = MacOSShortcuts()
+        self.kb = MacOSInputKeyboard()
+        self.shortcuts = MacOSInputShortcuts()
         self.pb = NSPasteboard.generalPasteboard()
 
     def _get_system_clipboard(self):
@@ -573,10 +573,10 @@ class MacOSClipboard(InputClipboard):
         return {"cleared": True}
 
 
-class MacOSSelection(InputSelection):
+class MacOSInputSelection(InputSelection):
     def __init__(self):
-        self.kb = MacOSKeyboard()
-        self.shortcuts = MacOSShortcuts()
+        self.kb = MacOSInputKeyboard()
+        self.shortcuts = MacOSInputShortcuts()
 
     def select_all_text(self):
         self.shortcuts.press_shortcut("cmd+a")
@@ -709,10 +709,10 @@ class MacOSSelection(InputSelection):
         return {"direction": direction, "amount": amount, "unit": unit}
 
 
-class MacOSState(InputState):
+class MacOSInputState(InputState):
     def __init__(self):
-        self.kb = MacOSKeyboard()
-        self.mouse = MacOSMouse()
+        self.kb = MacOSInputKeyboard()
+        self.mouse = MacOSInputMouse()
 
         self.MOD_MAP = {
             "cmd": Quartz.kCGEventFlagMaskCommand,
@@ -801,9 +801,9 @@ class MacOSState(InputState):
             return {"keys_released": keys_ok, "mouse_buttons_released": mouse_ok}
 
 
-class MacOSGestures(InputGestures):
+class MacOSInputGestures(InputGestures):
     def __init__(self):
-        self.mouse = MacOSMouse()
+        self.mouse = MacOSInputMouse()
 
     def drag_gesture(self, start_x, start_y, end_x, end_y, button="left", duration=0.5):
         result = self.mouse.drag_mouse(start_x, start_y, end_x, end_y, button, duration)
@@ -853,10 +853,10 @@ class MacOSGestures(InputGestures):
         return {"count": count, "completed": True}
 
 
-class MacOSAutomation(InputAutomation):
+class MacOSInputAutomation(InputAutomation):
     def __init__(self):
-        self.kb = MacOSKeyboard()
-        self.mouse = MacOSMouse()
+        self.kb = MacOSInputKeyboard()
+        self.mouse = MacOSInputMouse()
         self._cancel_flags = {}
 
     def _dispatch_action(self, action):
@@ -878,7 +878,7 @@ class MacOSAutomation(InputAutomation):
         elif atype == "tap_key":
             self.kb.tap_key(action['key'])
         elif atype == "press_shortcut":
-            MacOSShortcuts().press_shortcut(action['shortcut'])
+            MacOSInputShortcuts().press_shortcut(action['shortcut'])
 
     def execute_input_sequence(self, actions):
         executed = 0
@@ -900,7 +900,7 @@ class MacOSAutomation(InputAutomation):
         return {"executed": executed, "completed": True}
 
     def wait_for_input(self, input_type="any", timeout=30):
-        state_service = MacOSState()
+        state_service = MacOSInputState()
 
         start_time = time.time()
         while time.time() - start_time < timeout:
@@ -920,7 +920,7 @@ class MacOSAutomation(InputAutomation):
         raise TimeoutError("Input event not detected within timeout")
 
     def wait_for_key(self, key, timeout=10):
-        state_service = MacOSState()
+        state_service = MacOSInputState()
 
         start_time = time.time()
         while time.time() - start_time < timeout:
@@ -930,7 +930,7 @@ class MacOSAutomation(InputAutomation):
         raise TimeoutError(f"Key '{key}' was not pressed")
 
     def wait_for_mouse_click(self, button="left", timeout=10):
-        state_service = MacOSState()
+        state_service = MacOSInputState()
 
         start_time = time.time()
         while time.time() - start_time < timeout:
