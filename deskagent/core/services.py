@@ -21,6 +21,11 @@ from deskagent.platform.base.input import (
     InputSelection, InputState as InputInputState,
     InputGestures, InputAutomation
 )
+from deskagent.platform.base.file import (
+    FileInformation, FileLifecycle, FileContent, FileSearch,
+    FileOrganization, FilePermissions, FileLinks, FileArchive,
+    FileComparison, FileDisk, FileTemporary, FileSystem
+)
 from deskagent.platform.macos.system import (
     MacOSAudio, MacOSClipboard, MacOSDisplay, MacOSInformation,
     MacOSMouse, MacOSNetwork, MacOSNotification, MacOSPower
@@ -44,7 +49,11 @@ from deskagent.platform.macos.input import (
     MacOSClipboard, MacOSSelection, MacOSState,
     MacOSGestures, MacOSAutomation
 )
-
+from deskagent.platform.macos.file import (
+    MacOSFileInformation, MacOSFileLifecycle, MacOSFileContent, MacOSFileSearch,
+    MacOSFileOrganization, MacOSFilePermissions, MacOSFileLinks, MacOSFileArchive,
+    MacOSFileComparison, MacOSFileDisk, MacOSFileTemporary, MacOSFileSystem
+)
 
 @dataclass
 class SystemServices:
@@ -95,6 +104,20 @@ class InputServices:
     gestures: InputGestures
     automation: InputAutomation
 
+@dataclass
+class FileServices:
+    information: FileInformation
+    lifecycle: FileLifecycle
+    content: FileContent
+    search: FileSearch
+    organization: FileOrganization
+    permissions: FilePermissions
+    links: FileLinks
+    archive: FileArchive
+    comparison: FileComparison
+    disk: FileDisk
+    temporary: FileTemporary
+    system: FileSystem
 
 class MacOSSystemServices(SystemServices):
     def __init__(self):
@@ -153,12 +176,30 @@ class MacOSInputServices(InputServices):
             automation=MacOSAutomation()
         )
 
+class MacOSFileServices(FileServices):
+    def __init__(self):
+        super().__init__(
+            information=MacOSFileInformation(),
+            lifecycle=MacOSFileLifecycle(),
+            content=MacOSFileContent(),
+            search=MacOSFileSearch(),
+            organization=MacOSFileOrganization(),
+            permissions=MacOSFilePermissions(),
+            links=MacOSFileLinks(),
+            archive=MacOSFileArchive(),
+            comparison=MacOSFileComparison(),
+            disk=MacOSFileDisk(),
+            temporary=MacOSFileTemporary(),
+            system=MacOSFileSystem()
+        )
+
 @dataclass
 class Services:
     system: SystemServices
     application: ApplicationServices
     window: WindowServices
     input: InputServices
+    file: FileServices
 
 
 class ServicesFactory:
@@ -180,7 +221,8 @@ class ServicesFactory:
                 system=MacOSSystemServices(),
                 application=MacOSApplicationServices(),
                 window=MacOSWindowServices(),
-                input=MacOSInputServices()
+                input=MacOSInputServices(),
+                file=MacOSFileServices()
             )
 
         raise RuntimeError(f"Unsupported platform: {platform_name}")
