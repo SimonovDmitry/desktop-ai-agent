@@ -17,8 +17,7 @@ from deskagent.platform.base.window import (
 )
 from deskagent.platform.base.input import (
     InputKeyboard, InputMouse, InputShortcuts, InputHotkeys,
-    InputClipboard as InputInputClipboard,
-    InputSelection, InputState as InputInputState,
+    InputClipboard, InputSelection, InputState,
     InputGestures, InputAutomation
 )
 from deskagent.platform.base.file import (
@@ -27,27 +26,25 @@ from deskagent.platform.base.file import (
     FileComparison, FileDisk, FileTemporary, FileSystem
 )
 from deskagent.platform.macos.system import (
-    MacOSAudio, MacOSClipboard, MacOSDisplay, MacOSInformation,
-    MacOSMouse, MacOSNetwork, MacOSNotification, MacOSPower
+    MacOSSystemAudio, MacOSSystemClipboard, MacOSSystemDisplay, MacOSSystemInformation,
+    MacOSSystemMouse, MacOSSystemNetwork, MacOSSystemNotification, MacOSSystemPower
 )
 from deskagent.platform.macos.application import (
-    MacOSLifecycle,
-    MacOSInformation as MacOSAppInformation,
-    MacOSFocus as MacOSAppFocus,
-    MacOSInstances, MacOSPreferences, MacOSResources,
-    MacOSDocuments, MacOSProcesses, MacOSStartup
+    MacOSApplicationLifecycle, MacOSApplicationInformation, MacOSApplicationFocus,
+    MacOSApplicationInstances, MacOSApplicationPreferences, MacOSApplicationResources,
+    MacOSApplicationDocuments, MacOSApplicationProcesses, MacOSApplicationStartup
 )
 from deskagent.platform.macos.window import (
-    MacOSInformation as MacOSWindowInformation,
-    MacOSFocus as MacOSWindowFocus,
-    MacOSPosition, MacOSSize, MacOSState,
-    MacOSAppearance, MacOSHierarchy, MacOSDisplay as MacOSWindowDisplay,
-    MacOSArrangement, MacOSGroups, MacOSLifecycle as MacOSWindowLifecycle
+    MacOSWindowInformation as MacOSWindowInformation,
+    MacOSWindowFocus,
+    MacOSWindowPosition, MacOSWindowSize, MacOSWindowState,
+    MacOSWindowAppearance, MacOSWindowHierarchy, MacOSWindowDisplay,
+    MacOSWindowArrangement, MacOSWindowGroups, MacOSWindowLifecycle
 )
 from deskagent.platform.macos.input import (
-    MacOSKeyboard, MacOSMouse, MacOSShortcuts, MacOSHotkeys,
-    MacOSClipboard, MacOSSelection, MacOSState,
-    MacOSGestures, MacOSAutomation
+    MacOSInputKeyboard, MacOSInputMouse, MacOSInputShortcuts, MacOSInputHotkeys,
+    MacOSInputClipboard, MacOSInputSelection, MacOSInputState,
+    MacOSInputGestures, MacOSInputAutomation
 )
 from deskagent.platform.macos.file import (
     MacOSFileInformation, MacOSFileLifecycle, MacOSFileContent, MacOSFileSearch,
@@ -98,9 +95,9 @@ class InputServices:
     mouse: InputMouse
     shortcuts: InputShortcuts
     hotkeys: InputHotkeys
-    clipboard: InputInputClipboard
+    clipboard: InputClipboard
     selection: InputSelection
-    state: InputInputState
+    state: InputState
     gestures: InputGestures
     automation: InputAutomation
 
@@ -122,28 +119,28 @@ class FileServices:
 class MacOSSystemServices(SystemServices):
     def __init__(self):
         super().__init__(
-            audio=MacOSAudio(),
-            clipboard=MacOSClipboard(),
-            display=MacOSDisplay(),
-            information=MacOSInformation(),
-            mouse=MacOSMouse(),
-            network=MacOSNetwork(),
-            notify=MacOSNotification(),
-            power=MacOSPower(),
+            audio=MacOSSystemAudio(),
+            clipboard=MacOSInputClipboard(),
+            display=MacOSSystemDisplay(),
+            information=MacOSSystemInformation(),
+            mouse=MacOSInputMouse(),
+            network=MacOSSystemNetwork(),
+            notify=MacOSSystemNotification(),
+            power=MacOSSystemPower(),
         )
 
 class MacOSApplicationServices(ApplicationServices):
     def __init__(self):
         super().__init__(
-            lifecycle=MacOSLifecycle(),
-            information=MacOSAppInformation(),
-            focus=MacOSAppFocus(),
-            preferences=MacOSPreferences(),
-            resources=MacOSResources(),
-            processes=MacOSProcesses(),
-            instances=MacOSInstances(),
-            documents=MacOSDocuments(),
-            startup=MacOSStartup(),
+            lifecycle=MacOSApplicationLifecycle(),
+            information=MacOSApplicationInformation(),
+            focus=MacOSApplicationFocus(),
+            preferences=MacOSApplicationPreferences(),
+            resources=MacOSApplicationResources(),
+            processes=MacOSApplicationProcesses(),
+            instances=MacOSApplicationInstances(),
+            documents=MacOSApplicationDocuments(),
+            startup=MacOSApplicationStartup(),
         )
 
 class MacOSWindowServices(WindowServices):
@@ -151,29 +148,29 @@ class MacOSWindowServices(WindowServices):
         super().__init__(
             information=MacOSWindowInformation(),
             focus=MacOSWindowFocus(),
-            position=MacOSPosition(),
-            size=MacOSSize(),
-            state=MacOSState(),
-            appearance=MacOSAppearance(),
-            hierarchy=MacOSHierarchy(),
+            position=MacOSWindowPosition(),
+            size=MacOSWindowSize(),
+            state=MacOSWindowState(),
+            appearance=MacOSWindowAppearance(),
+            hierarchy=MacOSWindowHierarchy(),
             display=MacOSWindowDisplay(),
-            arrangement=MacOSArrangement(),
-            groups=MacOSGroups(),
+            arrangement=MacOSWindowArrangement(),
+            groups=MacOSWindowGroups(),
             lifecycle=MacOSWindowLifecycle()
         )
 
 class MacOSInputServices(InputServices):
     def __init__(self):
         super().__init__(
-            keyboard=MacOSKeyboard(),
-            mouse=MacOSMouse(),
-            shortcuts=MacOSShortcuts(),
-            hotkeys=MacOSHotkeys(),
-            clipboard=MacOSClipboard(),
-            selection=MacOSSelection(),
-            state=MacOSState(),
-            gestures=MacOSGestures(),
-            automation=MacOSAutomation()
+            keyboard=MacOSInputKeyboard(),
+            mouse=MacOSInputMouse(),
+            shortcuts=MacOSInputShortcuts(),
+            hotkeys=MacOSInputHotkeys(),
+            clipboard=MacOSInputClipboard(),
+            selection=MacOSInputSelection(),
+            state=MacOSInputState(),
+            gestures=MacOSInputGestures(),
+            automation=MacOSInputAutomation()
         )
 
 class MacOSFileServices(FileServices):

@@ -12,7 +12,7 @@ from deskagent.platform.base.application import (ApplicationDocuments, Applicati
                                                  ApplicationProcesses, ApplicationResources, ApplicationStartup)
 
 
-class MacOSLifecycle(ApplicationLifecycle):
+class MacOSApplicationLifecycle(ApplicationLifecycle):
     def _get_pid_by_name(self, app_name):
         for proc in psutil.process_iter(['pid', 'name']):
             if app_name.lower() in proc.info['name'].lower():
@@ -102,7 +102,7 @@ class MacOSLifecycle(ApplicationLifecycle):
             }
 
 
-class MacOSInformation(ApplicationInformation):
+class MacOSApplicationInformation(ApplicationInformation):
     def _get_running_app_by_name(self, app_name):
         workspace = NSWorkspace.sharedWorkspace()
         for app in workspace.runningApplications():
@@ -252,7 +252,7 @@ class MacOSInformation(ApplicationInformation):
         return "Unknown"
 
 
-class MacOSPreferences(ApplicationPreferences):
+class MacOSApplicationPreferences(ApplicationPreferences):
     def get_permissions(self, app_name):
         return {
             "accessibility": self.get_accessibility_status(app_name),
@@ -334,7 +334,7 @@ class MacOSPreferences(ApplicationPreferences):
         return True
 
 
-class MacOSFocus(ApplicationFocus):
+class MacOSApplicationFocus(ApplicationFocus):
     def _get_app_by_name(self, app_name):
         workspace = NSWorkspace.sharedWorkspace()
         for app in workspace.runningApplications():
@@ -415,7 +415,7 @@ class MacOSFocus(ApplicationFocus):
         return {"focused": False}
 
 
-class MacOSResources(ApplicationResources):
+class MacOSApplicationResources(ApplicationResources):
     def _get_all_matching_processes(self, app_name):
         processes = []
         for proc in psutil.process_iter(['pid', 'name']):
@@ -515,7 +515,7 @@ class MacOSResources(ApplicationResources):
         return result
 
 
-class MacOSProcesses(ApplicationProcesses):
+class MacOSApplicationProcesses(ApplicationProcesses):
 
     def _find_all(self, app_name):
 
@@ -603,7 +603,7 @@ class MacOSProcesses(ApplicationProcesses):
         return {"application": app_name, "resumed": True}
 
 
-class MacOSInstances(ApplicationInstances):
+class MacOSApplicationInstances(ApplicationInstances):
 
     def _get_apps_by_name(self, app_name):
         workspace = NSWorkspace.sharedWorkspace()
@@ -642,7 +642,7 @@ class MacOSInstances(ApplicationInstances):
         raise ValueError(f"Instance with PID {pid} not found")
 
 
-class MacOSStartup(ApplicationStartup):
+class MacOSApplicationStartup(ApplicationStartup):
     def _get_app_path(self, app_name):
         try:
             cmd = ["mdfind", f"kMDItemFSName == '{app_name}.app'"]
@@ -693,7 +693,7 @@ class MacOSStartup(ApplicationStartup):
         return {"application": app_name, "enabled": False}
 
 
-class MacOSDocuments(ApplicationDocuments):
+class MacOSApplicationDocuments(ApplicationDocuments):
     def _get_app_path(self, app_name):
         try:
             cmd = ["mdfind", f"kMDItemFSName == '{app_name}.app'"]

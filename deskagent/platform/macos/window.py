@@ -15,7 +15,7 @@ from deskagent.platform.base.window import (WindowAppearance, WindowArrangement,
                                             WindowPosition, WindowSize, WindowState)
 
 
-class MacOSInformation(WindowInformation):
+class MacOSWindowInformation(WindowInformation):
     def _get_raw_window_list(self, visible_only=True):
         options = Quartz.kCGWindowListExcludeDesktopElements | Quartz.kCGWindowListOptionAll
         return Quartz.CGWindowListCopyWindowInfo(options, Quartz.kCGNullWindowID)
@@ -135,7 +135,7 @@ class MacOSInformation(WindowInformation):
         return {"visible": win['visible']} if win else None
 
 
-class MacOSFocus(WindowFocus):
+class MacOSWindowFocus(WindowFocus):
     def _get_main_window_by_pid(self, pid):
         try:
             app_ref = AXUIElementCreateApplication(int(pid))
@@ -290,7 +290,7 @@ class MacOSFocus(WindowFocus):
         return {"pid": int(pid), "back": True}
 
 
-class MacOSPosition(WindowPosition):
+class MacOSWindowPosition(WindowPosition):
     def __init__(self):
         self._history = {}
 
@@ -497,7 +497,7 @@ class MacOSPosition(WindowPosition):
         return None
 
 
-class MacOSSize(WindowSize):
+class MacOSWindowSize(WindowSize):
     def __init__(self):
         self._size_history = {}
 
@@ -634,7 +634,7 @@ class MacOSSize(WindowSize):
         return self.fit_to_display(window_id, display_id)
 
 
-class MacOSState(WindowState):
+class MacOSWindowState(WindowState):
     def _extract_ax_point(self, ax_value):
         if ax_value is None:
             return 0, 0
@@ -796,7 +796,7 @@ class MacOSState(WindowState):
         return None
 
 
-class MacOSAppearance(WindowAppearance):
+class MacOSWindowAppearance(WindowAppearance):
     def _extract_ax_point(self, ax_value):
         if ax_value is None: return 0, 0
         ok, point = AXValueGetValue(ax_value, kAXValueCGPointType, None)
@@ -899,7 +899,7 @@ class MacOSAppearance(WindowAppearance):
         return self.set_fullscreen(window_id, False)
 
 
-class MacOSHierarchy(WindowHierarchy):
+class MacOSWindowHierarchy(WindowHierarchy):
     def _get_raw_windows(self):
         return Quartz.CGWindowListCopyWindowInfo(
             Quartz.kCGWindowListExcludeDesktopElements | Quartz.kCGWindowListOptionOnScreenOnly,
@@ -993,7 +993,7 @@ class MacOSHierarchy(WindowHierarchy):
         }
 
 
-class MacOSDisplay(WindowDisplay):
+class MacOSWindowDisplay(WindowDisplay):
     def _get_screens_list(self):
         return sorted(NSScreen.screens(), key=lambda s: s.frame().origin.x)
 
@@ -1146,7 +1146,7 @@ class MacOSDisplay(WindowDisplay):
         return None
 
 
-class MacOSArrangement(WindowArrangement):
+class MacOSWindowArrangement(WindowArrangement):
     def _extract_ax_val(self, ax_value, ax_type):
         if ax_value is None: return (0, 0)
         ok, val = AXValueGetValue(ax_value, ax_type, None)
@@ -1307,7 +1307,7 @@ class MacOSArrangement(WindowArrangement):
         return {"equalized": True}
 
 
-class MacOSGroups(WindowGroups):
+class MacOSWindowGroups(WindowGroups):
     def __init__(self):
         self._groups = {}
 
@@ -1389,15 +1389,15 @@ class MacOSGroups(WindowGroups):
         return {"group": group_name, "activated": True}
 
     def arrange(self, group_name, layout):
-        from deskagent.platform.macos.window import MacOSArrangement
+        from deskagent.platform.macos.window import MacOSWindowArrangement
         ids = self._groups.get(group_name, [])
         if ids:
-            arranger = MacOSArrangement()
+            arranger = MacOSWindowArrangement()
             return arranger.arrange(ids, layout)
         return None
 
 
-class MacOSLifecycle(WindowLifecycle):
+class MacOSWindowLifecycle(WindowLifecycle):
     def _extract_point(self, ax_value):
         if ax_value is None: return (0, 0)
         ok, point = AXValueGetValue(ax_value, kAXValueCGPointType, None)
