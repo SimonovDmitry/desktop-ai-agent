@@ -1,4 +1,4 @@
-from deskagent.actions.result import ActionResult
+from deskagent.actions.types import ActionResult
 
 
 def test_action_result_success():

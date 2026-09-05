@@ -1,6 +1,6 @@
 from deskagent.actions.base import Action
-from deskagent.actions.result import ActionResult
-from deskagent.actions.types import RiskLevel, ActionCategory
+from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+
 
 class GetFileDiskUsage(Action):
     name = "get_file_disk_usage"
