@@ -1,6 +1,6 @@
 import logging
 from typing import Any, Callable
-from deskagent.actions.registry import ActionRegistry
+from deskagent.actions.base import ActionRegistry
 from deskagent.actions.types import ActionResult
 
 
@@ -78,7 +78,15 @@ class ActionExecutor:
         return getattr(context, "logger", logging.getLogger(__name__))
 
     def _log(self, context, level, msg, *args):
-        self._get_logger(context).log(level, msg, *args)
+        logger = self._get_logger(context)
+        if level == logging.INFO:
+            logger.info(msg, *args)
+        elif level == logging.WARNING:
+            logger.warning(msg, *args)
+        elif level == logging.ERROR:
+            logger.error(msg, *args)
+        else:
+            logger.log(level, msg, *args)
 
     def _log_result(self, context, action, result):
         if result.success:

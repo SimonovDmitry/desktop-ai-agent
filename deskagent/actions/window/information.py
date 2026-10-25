@@ -1,4 +1,5 @@
-from deskagent.core.action import Action, ActionResult, ActionCategory, RiskLevel
+from deskagent.actions.base import Action
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GetWindows(Action):
