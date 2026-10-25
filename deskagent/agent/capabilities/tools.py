@@ -7,6 +7,8 @@ from deskagent.actions.executor import ActionExecutor
 from deskagent.agent.llm.response import ToolCall
 from deskagent.agent.capabilities.policy import ActionPolicy
 from deskagent.agent.core.models import ActionExecution
+from deskagent.safety.audit import AuditLog, AuditRecord
+from deskagent.safety.limits import SafetyLimits
 
 def create_mvp_action_registry() -> ActionRegistry:
     from deskagent.actions.application.information import (
@@ -32,13 +34,17 @@ def create_mvp_action_registry() -> ActionRegistry:
 
 
 class ActionToolCatalog:
-    def __init__(self, registry: ActionRegistry, executor: ActionExecutor, context, allowed_names=None, policy=None, verifier=None):
+    def __init__(self, registry: ActionRegistry, executor: ActionExecutor, context, allowed_names=None,
+                 policy=None, verifier=None, audit_log: AuditLog | None = None,
+                 limits: SafetyLimits | None = None):
         self.registry = registry
         self.executor = executor
         self.context = context
         self.allowed_names = self._resolve_names(allowed_names)
         self.policy = policy or ActionPolicy()
         self.verifier = verifier
+        self.audit_log = audit_log
+        self.limits = limits or SafetyLimits()
 
     def _resolve_names(self, names):
         requested = names if names is not None else self.registry.names()
@@ -55,19 +61,56 @@ class ActionToolCatalog:
         if tool_call.name not in self.allowed_names:
             from deskagent.agent.capabilities.policy import PolicyDecision
             return PolicyDecision(False, reason=f"Action is not allowed: {tool_call.name}")
-        return self.policy.evaluate(self.registry.get(tool_call.name), tool_call.arguments, action_count)
+        decision = self.policy.evaluate(self.registry.get(tool_call.name), tool_call.arguments, action_count)
+        limit = self.limits.check(tool_call.name, tool_call.arguments)
+        if decision.allowed and not limit.allowed:
+            from deskagent.agent.capabilities.policy import PolicyDecision
+            return PolicyDecision(False, reason=limit.reason, reason_code=limit.code, risk=decision.risk)
+        return decision
 
-    def execute(self, tool_call: ToolCall) -> ActionExecution:
+    def execute(self, tool_call: ToolCall, thread_id: str | None = None, risk: str | None = None) -> ActionExecution:
         if tool_call.name not in self.allowed_names:
             return ActionExecution(
                 tool_call_id=tool_call.id, name=tool_call.name, parameters=tool_call.arguments,
                 success=False, error=f"Action is not allowed: {tool_call.name}", error_code="ACTION_NOT_ALLOWED",
             )
+        limit = self.limits.check(tool_call.name, tool_call.arguments)
+        if not limit.allowed:
+            execution = ActionExecution(
+                tool_call_id=tool_call.id, name=tool_call.name, parameters=tool_call.arguments,
+                success=False, error=limit.reason, error_code=limit.code,
+            )
+            self.audit_execution(execution, thread_id, risk=risk)
+            return execution
         result = self.executor.execute(tool_call.name, self.context, tool_call.arguments)
-        return ActionExecution(
+        execution = ActionExecution(
             tool_call_id=tool_call.id, name=tool_call.name, parameters=tool_call.arguments,
             success=result.success, data=result.data, error=result.error, error_code=result.error_code,
         )
+        self.limits.record(tool_call.name, tool_call.arguments, result.success)
+        self.audit_execution(execution, thread_id, risk=risk)
+        return execution
+
+    def audit_decision(self, tool_call: ToolCall, decision, thread_id=None, confirmation_id=None):
+        if not self.audit_log:
+            return
+        allowed = decision.get("allowed", True) if isinstance(decision, dict) else decision.allowed
+        confirmation = decision.get("confirmation_required", False) if isinstance(decision, dict) else decision.confirmation_required
+        risk = decision.get("risk", "unknown") if isinstance(decision, dict) else decision.risk.value
+        outcome = "denied" if not allowed else ("confirmation_required" if confirmation else "allowed")
+        self.audit_log.append(AuditRecord(
+            "policy", tool_call.name, tool_call.arguments, str(risk), outcome,
+            thread_id, tool_call.id, confirmation_id,
+        ))
+
+    def audit_execution(self, execution: ActionExecution, thread_id=None, decision="executed", risk=None):
+        if not self.audit_log:
+            return
+        risk = risk or (self.registry.get(execution.name).risk_level.value if self.registry.contains(execution.name) else "unknown")
+        self.audit_log.append(AuditRecord(
+            "execution", execution.name, execution.parameters, risk, decision,
+            thread_id, execution.tool_call_id, result=execution.tool_result(),
+        ))
 
     def verify(self, execution: ActionExecution) -> ActionExecution:
         if isinstance(execution.data, dict) and execution.data.get("dry_run"):

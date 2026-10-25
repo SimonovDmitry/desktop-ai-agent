@@ -23,7 +23,9 @@ class AgentSettings:
 
 @dataclass
 class SecuritySettings:
-    allowed_paths: list[str] = field(default_factory=list)
+    allowed_paths: list[str] = field(default_factory=lambda: [
+        "~/Downloads", "~/Documents/DeskAgent", ".",
+    ])
     blocked_paths: list[str] = field(default_factory=lambda: [
         "~/.ssh", "~/.gnupg", "~/Library/Keychains", "/System", "/Library",
     ])
@@ -31,7 +33,12 @@ class SecuritySettings:
     excluded_apps: list[str] = field(default_factory=list)
     dry_run: bool = False
     allow_shell: bool = False
+    shell_allowed_commands: list[str] = field(default_factory=list)
+    strict_mode: bool = True
+    confirm_medium: bool = True
     max_actions: int = 24
+    max_clicks_per_minute: int = 60
+    max_consecutive_failures: int = 3
 
 
 @dataclass
@@ -39,6 +46,7 @@ class StorageSettings:
     checkpoints: str = "~/.deskagent/checkpoints.sqlite"
     memory: str = "~/.deskagent/memory.sqlite"
     telemetry: str = "~/.deskagent/telemetry.jsonl"
+    audit: str = "~/.deskagent/audit.sqlite"
     skills: str = "~/.deskagent/skills"
 
 
@@ -80,9 +88,14 @@ class Settings(BaseConfig):
         "MODEL": "llm.model", "PROVIDER": "llm.provider", "BASE_URL": "llm.base_url",
         "API_KEY": "llm.api_key", "CHECKPOINTS": "storage.checkpoints",
         "MEMORY": "storage.memory", "TELEMETRY": "storage.telemetry", "SKILLS": "storage.skills",
+        "AUDIT": "storage.audit",
         "ALLOWED_PATHS": "security.allowed_paths", "ALLOWED_APPLICATIONS": "security.allowed_applications",
         "EXCLUDED_APPS": "security.excluded_apps", "DRY_RUN": "security.dry_run",
         "ALLOW_SHELL": "security.allow_shell", "MAX_ACTIONS": "security.max_actions",
+        "SHELL_ALLOWED_COMMANDS": "security.shell_allowed_commands",
+        "STRICT_MODE": "security.strict_mode", "CONFIRM_MEDIUM": "security.confirm_medium",
+        "MAX_CLICKS_PER_MINUTE": "security.max_clicks_per_minute",
+        "MAX_CONSECUTIVE_FAILURES": "security.max_consecutive_failures",
         "MAX_ITERATIONS": "agent.max_iterations", "MAX_TOOLS": "agent.max_tools",
         "VISION_ENABLED": "vision.enabled", "AUDIO_ENABLED": "audio.enabled",
     }
@@ -100,6 +113,8 @@ class Settings(BaseConfig):
             raise ValueError("Agent limits must be positive")
         if self.security.max_actions < 1:
             raise ValueError("security.max_actions must be positive")
+        if self.security.max_clicks_per_minute < 1 or self.security.max_consecutive_failures < 1:
+            raise ValueError("Security rate and repeat limits must be positive")
         if self.llm.context_window < 1 or self.llm.max_tokens < 1:
             raise ValueError("LLM token limits must be positive")
         return self
