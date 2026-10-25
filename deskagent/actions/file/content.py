@@ -209,6 +209,7 @@ class ClearFile(Action):
     description = "Empty the content of a file without deleting it"
     category = ActionCategory.FILE
     risk_level = RiskLevel.HIGH
+    requires_confirmation = True
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):

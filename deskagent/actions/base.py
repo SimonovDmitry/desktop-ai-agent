@@ -9,9 +9,11 @@ class Action(ABC):
     name: str
     description: str
     category: ActionCategory
-    risk_level: RiskLevel
+    risk_level: RiskLevel = RiskLevel.LOW
     requires_confirmation: bool = False
     reversible: bool = False
+    required_permissions: tuple[str, ...] = ()
+    discoverable: bool = True
     parameters_schema: dict = {}
 
     @abstractmethod
@@ -37,8 +39,11 @@ class ActionRegistry:
             )
 
         if name in self._actions:
+            current = self._actions[name]
             raise ValueError(
-                f"Action already registered: {name}"
+                f"Action already registered: {name} "
+                f"({current.__module__}.{current.__name__} and "
+                f"{action_class.__module__}.{action_class.__name__})"
             )
 
         self._actions[name] = action_class

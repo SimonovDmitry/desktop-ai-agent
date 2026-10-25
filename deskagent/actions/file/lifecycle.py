@@ -48,7 +48,7 @@ class TrashFile(Action):
     description = "Move a file to the Trash/Recycle Bin (safer than delete)"
     category = ActionCategory.FILE
     risk_level = RiskLevel.MEDIUM
-    requires_confirmation = False
+    requires_confirmation = True
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):

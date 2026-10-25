@@ -20,7 +20,7 @@ class ResizeWindow(Action):
         dw = parameters.get('delta_width')
         dh = parameters.get('delta_height')
         try:
-            new_size = context.services.window.size.resize_relative(win_id, dw, dh)
+            new_size = context.services.window.size.resize(win_id, dw, dh)
             return ActionResult(success=True, data={"window_id": win_id, "width": new_size['width'], "height": new_size['height']})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -44,7 +44,7 @@ class ResizeWindowTo(Action):
         w = parameters.get('width')
         h = parameters.get('height')
         try:
-            context.services.window.size.resize_absolute(win_id, w, h)
+            context.services.window.size.resize_to(win_id, w, h)
             return ActionResult(success=True, data={"window_id": win_id, "size": {"width": w, "height": h}})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -106,7 +106,7 @@ class SetWindowSize(Action):
         w = parameters.get('width')
         h = parameters.get('height')
         try:
-            context.services.window.size.resize_absolute(win_id, w, h)
+            context.services.window.size.set_size(win_id, w, h)
             return ActionResult(success=True, data={"width": w, "height": h})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -146,7 +146,7 @@ class MaximizeWindowToDisplay(Action):
         win_id = parameters.get('window_id')
         disp_id = parameters.get('display_id')
         try:
-            bounds = context.services.window.size.maximize_on_display(win_id, disp_id)
+            bounds = context.services.window.size.maximize_to_display(win_id, disp_id)
             return ActionResult(success=True, data={"window_id": win_id, "bounds": bounds})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

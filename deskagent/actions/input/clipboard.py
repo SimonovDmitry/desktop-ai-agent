@@ -1,6 +1,5 @@
 from deskagent.actions.base import Action
 from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
-import time
 
 
 class CopyText(Action):
@@ -12,9 +11,7 @@ class CopyText(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.copy()
-            time.sleep(0.1)
-            text = context.services.system.clipboard.get_clipboard()
+            text = context.services.input.clipboard.copy_text()
 
             return ActionResult(success=True, data={
                 "copied": True,
@@ -25,6 +22,7 @@ class CopyText(Action):
 
 
 class PasteText(Action):
+    discoverable = False
     name = "paste_text"
     description = "Place specific text into the clipboard and trigger the 'Paste' command"
     category = ActionCategory.SYSTEM
@@ -39,8 +37,7 @@ class PasteText(Action):
             return ActionResult(success=False, error="Parameter 'text' is required", error_code="MISSING_PARAM")
 
         try:
-            context.services.system.clipboard.set_clipboard(text)
-            context.services.system.keyboard.paste()
+            context.services.input.clipboard.paste_text(text)
 
             return ActionResult(success=True, data={
                 "pasted": True,
@@ -58,11 +55,7 @@ class GetSelectedText(Action):
 
     def execute(self, context, parameters):
         try:
-            old_content = context.services.system.clipboard.get_clipboard()
-
-            context.services.system.keyboard.copy()
-            time.sleep(0.1)
-            selected_text = context.services.system.clipboard.get_clipboard()
+            selected_text = context.services.input.clipboard.get_selected_text()
             return ActionResult(success=True, data={
                 "selected": True,
                 "text": selected_text or ""
@@ -85,8 +78,7 @@ class ReplaceSelectedText(Action):
         if text is None: return ActionResult(success=False, error="Missing text")
 
         try:
-            context.services.system.clipboard.set_clipboard(text)
-            context.services.system.keyboard.paste()
+            context.services.input.clipboard.replace_selected_text(text)
 
             return ActionResult(success=True, data={
                 "replaced": True,
@@ -110,10 +102,8 @@ class AppendToClipboard(Action):
         separator = parameters.get('separator', "\n")
 
         try:
-            current = context.services.system.clipboard.get_clipboard() or ""
-            new_content = current + separator + text if current else text
-
-            context.services.system.clipboard.set_clipboard(new_content)
+            context.services.input.clipboard.append_to_clipboard(text, separator)
+            new_content = text
             return ActionResult(success=True, data={
                 "appended": True,
                 "text_length": len(new_content)
@@ -130,7 +120,7 @@ class ClearClipboard(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.clipboard.clean_clipboard()
+            context.services.input.clipboard.clear_clipboard()
             return ActionResult(success=True, data={"cleared": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))

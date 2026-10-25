@@ -20,6 +20,7 @@ class GetCursorPosition(Action):
 
 
 class MoveMouse(Action):
+    discoverable = False
     name = "move_mouse"
     description = "Move the mouse cursor to specific coordinates"
     category = ActionCategory.SYSTEM
@@ -108,6 +109,7 @@ class DoubleClick(Action):
 
 
 class DragMouse(Action):
+    discoverable = False
     name = "drag_mouse"
     description = "Drag the mouse from one point to another"
     category = ActionCategory.SYSTEM
@@ -138,6 +140,7 @@ class DragMouse(Action):
 
 
 class ScrollMouse(Action):
+    discoverable = False
     name = "scroll_mouse"
     description = "Scroll the mouse wheel"
     category = ActionCategory.SYSTEM

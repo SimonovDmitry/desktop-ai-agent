@@ -50,7 +50,7 @@ class GetWindowAlwaysOnTop(Action):
     def execute(self, context, parameters):
         win_id = parameters.get('window_id')
         try:
-            is_on_top = context.services.window.appearance.is_always_on_top(win_id)
+            is_on_top = context.services.window.appearance.get_always_on_top(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "always_on_top": is_on_top})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

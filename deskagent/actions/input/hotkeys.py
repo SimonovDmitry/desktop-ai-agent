@@ -30,7 +30,7 @@ class RegisterHotkey(Action):
             return ActionResult(success=False, error="Hotkey and action are required", error_code="MISSING_PARAM")
 
         try:
-            context.services.system.keyboard.register_hotkey(hotkey, action_id)
+            context.services.input.hotkeys.register_hotkey(hotkey, action_id)
             return ActionResult(success=True, data={"hotkey": hotkey, "registered": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -48,7 +48,7 @@ class UnregisterHotkey(Action):
     def execute(self, context, parameters):
         hotkey = parameters.get('hotkey')
         try:
-            context.services.system.keyboard.unregister_hotkey(hotkey)
+            context.services.input.hotkeys.unregister_hotkey(hotkey)
             return ActionResult(success=True, data={"hotkey": hotkey, "unregistered": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -63,7 +63,7 @@ class UnregisterAllHotkeys(Action):
 
     def execute(self, context, parameters):
         try:
-            count = context.services.system.keyboard.unregister_all_hotkeys()
+            count = context.services.input.hotkeys.unregister_all_hotkeys()
             return ActionResult(success=True, data={"removed": count})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -78,7 +78,7 @@ class GetRegisteredHotkeys(Action):
 
     def execute(self, context, parameters):
         try:
-            hotkeys = context.services.system.keyboard.get_registered_hotkeys()
+            hotkeys = context.services.input.hotkeys.get_registered_hotkeys()
             return ActionResult(success=True, data={"hotkeys": hotkeys})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -95,7 +95,7 @@ class IsHotkeyRegistered(Action):
     def execute(self, context, parameters):
         hotkey = parameters.get('hotkey')
         try:
-            is_reg = context.services.system.keyboard.is_hotkey_registered(hotkey)
+            is_reg = context.services.input.hotkeys.is_hotkey_registered(hotkey)
             return ActionResult(success=True, data={"hotkey": hotkey, "registered": is_reg})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -113,7 +113,7 @@ class TriggerHotkey(Action):
     def execute(self, context, parameters):
         hotkey = parameters.get('hotkey')
         try:
-            context.services.system.keyboard.trigger_hotkey(hotkey)
+            context.services.input.hotkeys.trigger_hotkey(hotkey)
             return ActionResult(success=True, data={"hotkey": hotkey, "triggered": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="NOT_FOUND")

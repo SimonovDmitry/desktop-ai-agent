@@ -21,9 +21,7 @@ class MoveAndClick(Action):
             return ActionResult(success=False, error="X and Y coordinates are required", error_code="MISSING_PARAM")
 
         try:
-            context.services.system.mouse.move_mouse(x, y)
-            time.sleep(0.05)
-            context.services.system.mouse.click(btn)
+            context.services.input.gestures.move_and_click(x, y, btn)
             return ActionResult(success=True, data={"position": {"x": x, "y": y}, "button": btn, "clicked": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -44,9 +42,7 @@ class MoveAndDoubleClick(Action):
         x, y = parameters.get('x'), parameters.get('y')
         btn = parameters.get('button', 'left')
         try:
-            context.services.system.mouse.move_mouse(x, y)
-            time.sleep(0.05)
-            context.services.system.mouse.double_click(btn)
+            context.services.input.gestures.move_and_double_click(x, y, btn)
             return ActionResult(success=True,
                                 data={"position": {"x": x, "y": y}, "button": btn, "clicked": True, "click_count": 2})
         except Exception as exc:
@@ -70,12 +66,9 @@ class DragGesture(Action):
     def execute(self, context, parameters):
         p = parameters
         try:
-            context.services.system.mouse.drag_mouse(
-                p['start_x'], p['start_y'],
-                p['end_x'], p['end_y'],
-                p.get('button', 'left'),
-                p.get('duration', 0.5)
-            )
+            context.services.input.gestures.drag_gesture(
+                p['start_x'], p['start_y'], p['end_x'], p['end_y'],
+                p.get('button', 'left'), p.get('duration', 0.5))
             return ActionResult(success=True, data={"gesture": "drag", "completed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -96,8 +89,8 @@ class SwipeGesture(Action):
     def execute(self, context, parameters):
         p = parameters
         try:
-            context.services.system.mouse.move_smooth(p['start_x'], p['start_y'], 0.05)
-            context.services.system.mouse.move_smooth(p['end_x'], p['end_y'], p.get('duration', 0.3))
+            context.services.input.gestures.swipe_gesture(
+                p['start_x'], p['start_y'], p['end_x'], p['end_y'], p.get('duration', 0.3))
             return ActionResult(success=True, data={"gesture": "swipe", "completed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -116,9 +109,7 @@ class ClickAndHold(Action):
         btn = parameters.get('button', 'left')
         dur = parameters.get('duration')
         try:
-            context.services.system.mouse.mouse_down(btn)
-            time.sleep(dur)
-            context.services.system.mouse.mouse_up(btn)
+            context.services.input.gestures.click_and_hold(btn, dur)
             return ActionResult(success=True, data={"button": btn, "duration": dur, "completed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -137,14 +128,7 @@ class ScrollGesture(Action):
         direction = parameters.get('direction')
         amount = parameters.get('amount')
         try:
-            if direction == "up":
-                context.services.system.mouse.scroll_mouse(amount)
-            elif direction == "down":
-                context.services.system.mouse.scroll_mouse(-amount)
-            elif direction == "left":
-                context.services.system.mouse.scroll_horizontal(-amount)
-            elif direction == "right":
-                context.services.system.mouse.scroll_horizontal(amount)
+            context.services.input.gestures.scroll_gesture(direction, amount)
 
             return ActionResult(success=True, data={"direction": direction, "amount": amount, "completed": True})
         except Exception as exc:
@@ -166,9 +150,7 @@ class MultiClickGesture(Action):
         btn = parameters.get('button', 'left')
         interval = parameters.get('interval', 0.1)
         try:
-            for _ in range(count):
-                context.services.system.mouse.click(btn)
-                time.sleep(interval)
+            context.services.input.gestures.multi_click_gesture(count, btn, interval)
             return ActionResult(success=True, data={"count": count, "completed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))

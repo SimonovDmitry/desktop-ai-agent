@@ -13,7 +13,7 @@ class GetMousePosition(Action):
 
     def execute(self, context, parameters):
         try:
-            pos = context.services.system.mouse.get_cursor_position()
+            pos = context.services.input.mouse.get_mouse_position()
             return ActionResult(success=True, data=pos)
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -28,7 +28,7 @@ class GetMouseButtonState(Action):
 
     def execute(self, context, parameters):
         try:
-            state = context.services.system.mouse.get_button_state()
+            state = context.services.input.mouse.get_mouse_button_state()
             return ActionResult(success=True, data=state)
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -49,7 +49,7 @@ class MoveMouse(Action):
         if x is None or y is None:
             return ActionResult(success=False, error="X and Y are required", error_code="MISSING_PARAM")
         try:
-            context.services.system.mouse.move_mouse(x, y)
+            context.services.input.mouse.move_mouse(x, y)
             return ActionResult(success=True, data={"x": x, "y": y, "moved": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -67,7 +67,7 @@ class MoveMouseRelative(Action):
     def execute(self, context, parameters):
         dx, dy = parameters.get('dx'), parameters.get('dy')
         try:
-            new_pos = context.services.system.mouse.move_relative(dx, dy)
+            new_pos = context.services.input.mouse.move_mouse_relative(dx, dy)
             return ActionResult(success=True, data={"dx": dx, "dy": dy, "moved": True, "new_pos": new_pos})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -87,7 +87,7 @@ class MoveMouseSmoothly(Action):
         x, y = parameters.get('x'), parameters.get('y')
         duration = parameters.get('duration', 0.5)
         try:
-            context.services.system.mouse.move_smooth(x, y, duration)
+            context.services.input.mouse.move_mouse_smoothly(x, y, duration)
             return ActionResult(success=True, data={"x": x, "y": y, "duration": duration, "moved": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -105,7 +105,7 @@ class ClickMouse(Action):
     def execute(self, context, parameters):
         btn = parameters.get('button', 'left')
         try:
-            context.services.system.mouse.click(btn)
+            context.services.input.mouse.click_mouse(btn)
             return ActionResult(success=True, data={"button": btn, "clicked": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -123,7 +123,7 @@ class DoubleClickMouse(Action):
     def execute(self, context, parameters):
         btn = parameters.get('button', 'left')
         try:
-            context.services.system.mouse.double_click(btn)
+            context.services.input.mouse.double_click_mouse(btn)
             return ActionResult(success=True, data={"button": btn, "clicked": True, "click_count": 2})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -141,7 +141,7 @@ class TripleClickMouse(Action):
     def execute(self, context, parameters):
         btn = parameters.get('button', 'left')
         try:
-            context.services.system.mouse.triple_click(btn)
+            context.services.input.mouse.triple_click_mouse(btn)
             return ActionResult(success=True, data={"button": btn, "click_count": 3})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -159,7 +159,7 @@ class MouseDown(Action):
     def execute(self, context, parameters):
         btn = parameters.get('button')
         try:
-            context.services.system.mouse.mouse_down(btn)
+            context.services.input.mouse.mouse_down(btn)
             return ActionResult(success=True, data={"button": btn, "pressed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -176,7 +176,7 @@ class MouseUp(Action):
     def execute(self, context, parameters):
         btn = parameters.get('button')
         try:
-            context.services.system.mouse.mouse_up(btn)
+            context.services.input.mouse.mouse_up(btn)
             return ActionResult(success=True, data={"button": btn, "released": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -199,12 +199,34 @@ class DragMouse(Action):
     def execute(self, context, parameters):
         p = parameters
         try:
-            context.services.system.mouse.drag_mouse(p['x1'], p['y1'], p['x2'], p['y2'], p.get('button', 'left'))
+            context.services.input.mouse.drag_mouse(p['x1'], p['y1'], p['x2'], p['y2'], p.get('button', 'left'))
             return ActionResult(success=True, data={
                 "from": {"x": p['x1'], "y": p['y1']},
                 "to": {"x": p['x2'], "y": p['y2']},
                 "dragged": True
             })
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc))
+
+
+class DragMouseRelative(Action):
+    name = "drag_mouse_relative"
+    description = "Drag from the current cursor position by a relative offset"
+    category = ActionCategory.INPUT
+    risk_level = RiskLevel.MEDIUM
+    parameters_schema = {
+        "dx": {"type": "integer", "required": True},
+        "dy": {"type": "integer", "required": True},
+        "button": {"type": "string", "required": False, "default": "left"},
+        "duration": {"type": "float", "required": False, "default": 0.5},
+    }
+
+    def execute(self, context, parameters):
+        try:
+            context.services.input.mouse.drag_mouse_relative(
+                parameters["dx"], parameters["dy"], parameters.get("button", "left"),
+                parameters.get("duration", 0.5))
+            return ActionResult(success=True, data={"dragged": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -220,7 +242,7 @@ class ScrollMouse(Action):
     def execute(self, context, parameters):
         clicks = parameters.get('clicks')
         try:
-            context.services.system.mouse.scroll_mouse(clicks)
+            context.services.input.mouse.scroll_mouse(clicks)
             return ActionResult(success=True, data={"clicks": clicks, "scrolled": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -237,7 +259,7 @@ class HorizontalScrollMouse(Action):
     def execute(self, context, parameters):
         clicks = parameters.get('clicks')
         try:
-            context.services.system.mouse.scroll_horizontal(clicks)
+            context.services.input.mouse.horizontal_scroll_mouse(clicks)
             return ActionResult(success=True, data={"clicks": clicks, "scrolled": True, "direction": "horizontal"})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
