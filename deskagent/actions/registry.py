@@ -210,7 +210,7 @@ from deskagent.actions.window.state import (
 )
 
 def create_action_registry():
-    registry = ActionRegistry()
+    registry = ActionRegistry(ignore_duplicates=True)
 
     registry.register(LaunchApplication)
     registry.register(LaunchApplicationWithArguments)

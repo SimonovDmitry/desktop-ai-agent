@@ -1,9 +1,6 @@
 import uuid
 from dataclasses import dataclass, field
-from operator import add
-from typing import Annotated, Any, TypedDict
-
-from langgraph.graph.message import add_messages
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -15,9 +12,38 @@ class ActionExecution:
     data: Any = None
     error: str | None = None
     error_code: str | None = None
+    verified: bool | None = None
+    verification_error: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {"success": self.success, "data": self.data, "error": self.error, "error_code": self.error_code}
+        return {
+            "tool_call_id": self.tool_call_id, "name": self.name, "parameters": self.parameters,
+            "success": self.success, "data": self.data, "error": self.error,
+            "error_code": self.error_code, "verified": self.verified,
+            "verification_error": self.verification_error,
+        }
+
+    def tool_result(self) -> dict[str, Any]:
+        return {key: self.to_dict()[key] for key in (
+            "success", "data", "error", "error_code", "verified", "verification_error",
+        )}
+
+    @classmethod
+    def from_dict(cls, value: dict[str, Any]) -> "ActionExecution":
+        return cls(**{key: value.get(key) for key in cls.__dataclass_fields__})
+
+
+@dataclass(frozen=True)
+class PlanStep:
+    id: str
+    description: str
+    action: str | None = None
+    status: str = "pending"
+    attempts: int = 0
+    dependencies: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {key: getattr(self, key) for key in self.__dataclass_fields__}
 
 
 @dataclass(frozen=True)
@@ -26,6 +52,19 @@ class AgentResponse:
     actions: list[ActionExecution] = field(default_factory=list)
     thread_id: str | None = None
     error: str | None = None
+    pending_confirmation: dict[str, Any] | None = None
+    plan: list[dict[str, Any]] = field(default_factory=list)
+
+    @property
+    def interrupted(self) -> bool:
+        return self.pending_confirmation is not None
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "content": self.content, "actions": [action.to_dict() for action in self.actions],
+            "thread_id": self.thread_id, "error": self.error,
+            "pending_confirmation": self.pending_confirmation, "plan": self.plan,
+        }
 
 
 @dataclass
@@ -34,10 +73,3 @@ class AgentSession:
 
     def graph_config(self) -> dict:
         return {"configurable": {"thread_id": self.thread_id}}
-
-
-class AgentState(TypedDict, total=False):
-    messages: Annotated[list[Any], add_messages]
-    action_executions: Annotated[list[ActionExecution], add]
-    iterations: int
-    error: str | None

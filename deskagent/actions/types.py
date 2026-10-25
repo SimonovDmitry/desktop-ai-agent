@@ -17,6 +17,14 @@ class ActionCategory(Enum):
     WINDOW = "window"
     INPUT = "input"
     FILE = "file"
+    BROWSER = "browser"
+    NOTES = "notes"
+    CALENDAR = "calendar"
+    PRODUCTIVITY = "productivity"
+    ACTIVITY = "activity"
+    COMMUNICATION = "communication"
+    MEDIA = "media"
+    CODE = "code"
 
 
 @dataclass

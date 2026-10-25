@@ -1,5 +1,7 @@
-from agent.llm.config import LLMConfig
+from deskagent.agent.llm.config import LLMConfig
 from deskagent.agent.llm.openai_compatible import OpenAICompatibleLLM
+
+__test__ = False
 
 
 SYSTEM_PROMPT = """

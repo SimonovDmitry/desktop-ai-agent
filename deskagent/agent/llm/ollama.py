@@ -63,6 +63,9 @@ class OllamaLLM(LLMProvider):
     def is_available(self) -> bool:
         return self.runtime.has_model()
 
+    def close(self):
+        self.runtime.stop()
+
     @staticmethod
     def _content_to_text(content: Any) -> str:
         if isinstance(content, str):

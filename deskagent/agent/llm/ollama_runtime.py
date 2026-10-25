@@ -26,6 +26,10 @@ class OllamaRuntime:
                 raise LLMProviderError(f"Ollama model is not installed: {self.config.model}")
             self._run("pull", self.config.model)
 
+    def stop(self):
+        self._require_binary()
+        self._run("stop", self.config.model)
+
     def has_model(self) -> bool:
         try:
             with urlopen(f"{self.config.base_url.rstrip('/')}/api/tags", timeout=2) as response:

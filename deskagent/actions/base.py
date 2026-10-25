@@ -20,8 +20,9 @@ class Action(ABC):
 
 
 class ActionRegistry:
-    def __init__(self):
+    def __init__(self, ignore_duplicates=False):
         self._actions: dict[str, Type[Action]] = {}
+        self.ignore_duplicates = ignore_duplicates
 
     def register(self, action_class: Type[Action]) -> None:
         if not issubclass(action_class, Action):
@@ -37,6 +38,8 @@ class ActionRegistry:
             )
 
         if name in self._actions:
+            if self.ignore_duplicates:
+                return
             raise ValueError(
                 f"Action already registered: {name}"
             )
