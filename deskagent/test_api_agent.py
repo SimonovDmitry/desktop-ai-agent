@@ -1,5 +1,5 @@
 from agent.llm.config import LLMConfig
-from agent.llm.qwen import QwenLLM
+from deskagent.agent.llm.openai_compatible import OpenAICompatibleLLM
 
 
 SYSTEM_PROMPT = """
@@ -28,7 +28,7 @@ def test_api():
         enable_thinking=False
     )
 
-    llm = QwenLLM(config)
+    llm = OpenAICompatibleLLM(config)
 
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},

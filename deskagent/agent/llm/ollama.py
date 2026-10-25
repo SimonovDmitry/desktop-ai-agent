@@ -1,17 +1,20 @@
-import json
 from collections.abc import Iterable
 from typing import Any
-from urllib.error import URLError
-from urllib.request import urlopen
 
 from deskagent.agent.llm.base import LLMProvider, LLMProviderError
 from deskagent.agent.llm.config import LLMConfig
+from deskagent.agent.llm.ollama_runtime import OllamaRuntime
 from deskagent.agent.llm.response import LLMResponse, ToolCall
 
 
 class OllamaLLM(LLMProvider):
     def __init__(self, config: LLMConfig | None = None):
         self.config = config or LLMConfig()
+        if not self.config.model.strip():
+            raise LLMProviderError("Model name is required")
+        self.runtime = OllamaRuntime(self.config)
+        if self.config.manage_runtime:
+            self.runtime.prepare()
         self._model = self._create_model()
 
     def _create_model(self):
@@ -58,15 +61,7 @@ class OllamaLLM(LLMProvider):
             raise LLMProviderError(f"Ollama stream failed: {exc}") from exc
 
     def is_available(self) -> bool:
-        url = f"{self.config.base_url.rstrip('/')}/api/tags"
-        try:
-            with urlopen(url, timeout=2) as response:
-                payload = json.loads(response.read())
-        except (OSError, URLError, json.JSONDecodeError):
-            return False
-
-        target_base = self.config.model.split(":")[0]
-        return any(m.get("name", "").split(":")[0] == target_base for m in payload.get("models", []))
+        return self.runtime.has_model()
 
     @staticmethod
     def _content_to_text(content: Any) -> str:
