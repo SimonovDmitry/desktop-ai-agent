@@ -14,6 +14,7 @@ from deskagent.agent.capabilities.tools import ActionToolCatalog
 from deskagent.agent.core.models import ActionExecution, PlanStep
 from deskagent.agent.core.prompts import build_system_prompt
 from deskagent.agent.core.state import AgentState
+from deskagent.safety.confirmation import ConfirmationRequest, PreviewBuilder
 
 
 class AgentGraph:
@@ -50,6 +51,9 @@ class AgentGraph:
         return {"selected_actions": selected}
 
     def _call_model(self, state: AgentState) -> dict[str, Any]:
+        if state.get("error"):
+            message = f"Execution stopped by the safety system: {state['error']}. Review the action or ask for help."
+            return {"messages": [{"role": "assistant", "content": message}]}
         prompt = build_system_prompt(state.get("screen_context"), state.get("system_context"), state.get("plan"))
         messages = [{"role": "system", "content": prompt}, *state.get("messages", [])]
         iterations = state.get("iterations", 0) + 1
@@ -81,11 +85,17 @@ class AgentGraph:
                 status = "waiting_confirmation" if decision.confirmation_required else "ready"
                 plan.append(PlanStep(call.id, f"Run {call.name}", call.name, status=status).to_dict())
             if decision.allowed and decision.confirmation_required:
-                confirmations.append({"id": call.id, "action": call.name, "parameters": call.arguments,
-                                      "risk": self.tools.registry.get(call.name).risk_level.value})
+                confirmations.append(item)
         confirmation = None
         if confirmations:
-            confirmation = {"question": "Approve dangerous actions?", "actions": confirmations}
+            confirmation = PreviewBuilder.build(confirmations).to_dict()
+        for item in pending:
+            call = ToolCall.from_value(item)
+            policy = item.get("policy", {})
+            self.tools.audit_decision(
+                call, policy, state.get("thread_id"),
+                confirmation.get("confirmation_id") if confirmation and policy.get("confirmation_required") else None,
+            )
         return {"pending_tool_calls": pending, "pending_confirmation": confirmation,
                 "confirmation_approved": None, "plan": plan}
 
@@ -93,27 +103,36 @@ class AgentGraph:
         payload = state.get("pending_confirmation") or {}
         self._emit("confirmation_needed", payload)
         answer = interrupt(payload)
-        approved = answer.get("approved", False) if isinstance(answer, dict) else bool(answer)
+        approved = ConfirmationRequest.from_dict(payload).verify(answer)
         return {"confirmation_approved": approved}
 
     def _execute_tools(self, state: AgentState):
-        executions, approved = [], state.get("confirmation_approved")
+        executions, approved, safety_error = [], state.get("confirmation_approved"), None
         for item in state.get("pending_tool_calls", []):
             call, policy = ToolCall.from_value(item), item.get("policy", {})
             if not policy.get("allowed", True):
                 execution = self._failed(call, policy.get("reason"), "POLICY_DENIED")
+                if policy.get("reason_code") in {"ACTION_LIMIT", "REPEAT_LIMIT", "EMERGENCY_STOP", "CLICK_RATE_LIMIT"}:
+                    safety_error = policy.get("reason")
             elif policy.get("confirmation_required") and not approved:
                 execution = self._failed(call, "Action was not approved", "ACTION_CANCELLED")
             elif policy.get("dry_run"):
                 execution = ActionExecution(call.id, call.name, call.arguments, True, {"dry_run": True})
+                self.tools.audit_execution(execution, state.get("thread_id"), "dry_run", policy.get("risk"))
             else:
                 self._emit("action_started", {"id": call.id, "name": call.name, "parameters": call.arguments})
                 with self.telemetry.span("action", action=call.name):
-                    execution = self.tools.execute(call)
+                    execution = self.tools.execute(call, state.get("thread_id"), policy.get("risk"))
+                if execution.error_code in {"REPEAT_LIMIT", "EMERGENCY_STOP", "CLICK_RATE_LIMIT"}:
+                    safety_error = execution.error
+            if not policy.get("allowed", True) or (policy.get("confirmation_required") and not approved):
+                self.tools.audit_execution(
+                    execution, state.get("thread_id"), "not_executed", policy.get("risk"),
+                )
             executions.append(execution.to_dict())
             self._emit("action_finished", execution.to_dict())
         return {"current_executions": executions, "action_count": state.get("action_count", 0) + len(executions),
-                "pending_confirmation": None, "confirmation_approved": None}
+                "pending_confirmation": None, "confirmation_approved": None, "error": safety_error}
 
     def _verify(self, state: AgentState):
         verified, plan = [], list(state.get("plan", []))

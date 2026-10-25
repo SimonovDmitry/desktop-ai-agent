@@ -39,18 +39,20 @@ class DesktopAgent:
         if before.interrupts:
             return self._response(before, session.thread_id, len(before.values.get("action_executions", [])))
         previous = len(before.values.get("action_executions", []))
-        state = self.graph.graph.invoke(self._input(request, screen_context, system_context), config=config)
+        state = self.graph.graph.invoke(self._input(request, screen_context, system_context, session.thread_id), config=config)
         response = self._response(self.graph.graph.get_state(config), session.thread_id, previous, state)
         self._remember(request, response)
         return response
 
-    def confirm(self, thread_id: str, approved=True) -> AgentResponse:
+    def confirm(self, thread_id: str, approved=True, text: str | None = None,
+                confirmation_id: str | None = None) -> AgentResponse:
         session = AgentSession(thread_id)
         config, before = session.graph_config(), self.graph.graph.get_state(session.graph_config())
         if not before.interrupts:
             raise ValueError(f"Session is not waiting for confirmation: {thread_id}")
         previous = len(before.values.get("action_executions", []))
-        state = self.graph.graph.invoke(Command(resume={"approved": approved}), config=config)
+        answer = {"approved": approved, "text": text, "confirmation_id": confirmation_id}
+        state = self.graph.graph.invoke(Command(resume=answer), config=config)
         return self._response(self.graph.graph.get_state(config), thread_id, previous, state)
 
     def resume(self, thread_id: str, value=True) -> AgentResponse:
@@ -75,7 +77,7 @@ class DesktopAgent:
             yield {"event": "confirmation_needed", "data": snapshot.values.get("pending_confirmation")}
             return
         for chunk in self.graph.graph.stream(
-            self._input(request, screen_context, system_context), config=config,
+            self._input(request, screen_context, system_context, session.thread_id), config=config,
             stream_mode=("custom", "updates"), version="v2",
         ):
             event = self._stream_event(chunk)
@@ -87,7 +89,7 @@ class DesktopAgent:
         yield {"event": "done", "data": response.to_dict()}
         self._remember(request, response)
 
-    def _input(self, request, screen_context=None, system_context=None):
+    def _input(self, request, screen_context=None, system_context=None, thread_id=None):
         screen, system = self.context_collector.collect() if self.context_collector else ({}, {})
         screen.update(screen_context or {})
         system.update(system_context or {})
@@ -95,8 +97,15 @@ class DesktopAgent:
             "messages": [self.conversation.user_message(request)], "screen_context": screen,
             "system_context": system, "plan": [], "iterations": 0, "action_count": 0,
             "current_executions": [], "pending_tool_calls": [], "pending_confirmation": None,
-            "confirmation_approved": None, "error": None,
+            "confirmation_approved": None, "error": None, "thread_id": thread_id or "",
         }
+
+    def emergency_stop(self):
+        """Stop this agent before its next action (including a queued action)."""
+        self.graph.tools.limits.emergency_stop.trigger()
+
+    def reset_emergency_stop(self):
+        self.graph.tools.limits.emergency_stop.reset()
 
     def _response(self, snapshot, thread_id, previous=0, fallback=None):
         state = snapshot.values or fallback or {}

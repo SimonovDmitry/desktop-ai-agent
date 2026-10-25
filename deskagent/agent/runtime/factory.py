@@ -23,6 +23,8 @@ from deskagent.core.config import Settings
 from deskagent.core.context import ActionContext
 from deskagent.core.permissions import PermissionManager
 from deskagent.core.services import ServicesFactory
+from deskagent.safety.audit import AuditLog
+from deskagent.safety.limits import SafetyLimits
 
 
 @dataclass
@@ -34,8 +36,11 @@ class AgentRuntime:
 
     def create_agent(self, allowed_actions=None, max_iterations=8, max_tool_calls=6,
                      checkpointer=None, policy=None, router=None, telemetry=None, memory=None, screen_provider=None,
-                     event_bus=None, proactive_rules=None, skills=None):
-        tools = ActionToolCatalog(self.registry, self.executor, self.context, allowed_actions, policy)
+                     event_bus=None, proactive_rules=None, skills=None, audit_log=None, limits=None):
+        tools = ActionToolCatalog(
+            self.registry, self.executor, self.context, allowed_actions, policy,
+            audit_log=audit_log, limits=limits,
+        )
         graph = AgentGraph(self.llm, tools, max_iterations, max_tool_calls, checkpointer=checkpointer,
                            router=router, telemetry=telemetry)
         return DesktopAgent(
@@ -58,6 +63,8 @@ def create_desktop_agent(llm_config: LLMConfig, allowed_actions=None, max_iterat
     security = settings.security
     policy_config = policy_config or PolicyConfig(
         dry_run=security.dry_run, max_actions=security.max_actions, allow_shell=security.allow_shell,
+        strict_mode=security.strict_mode, confirm_medium=security.confirm_medium,
+        shell_allowed_commands=tuple(security.shell_allowed_commands),
         allowed_paths=tuple(security.allowed_paths), blocked_paths=tuple(security.blocked_paths),
         allowed_applications=tuple(security.allowed_applications),
     )
@@ -68,4 +75,6 @@ def create_desktop_agent(llm_config: LLMConfig, allowed_actions=None, max_iterat
         ActionPolicy(policy_config), ToolRouter(settings.agent.max_tools),
         Telemetry(telemetry_path or settings.storage.telemetry), memory, screen_provider,
         EventBus(), ProactiveRules(), SkillStore(registry, skills_path or settings.storage.skills),
+        AuditLog(settings.storage.audit),
+        SafetyLimits(security.max_clicks_per_minute, security.max_consecutive_failures),
     )

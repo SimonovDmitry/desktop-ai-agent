@@ -12,6 +12,7 @@ class AgentState(TypedDict, total=False):
     pending_tool_calls: list[dict[str, Any]]
     pending_confirmation: dict[str, Any] | None
     confirmation_approved: bool | None
+    thread_id: str
     screen_context: dict[str, Any]
     system_context: dict[str, Any]
     plan: list[dict[str, Any]]
