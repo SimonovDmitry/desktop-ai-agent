@@ -3,6 +3,7 @@ import re
 from typing import Any
 
 from deskagent.agent.llm.base import LLMProvider, LLMProviderError
+from deskagent.agent.llm.config import LLMConfig
 from deskagent.agent.llm.response import LLMResponse, ToolCall
 
 
@@ -84,17 +85,18 @@ def parse_tool_calls(text: str) -> tuple[str, list[ToolCall]]:
 
 
 class MLXLLM(LLMProvider):
-    def __init__(self, model_id: str, max_tokens: int = 1024):
+    def __init__(self, config: LLMConfig | str, max_tokens=1024):
         try:
             from mlx_lm import load
         except ImportError as exc:
             raise LLMProviderError("Package 'mlx-lm' is required for MLXLLM") from exc
-
-        self.model, self.tokenizer = load(model_id)
-        self.max_tokens = max_tokens
+        self.config = (config if isinstance(config, LLMConfig)
+                       else LLMConfig(provider="mlx", model=config, max_tokens=max_tokens)).validate()
+        self.model, self.tokenizer = load(self.config.model)
 
     def _build_prompt(self, messages, tools=None):
-        kwargs = {"tokenize": False, "add_generation_prompt": True, "enable_thinking": False}
+        kwargs = {"tokenize": False, "add_generation_prompt": True,
+                  "enable_thinking": self.config.enable_thinking}
         if tools:
             kwargs["tools"] = tools
         norm_messages = normalize_messages(messages)
@@ -102,14 +104,16 @@ class MLXLLM(LLMProvider):
 
     def _create_sampler(self):
         from mlx_lm.sample_utils import make_sampler
-        return make_sampler(temp=0.0, top_p=0.8, top_k=20)
+        return make_sampler(temp=self.config.temperature, top_p=self.config.top_p,
+                            top_k=self.config.top_k)
 
     def stream_generate(self, messages, tools=None):
         from mlx_lm import stream_generate
         prompt = self._build_prompt(messages, tools=tools)
         sampler = self._create_sampler()
         for response in stream_generate(
-            self.model, self.tokenizer, prompt=prompt, max_tokens=self.max_tokens, sampler=sampler
+            self.model, self.tokenizer, prompt=prompt, max_tokens=self.config.max_tokens,
+            sampler=sampler,
         ):
             yield response.text
 

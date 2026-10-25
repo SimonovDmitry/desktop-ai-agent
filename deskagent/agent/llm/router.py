@@ -22,11 +22,16 @@ class FallbackLLM(LLMProvider):
     def stream_generate(self, messages, tools=None):
         errors = []
         for provider in self.providers:
+            emitted = False
             try:
-                yield from provider.stream_generate(messages, tools)
+                for chunk in provider.stream_generate(messages, tools):
+                    emitted = True
+                    yield chunk
                 self.active_provider = provider
                 return
             except LLMProviderError as exc:
+                if emitted:
+                    raise
                 errors.append(str(exc))
         raise LLMProviderError("All LLM providers failed: " + " | ".join(errors))
 

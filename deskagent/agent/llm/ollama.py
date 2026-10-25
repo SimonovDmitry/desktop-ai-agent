@@ -9,9 +9,7 @@ from deskagent.agent.llm.response import LLMResponse, ToolCall
 
 class OllamaLLM(LLMProvider):
     def __init__(self, config: LLMConfig | None = None):
-        self.config = config or LLMConfig()
-        if not self.config.model.strip():
-            raise LLMProviderError("Model name is required")
+        self.config = (config or LLMConfig()).validate()
         self.runtime = OllamaRuntime(self.config)
         if self.config.manage_runtime:
             self.runtime.prepare()

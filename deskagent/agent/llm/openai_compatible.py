@@ -6,9 +6,7 @@ from deskagent.agent.llm.response import LLMResponse, ToolCall
 
 class OpenAICompatibleLLM(LLMProvider):
     def __init__(self, config):
-        if not config.model.strip():
-            raise LLMProviderError("Model name is required")
-        self.config = config
+        self.config = config.validate()
         self.client = OpenAI(base_url=config.base_url, api_key=config.api_key)
 
     def generate(self, messages, tools=None):
@@ -33,7 +31,11 @@ class OpenAICompatibleLLM(LLMProvider):
         )
 
     def stream_generate(self, messages, tools=None):
-        params = {"model": self.config.model, "messages": messages, "stream": True}
+        params = {
+            "model": self.config.model, "messages": messages, "stream": True,
+            "temperature": self.config.temperature, "max_tokens": self.config.max_tokens,
+            "top_p": self.config.top_p,
+        }
         if tools:
             params["tools"] = tools
         if self.config.extra_body:
