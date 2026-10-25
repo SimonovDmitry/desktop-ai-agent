@@ -5,8 +5,8 @@ from typing import Any
 from deskagent.actions.base import ActionRegistry
 from deskagent.actions.executor import ActionExecutor
 from deskagent.agent.llm.response import ToolCall
-from deskagent.agent.models import ActionExecution
-from deskagent.agent.policy import ActionPolicy
+from deskagent.agent.capabilities.policy import ActionPolicy
+from deskagent.agent.core.models import ActionExecution
 
 def create_mvp_action_registry() -> ActionRegistry:
     from deskagent.actions.application.information import (
@@ -53,7 +53,7 @@ class ActionToolCatalog:
 
     def policy_for(self, tool_call: ToolCall, action_count=0):
         if tool_call.name not in self.allowed_names:
-            from deskagent.agent.policy import PolicyDecision
+            from deskagent.agent.capabilities.policy import PolicyDecision
             return PolicyDecision(False, reason=f"Action is not allowed: {tool_call.name}")
         return self.policy.evaluate(self.registry.get(tool_call.name), tool_call.arguments, action_count)
 

@@ -85,6 +85,7 @@ class RemoveFromArchive(Action):
     description = "Remove specific files from inside an archive"
     category = ActionCategory.FILE
     risk_level = RiskLevel.MEDIUM
+    requires_confirmation = True
     parameters_schema = {
         "archive": {"type": "string", "required": True},
         "file_names": {"type": "list", "required": True, "description": "Internal paths inside the archive"}

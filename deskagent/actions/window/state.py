@@ -3,6 +3,7 @@ from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
 
 
 class GetWindowState(Action):
+    discoverable = False
     name = "get_window_state"
     description = "Get the current visual state of a specific window (normal, minimized, maximized, etc.)"
     category = ActionCategory.APPLICATION
@@ -50,6 +51,7 @@ class SetWindowState(Action):
 
 
 class MinimizeWindow(Action):
+    discoverable = False
     name = "minimize_window"
     description = "Minimize a specific window"
     category = ActionCategory.APPLICATION
@@ -66,6 +68,7 @@ class MinimizeWindow(Action):
 
 
 class MaximizeWindow(Action):
+    discoverable = False
     name = "maximize_window"
     description = "Maximize a specific window"
     category = ActionCategory.APPLICATION
@@ -82,6 +85,7 @@ class MaximizeWindow(Action):
 
 
 class RestoreWindow(Action):
+    discoverable = False
     name = "restore_window"
     description = "Restore a window to its normal (unmaximized/unminimized) state"
     category = ActionCategory.APPLICATION

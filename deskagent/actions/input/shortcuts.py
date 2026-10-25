@@ -17,7 +17,7 @@ class PressShortcut(Action):
         if not shortcut:
             return ActionResult(success=False, error="Missing shortcut parameter", error_code="MISSING_PARAM")
         try:
-            context.services.system.keyboard.press_shortcut(shortcut)
+            context.services.input.shortcuts.press_shortcut(shortcut)
             return ActionResult(success=True, data={"shortcut": shortcut, "executed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -40,7 +40,7 @@ class ExecuteShortcutSequence(Action):
 
         try:
             for s in shortcuts:
-                context.services.system.keyboard.press_shortcut(s)
+                context.services.input.shortcuts.press_shortcut(s)
                 time.sleep(delay)
             return ActionResult(success=True, data={"executed": len(shortcuts), "completed": True})
         except Exception as exc:
@@ -55,7 +55,7 @@ class Copy(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.copy()
+            context.services.input.shortcuts.copy()
             return ActionResult(success=True, data={"copied": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -69,7 +69,7 @@ class Paste(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.paste()
+            context.services.input.shortcuts.paste()
             return ActionResult(success=True, data={"pasted": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -83,7 +83,7 @@ class Cut(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.cut()
+            context.services.input.shortcuts.cut()
             return ActionResult(success=True, data={"cut": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -97,7 +97,7 @@ class Undo(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.undo()
+            context.services.input.shortcuts.undo()
             return ActionResult(success=True, data={"undone": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -111,7 +111,7 @@ class Redo(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.redo()
+            context.services.input.shortcuts.redo()
             return ActionResult(success=True, data={"redone": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -126,8 +126,23 @@ class Save(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.save()
+            context.services.input.shortcuts.save()
             return ActionResult(success=True, data={"saved": True})
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc))
+
+
+class SaveAs(Action):
+    name = "save_as"
+    description = "Save current document under another path"
+    category = ActionCategory.INPUT
+    parameters_schema = {"path": {"type": "string", "required": False}}
+
+    def execute(self, context, parameters):
+        path = parameters.get("path")
+        try:
+            context.services.input.shortcuts.save_as(path)
+            return ActionResult(success=True, data={"saved": True, "path": path})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -143,9 +158,7 @@ class Find(Action):
     def execute(self, context, parameters):
         text = parameters.get('text')
         try:
-            context.services.system.keyboard.press_shortcut("cmd+f")
-            time.sleep(0.2)
-            context.services.system.keyboard.type(text)
+            context.services.input.shortcuts.find(text)
             return ActionResult(success=True, data={"search": text, "executed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -160,7 +173,7 @@ class Close(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.close()
+            context.services.input.shortcuts.close()
             return ActionResult(success=True, data={"closed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -175,7 +188,7 @@ class Quit(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.quit()
+            context.services.input.shortcuts.quit()
             return ActionResult(success=True, data={"quit": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -192,7 +205,7 @@ class SwitchApplication(Action):
     def execute(self, context, parameters):
         app_name = parameters.get('application')
         try:
-            context.services.application.focus.activate(app_name)
+            context.services.input.shortcuts.switch_application(app_name)
             return ActionResult(success=True, data={"application": app_name, "switched": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))

@@ -38,7 +38,10 @@ class ActionExecutor:
 
     def _validate_parameters(self, action, params: dict[str, Any]) -> ActionResult | None:
         schema = getattr(action, "parameters_schema", {})
-        types = {"string": str, "integer": int, "boolean": bool, "list": list, "dict": dict}
+        types = {
+            "string": (str,), "integer": (int,), "float": (int, float), "boolean": (bool,),
+            "list": (list,), "dict": (dict,), "string_or_int": (str, int),
+        }
 
         for name, cfg in schema.items():
             if cfg.get("required") and name not in params:
@@ -47,23 +50,34 @@ class ActionExecutor:
             if name not in params: continue
 
             val, t_name = params[name], cfg.get("type")
-            if t_name == "integer" and isinstance(val, bool):
-                return ActionResult(success=False, error=f"'{name}' must be int", error_code="INVALID_PARAM")
-
-            if t_name in types and not isinstance(val, types[t_name]):
+            if t_name in types and (isinstance(val, bool) != (t_name == "boolean")
+                                    or not isinstance(val, types[t_name])):
                 return ActionResult(success=False, error=f"'{name}' must be {t_name}", error_code="INVALID_PARAM")
 
             if (enum := cfg.get("enum")) and val not in enum:
                 return ActionResult(success=False, error=f"'{name}' not in {enum}", error_code="INVALID_PARAM")
+            if "minimum" in cfg and val < cfg["minimum"]:
+                return ActionResult(success=False, error=f"'{name}' is below minimum", error_code="INVALID_PARAM")
+            if "maximum" in cfg and val > cfg["maximum"]:
+                return ActionResult(success=False, error=f"'{name}' is above maximum", error_code="INVALID_PARAM")
         return None
 
     def _check_permissions(self, context, action) -> ActionResult | None:
         perms = getattr(action, "required_permissions", ())
-        if not perms: return None
+        if hasattr(self.permission_checker, "check_action"):
+            report = self.permission_checker.check_action(action)
+            if report.granted:
+                return None
+            return ActionResult(success=False, error=report.error, error_code="PERMISSION_DENIED",
+                                metadata=report.to_dict())
+        if not perms:
+            return None
         if not self.permission_checker:
-            return ActionResult(success=False, error="No perm checker", error_code="PERMISSION_CHECK_ERROR")
+            return ActionResult(success=False, error="Permission checker is not configured",
+                                error_code="PERMISSION_CHECK_ERROR")
         if not self.permission_checker(context, action, perms):
-            return ActionResult(success=False, error="Perms denied", error_code="PERMISSION_DENIED")
+            return ActionResult(success=False, error=f"Required permissions denied: {', '.join(perms)}",
+                                error_code="PERMISSION_DENIED")
         return None
 
     def _check_confirmation(self, context, action, params) -> ActionResult | None:

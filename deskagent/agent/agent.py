@@ -2,8 +2,8 @@ from typing import Any
 
 from langgraph.types import Command
 
-from deskagent.agent.graph import AgentGraph
-from deskagent.agent.models import ActionExecution, AgentResponse, AgentSession
+from deskagent.agent.core.graph import AgentGraph
+from deskagent.agent.core.models import ActionExecution, AgentResponse, AgentSession
 
 
 class ConversationManager:

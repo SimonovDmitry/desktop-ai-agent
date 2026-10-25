@@ -90,6 +90,7 @@ class RemoveLink(Action):
     description = "Remove a link file without affecting the original target"
     category = ActionCategory.FILE
     risk_level = RiskLevel.MEDIUM
+    requires_confirmation = True
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):

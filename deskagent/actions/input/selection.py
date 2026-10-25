@@ -13,7 +13,7 @@ class SelectAllText(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.select_all()
+            context.services.input.selection.select_all_text()
             return ActionResult(success=True, data={"selected": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -36,7 +36,7 @@ class SelectText(Action):
             return ActionResult(success=False, error="Start and end positions required", error_code="MISSING_PARAM")
 
         try:
-            context.services.system.keyboard.select_range(start, end)
+            context.services.input.selection.select_text(start, end)
             return ActionResult(success=True, data={"start": start, "end": end, "selected": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -50,7 +50,7 @@ class SelectWord(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.select_word()
+            context.services.input.selection.select_word()
             return ActionResult(success=True, data={"selected": True, "unit": "word"})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -64,7 +64,7 @@ class SelectLine(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.select_line()
+            context.services.input.selection.select_line()
             return ActionResult(success=True, data={"selected": True, "unit": "line"})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -86,7 +86,7 @@ class SelectToStart(Action):
     def execute(self, context, parameters):
         scope = parameters.get('scope', 'line')
         try:
-            context.services.system.keyboard.select_to_start(scope)
+            context.services.input.selection.select_to_start(scope)
             return ActionResult(success=True, data={"scope": scope, "extended": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -108,7 +108,7 @@ class SelectToEnd(Action):
     def execute(self, context, parameters):
         scope = parameters.get('scope', 'line')
         try:
-            context.services.system.keyboard.select_to_end(scope)
+            context.services.input.selection.select_to_end(scope)
             return ActionResult(success=True, data={"scope": scope, "extended": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -130,7 +130,7 @@ class ExtendSelection(Action):
             return ActionResult(success=False, error="Missing required parameters", error_code="MISSING_PARAM")
 
         try:
-            context.services.system.keyboard.extend_selection(p['direction'], p['amount'], p['unit'])
+            context.services.input.selection.extend_selection(p['direction'], p['amount'], p['unit'])
             return ActionResult(success=True,
                                 data={"direction": p['direction'], "amount": p['amount'], "unit": p['unit']})
         except Exception as exc:
@@ -145,7 +145,7 @@ class ClearSelection(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.clear_selection()
+            context.services.input.selection.clear_selection()
             return ActionResult(success=True, data={"cleared": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))

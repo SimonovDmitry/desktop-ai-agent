@@ -8,12 +8,12 @@ from langgraph.types import interrupt
 
 from deskagent.agent.llm.base import LLMProvider, LLMProviderError
 from deskagent.agent.llm.response import ToolCall
-from deskagent.agent.models import ActionExecution, PlanStep
-from deskagent.agent.prompts import build_system_prompt
-from deskagent.agent.routing import ToolRouter
-from deskagent.agent.state import AgentState
-from deskagent.agent.telemetry import Telemetry
-from deskagent.agent.tools import ActionToolCatalog
+from deskagent.agent.capabilities.routing import ToolRouter
+from deskagent.agent.capabilities.telemetry import Telemetry
+from deskagent.agent.capabilities.tools import ActionToolCatalog
+from deskagent.agent.core.models import ActionExecution, PlanStep
+from deskagent.agent.core.prompts import build_system_prompt
+from deskagent.agent.core.state import AgentState
 
 
 class AgentGraph:

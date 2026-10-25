@@ -52,6 +52,11 @@ class RevealFile(Action):
             return ActionResult(success=False, error=str(exc))
 
 
+class RevealFileInFileManager(RevealFile):
+    name = "reveal_file_in_file_manager"
+    description = "Reveal a file in Finder"
+
+
 class GetFileDefaultApplication(Action):
     name = "get_file_default_application"
     description = "Get the name of the default application assigned to this file type"

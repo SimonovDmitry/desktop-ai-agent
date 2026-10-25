@@ -120,10 +120,10 @@ class MacOSSystemServices(SystemServices):
     def __init__(self):
         super().__init__(
             audio=MacOSSystemAudio(),
-            clipboard=MacOSInputClipboard(),
+            clipboard=MacOSSystemClipboard(),
             display=MacOSSystemDisplay(),
             information=MacOSSystemInformation(),
-            mouse=MacOSInputMouse(),
+            mouse=MacOSSystemMouse(),
             network=MacOSSystemNetwork(),
             notify=MacOSSystemNotification(),
             power=MacOSSystemPower(),
@@ -192,11 +192,11 @@ class MacOSFileServices(FileServices):
 
 @dataclass
 class Services:
-    system: SystemServices
-    application: ApplicationServices
-    window: WindowServices
-    input: InputServices
-    file: FileServices
+    system: SystemServices | None = None
+    application: ApplicationServices | None = None
+    window: WindowServices | None = None
+    input: InputServices | None = None
+    file: FileServices | None = None
 
 
 class ServicesFactory:

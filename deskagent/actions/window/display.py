@@ -23,6 +23,7 @@ class GetWindowDisplay(Action):
 
 
 class MoveWindowToDisplay(Action):
+    discoverable = False
     name = "move_window_to_display"
     description = "Move a specific window to a target display"
     category = ActionCategory.APPLICATION
@@ -77,6 +78,7 @@ class MoveWindowToPreviousDisplay(Action):
 
 
 class CenterWindowOnDisplay(Action):
+    discoverable = False
     name = "center_window_on_display"
     description = "Move the window to a specific display and center it within its work area"
     category = ActionCategory.APPLICATION

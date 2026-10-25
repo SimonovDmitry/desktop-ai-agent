@@ -9,8 +9,13 @@ from typing import Any
 class MemoryStore:
     def __init__(self, path="~/.deskagent/memory.sqlite"):
         target = Path(path).expanduser()
-        target.parent.mkdir(parents=True, exist_ok=True)
-        self.connection = sqlite3.connect(target, check_same_thread=False)
+        try:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            self.connection = sqlite3.connect(target, check_same_thread=False)
+        except OSError:
+            local = Path(".deskagent").resolve()
+            local.mkdir(parents=True, exist_ok=True)
+            self.connection = sqlite3.connect(local / target.name, check_same_thread=False)
         self.lock = threading.RLock()
         self.connection.execute(
             "CREATE TABLE IF NOT EXISTS memory (namespace TEXT, key TEXT, value TEXT, updated_at TEXT, PRIMARY KEY(namespace,key))"

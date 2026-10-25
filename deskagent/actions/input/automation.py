@@ -1,6 +1,5 @@
 from deskagent.actions.base import Action
 from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
-import time
 
 
 class ExecuteInputSequence(Action):
@@ -18,28 +17,11 @@ class ExecuteInputSequence(Action):
 
     def execute(self, context, parameters):
         actions = parameters.get('actions', [])
-        executed_count = 0
-
         try:
-            for act in actions:
-                atype = act.get('type')
-
-                if atype == "move_mouse":
-                    context.services.system.mouse.move_mouse(act['x'], act['y'])
-                elif atype == "click":
-                    context.services.system.mouse.click(act.get('button', 'left'))
-                elif atype == "type_text":
-                    context.services.system.keyboard.type(act['text'])
-                elif atype == "press_key":
-                    context.services.system.keyboard.press(act['key'])
-                elif atype == "tap_key":
-                    context.services.system.keyboard.tap(act['key'])
-
-                executed_count += 1
-
-            return ActionResult(success=True, data={"completed": True, "executed": executed_count, "failed": 0})
+            result = context.services.input.automation.execute_input_sequence(actions)
+            return ActionResult(success=result.get("completed", True), data=result)
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc), data={"executed": executed_count})
+            return ActionResult(success=False, error=str(exc))
 
 
 class ExecuteInputSequenceWithDelay(Action):
@@ -57,9 +39,8 @@ class ExecuteInputSequenceWithDelay(Action):
         delay = parameters.get('delay', 0.5)
 
         try:
-            for act in actions:
-                time.sleep(delay)
-            return ActionResult(success=True, data={"executed": len(actions)})
+            result = context.services.input.automation.execute_input_sequence_with_delay(actions, delay)
+            return ActionResult(success=True, data=result)
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -77,8 +58,8 @@ class WaitForInput(Action):
         itype = parameters.get('input_type', 'any')
         timeout = parameters.get('timeout', 30)
         try:
-            triggered = context.services.system.input_monitor.wait_for_event(itype, timeout)
-            return ActionResult(success=True, data={"triggered": triggered, "input_type": itype})
+            result = context.services.input.automation.wait_for_input(itype, timeout)
+            return ActionResult(success=True, data=result)
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="TIMEOUT")
 
@@ -96,8 +77,8 @@ class WaitForKey(Action):
         key = parameters.get('key')
         timeout = parameters.get('timeout', 10)
         try:
-            context.services.system.keyboard.wait_for_key(key, timeout)
-            return ActionResult(success=True, data={"key": key, "pressed": True})
+            result = context.services.input.automation.wait_for_key(key, timeout)
+            return ActionResult(success=True, data=result)
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -115,8 +96,8 @@ class WaitForMouseClick(Action):
         btn = parameters.get('button', 'left')
         timeout = parameters.get('timeout', 10)
         try:
-            pos = context.services.system.mouse.wait_for_click(btn, timeout)
-            return ActionResult(success=True, data={"button": btn, "clicked_at": pos})
+            result = context.services.input.automation.wait_for_mouse_click(btn, timeout)
+            return ActionResult(success=True, data=result)
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -137,9 +118,8 @@ class RepeatInputAction(Action):
         interval = parameters.get('interval', 0.1)
 
         try:
-            for _ in range(count):
-                time.sleep(interval)
-            return ActionResult(success=True, data={"executed": count, "completed": True})
+            result = context.services.input.automation.repeat_input_action(action_data, count, interval)
+            return ActionResult(success=True, data=result)
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -155,8 +135,7 @@ class CancelInputAutomation(Action):
     def execute(self, context, parameters):
         auto_id = parameters.get('automation_id')
         try:
-            context.services.system.keyboard.stop_automation(auto_id)
-            context.services.system.mouse.stop_automation(auto_id)
-            return ActionResult(success=True, data={"automation_id": auto_id, "cancelled": True})
+            result = context.services.input.automation.cancel_input_automation(auto_id)
+            return ActionResult(success=True, data=result)
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))

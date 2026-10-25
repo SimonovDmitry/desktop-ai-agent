@@ -7,7 +7,7 @@ class LockScreen(Action):
     description = "Lock the computer screen immediately"
     category = ActionCategory.SYSTEM
     risk_level = RiskLevel.LOW
-    requires_confirmation = False
+    requires_confirmation = True
     reversible = False
     parameters_schema = {}
 
@@ -23,8 +23,8 @@ class SleepComputer(Action):
     name = "sleep_computer"
     description = "Put the computer into sleep mode"
     category = ActionCategory.SYSTEM
-    risk_level = RiskLevel.LOW
-    requires_confirmation = False
+    risk_level = RiskLevel.MEDIUM
+    requires_confirmation = True
     reversible = False
     parameters_schema = {}
 

@@ -18,7 +18,7 @@ class PressKey(Action):
         if not key:
             return ActionResult(success=False, error="Parameter 'key' is required", error_code="MISSING_PARAM")
         try:
-            context.services.system.keyboard.press(key)
+            context.services.input.keyboard.press_key(key)
             return ActionResult(success=True, data={"key": key, "pressed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -40,7 +40,7 @@ class ReleaseKey(Action):
         if not key:
             return ActionResult(success=False, error="Parameter 'key' is required", error_code="MISSING_PARAM")
         try:
-            context.services.system.keyboard.release(key)
+            context.services.input.keyboard.release_key(key)
             return ActionResult(success=True, data={"key": key, "released": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -64,7 +64,7 @@ class TapKey(Action):
         if not key:
             return ActionResult(success=False, error="Parameter 'key' is required", error_code="MISSING_PARAM")
         try:
-            context.services.system.keyboard.tap(key, duration)
+            context.services.input.keyboard.tap_key(key, duration)
             return ActionResult(success=True, data={"key": key, "pressed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -88,7 +88,7 @@ class HoldKey(Action):
         if not key or duration is None:
             return ActionResult(success=False, error="Key and duration are required", error_code="MISSING_PARAM")
         try:
-            context.services.system.keyboard.hold(key, duration)
+            context.services.input.keyboard.hold_key(key, duration)
             return ActionResult(success=True, data={"key": key, "duration": duration, "completed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -105,7 +105,7 @@ class ReleaseAllKeys(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.release_all()
+            context.services.input.keyboard.release_all_keys()
             return ActionResult(success=True, data={"released": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -125,7 +125,7 @@ class PressKeys(Action):
         if not isinstance(keys, list):
             return ActionResult(success=False, error="Keys must be a list", error_code="INVALID_INPUT")
         try:
-            context.services.system.keyboard.press_sequence(keys)
+            context.services.input.keyboard.press_keys(keys)
             return ActionResult(success=True, data={"keys": keys, "count": len(keys)})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -145,7 +145,7 @@ class TypeText(Action):
         if text is None:
             return ActionResult(success=False, error="Parameter 'text' is required", error_code="MISSING_PARAM")
         try:
-            context.services.system.keyboard.type(text)
+            context.services.input.keyboard.type_text(text)
             return ActionResult(success=True, data={"text_length": len(text), "typed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -166,7 +166,7 @@ class TypeTextSlowly(Action):
         interval = parameters.get('interval', 0.05)
         if text is None: return ActionResult(success=False, error="Missing text")
         try:
-            context.services.system.keyboard.type(text, interval=interval)
+            context.services.input.keyboard.type_text_slowly(text, interval)
             return ActionResult(success=True, data={"text_length": len(text), "interval": interval, "typed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -185,8 +185,7 @@ class PasteText(Action):
         text = parameters.get('text')
         if text is None: return ActionResult(success=False, error="Missing text")
         try:
-            context.services.system.clipboard.set_clipboard(text)
-            context.services.system.keyboard.paste()
+            context.services.input.keyboard.paste_text(text)
             return ActionResult(success=True, data={"text_length": len(text), "pasted": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -201,7 +200,7 @@ class CopySelection(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.copy()
+            context.services.input.keyboard.copy_selection()
             return ActionResult(success=True, data={"copied": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -216,7 +215,7 @@ class CutSelection(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.cut()
+            context.services.input.keyboard.cut_selection()
             return ActionResult(success=True, data={"cut": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -231,7 +230,7 @@ class SelectAll(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.select_all()
+            context.services.input.keyboard.select_all()
             return ActionResult(success=True, data={"selected": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -242,11 +241,12 @@ class DeleteSelection(Action):
     description = "Delete currently selected content"
     category = ActionCategory.SYSTEM
     risk_level = RiskLevel.LOW
+    requires_confirmation = True
     parameters_schema = {}
 
     def execute(self, context, parameters):
         try:
-            context.services.system.keyboard.delete()
+            context.services.input.keyboard.delete_selection()
             return ActionResult(success=True, data={"deleted": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -261,7 +261,7 @@ class GetKeyboardState(Action):
 
     def execute(self, context, parameters):
         try:
-            state = context.services.system.keyboard.get_state()
+            state = context.services.input.keyboard.get_keyboard_state()
             return ActionResult(success=True, data=state)
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))

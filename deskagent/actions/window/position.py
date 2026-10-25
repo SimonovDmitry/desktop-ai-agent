@@ -128,7 +128,7 @@ class SnapWindowLeft(Action):
     def execute(self, context, parameters):
         win_id = parameters.get('window_id')
         try:
-            result = context.services.window.position.snap(win_id, "left")
+            result = context.services.window.position.snap_left(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "position": result['pos'], "size": result['size']})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -148,7 +148,7 @@ class SnapWindowRight(Action):
     def execute(self, context, parameters):
         win_id = parameters.get('window_id')
         try:
-            result = context.services.window.position.snap(win_id, "right")
+            result = context.services.window.position.snap_right(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "position": result['pos'], "size": result['size']})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -168,7 +168,7 @@ class SnapWindowTop(Action):
     def execute(self, context, parameters):
         win_id = parameters.get('window_id')
         try:
-            result = context.services.window.position.snap(win_id, "top")
+            result = context.services.window.position.snap_top(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "position": result['pos'], "size": result['size']})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -188,7 +188,7 @@ class SnapWindowBottom(Action):
     def execute(self, context, parameters):
         win_id = parameters.get('window_id')
         try:
-            result = context.services.window.position.snap(win_id, "bottom")
+            result = context.services.window.position.snap_bottom(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "position": result['pos'], "size": result['size']})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

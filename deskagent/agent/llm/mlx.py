@@ -1,8 +1,58 @@
 import json
 import re
+from typing import Any
 
 from deskagent.agent.llm.base import LLMProvider, LLMProviderError
 from deskagent.agent.llm.response import LLMResponse, ToolCall
+
+
+def normalize_messages(messages: list[Any]) -> list[dict[str, Any]]:
+    system_parts, chat_messages = [], []
+    for msg in messages:
+        if isinstance(msg, dict):
+            role, content = msg.get("role") or "user", msg.get("content", "")
+            if role == "system":
+                if content:
+                    system_parts.append(str(content))
+                continue
+            item = {"role": role, "content": str(content)}
+            if "tool_calls" in msg:
+                item["tool_calls"] = msg["tool_calls"]
+            if "tool_call_id" in msg:
+                item["tool_call_id"] = msg["tool_call_id"]
+            chat_messages.append(item)
+            continue
+
+        msg_type = getattr(msg, "type", None) or getattr(msg, "role", "user")
+        if msg_type in ("human", "user"):
+            role = "user"
+        elif msg_type in ("ai", "assistant"):
+            role = "assistant"
+        elif msg_type == "system":
+            content = getattr(msg, "content", "")
+            if content:
+                system_parts.append(str(content))
+            continue
+        elif msg_type == "tool":
+            role = "tool"
+        else:
+            role = "user"
+
+        content = getattr(msg, "content", "")
+        item = {"role": role, "content": str(content)}
+        tool_calls = getattr(msg, "tool_calls", None)
+        if tool_calls:
+            item["tool_calls"] = tool_calls
+        tool_call_id = getattr(msg, "tool_call_id", None)
+        if tool_call_id:
+            item["tool_call_id"] = tool_call_id
+        chat_messages.append(item)
+
+    result = []
+    if system_parts:
+        result.append({"role": "system", "content": "\n\n".join(system_parts)})
+    result.extend(chat_messages)
+    return result
 
 
 def parse_tool_calls(text: str) -> tuple[str, list[ToolCall]]:
@@ -47,7 +97,8 @@ class MLXLLM(LLMProvider):
         kwargs = {"tokenize": False, "add_generation_prompt": True, "enable_thinking": False}
         if tools:
             kwargs["tools"] = tools
-        return self.tokenizer.apply_chat_template(messages, **kwargs)
+        norm_messages = normalize_messages(messages)
+        return self.tokenizer.apply_chat_template(norm_messages, **kwargs)
 
     def _create_sampler(self):
         from mlx_lm.sample_utils import make_sampler
