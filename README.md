@@ -1,4 +1,4 @@
-# DeskAgent
+## DeskAgent
 
 Локальный desktop-агент с LangGraph и сменными LLM-провайдерами.
 
