@@ -1,9 +1,15 @@
+import os
 from collections.abc import Iterable
+from pathlib import Path
 from typing import Any
 
 from deskagent.agent.llm.base import LLMProvider, LLMProviderError
 from deskagent.agent.llm.config import LLMConfig
 from deskagent.agent.llm.response import LLMResponse, ToolCall
+
+BUNDLED_CA = (
+    Path(__file__).resolve().parents[3] / "certs" / "russian_trusted_root_ca_pem.crt"
+)
 
 
 class GigaChatLLM(LLMProvider):
@@ -33,6 +39,11 @@ class GigaChatLLM(LLMProvider):
             options["scope"] = self.config.api_scope
         if self.config.base_url:
             options["base_url"] = self.config.base_url
+        ca_bundle = os.getenv("GIGACHAT_CA_BUNDLE_FILE")
+        if ca_bundle:
+            options["ca_bundle_file"] = ca_bundle
+        elif BUNDLED_CA.is_file():
+            options["ca_bundle_file"] = str(BUNDLED_CA)
         return GigaChat(**options)
 
     def generate(

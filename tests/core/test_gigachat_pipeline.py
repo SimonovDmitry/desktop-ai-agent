@@ -69,6 +69,7 @@ def test_local_ollama_pipeline_remains_available():
 
 
 def test_gigachat_provider_supports_tools_and_streaming(monkeypatch):
+    monkeypatch.delenv("GIGACHAT_CA_BUNDLE_FILE", raising=False)
     monkeypatch.setitem(sys.modules, "langchain_gigachat", SimpleNamespace(GigaChat=FakeGigaChat))
     config = LLMConfig(
         provider="gigachat",
@@ -84,6 +85,9 @@ def test_gigachat_provider_supports_tools_and_streaming(monkeypatch):
 
     assert llm._model.options["credentials"] == "secret"
     assert llm._model.options["scope"] == "GIGACHAT_API_PERS"
+    assert llm._model.options["ca_bundle_file"].endswith(
+        "certs/russian_trusted_root_ca_pem.crt"
+    )
     assert llm._model.tools == tools
     assert response.content == "done"
     assert response.finish_reason == "tool_calls"
