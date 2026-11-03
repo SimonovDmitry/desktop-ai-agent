@@ -41,3 +41,41 @@ python scripts/run_llm.py --provider gigachat --stream "Привет"
 окружения `DESKAGENT_*`. Аргументы командной строки имеют приоритет над `.env` и
 конфигурацией.
 Полный список аргументов доступен через `--help`.
+
+## Сессии, планы и автопилот
+
+Пакет `deskagent.autopilot` выполняет сохраняемые многошаговые планы поверх
+существующего каталога действий. Он поддерживает DAG-зависимости, передачу
+результатов между шагами, проверку результата, безопасные повторы, подтверждения,
+перепланирование, отмену и восстановление после перезапуска.
+
+```python
+from deskagent.autopilot import AutopilotEngine, Plan, SessionStore, Step
+
+store = SessionStore("data/sessions.sqlite")
+engine = AutopilotEngine(action_catalog, store)
+session = engine.create_session(
+    "Подготовить рабочее окружение",
+    Plan([
+        Step(
+            id="open_ide",
+            title="Открыть PyCharm",
+            action="launch_application",
+            arguments={"application": "PyCharm"},
+            idempotent=True,
+        ),
+        Step(
+            id="set_volume",
+            title="Установить громкость",
+            action="set_volume",
+            arguments={"volume": 25},
+            depends_on=("open_ide",),
+            idempotent=True,
+        ),
+    ]),
+)
+result = engine.start(session.id)
+```
+
+Сохранённые сценарии описываются декларативным YAML без выполнения произвольного
+Python или shell-кода. Пример находится в `examples/prepare_for_work.yaml`.

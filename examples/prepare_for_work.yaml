@@ -1,0 +1,45 @@
+schema_version: 1
+name: prepare_for_work
+version: 1
+title: Prepare for work
+description: Opens the development environment and configures sound.
+
+inputs:
+  focus_volume:
+    type: integer
+    default: 25
+    minimum: 0
+    maximum: 100
+
+steps:
+  - id: open_pycharm
+    title: Open PyCharm
+    action: launch_application
+    arguments:
+      application: PyCharm
+    idempotent: true
+    retry:
+      max_attempts: 3
+      strategy: exponential
+      initial_delay_seconds: 1
+
+  - id: open_docker
+    title: Open Docker
+    action: launch_application
+    arguments:
+      application: Docker
+    idempotent: true
+    retry:
+      max_attempts: 3
+      strategy: exponential
+      initial_delay_seconds: 2
+
+  - id: set_focus_volume
+    title: Set focus volume
+    action: set_volume
+    arguments:
+      volume: "${inputs.focus_volume}"
+    depends_on:
+      - open_pycharm
+      - open_docker
+    idempotent: true
