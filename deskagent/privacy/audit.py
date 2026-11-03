@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from deskagent.safety.confirmation import redact
+from deskagent.privacy.confirmation import redact
 
 
 @dataclass(frozen=True)

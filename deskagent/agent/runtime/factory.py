@@ -23,8 +23,8 @@ from deskagent.core.config import Settings
 from deskagent.core.context import ActionContext
 from deskagent.core.permissions import PermissionManager
 from deskagent.core.services import ServicesFactory
-from deskagent.safety.audit import AuditLog
-from deskagent.safety.limits import SafetyLimits
+from deskagent.privacy.audit import AuditLog
+from deskagent.privacy.limits import SafetyLimits
 
 
 @dataclass

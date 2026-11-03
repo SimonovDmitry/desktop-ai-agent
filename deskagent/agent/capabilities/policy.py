@@ -1,5 +1,5 @@
-"""Backward-compatible imports for the central safety package."""
+"""Backward-compatible imports for the central privacy package."""
 
-from deskagent.safety.policy import ActionPolicy, PolicyConfig, PolicyDecision
+from deskagent.privacy.policy import ActionPolicy, PolicyConfig, PolicyDecision
 
 __all__ = ["ActionPolicy", "PolicyConfig", "PolicyDecision"]

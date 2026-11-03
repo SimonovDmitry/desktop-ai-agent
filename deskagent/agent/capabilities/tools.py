@@ -7,8 +7,8 @@ from deskagent.actions.executor import ActionExecutor
 from deskagent.agent.llm.response import ToolCall
 from deskagent.agent.capabilities.policy import ActionPolicy
 from deskagent.agent.core.models import ActionExecution
-from deskagent.safety.audit import AuditLog, AuditRecord
-from deskagent.safety.limits import SafetyLimits
+from deskagent.privacy.audit import AuditLog, AuditRecord
+from deskagent.privacy.limits import SafetyLimits
 
 def create_mvp_action_registry() -> ActionRegistry:
     from deskagent.actions.application.information import (
