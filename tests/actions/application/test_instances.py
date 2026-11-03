@@ -1,4 +1,5 @@
 import pytest
+from tests.actions.application.conftest import assert_error, assert_success
 
 from deskagent.actions.application.instances import (
     ActivateApplicationInstance,
@@ -6,7 +7,6 @@ from deskagent.actions.application.instances import (
     GetApplicationInstances,
     QuitApplicationInstance,
 )
-from tests.application.conftest import assert_error, assert_success
 
 
 def test_get_application_instances(application_context):
@@ -16,27 +16,19 @@ def test_get_application_instances(application_context):
     ]
     application_context.services.application.get_instances.return_value = value
 
-    result = GetApplicationInstances().execute(
-        application_context, {"application": "Google Chrome"}
-    )
+    result = GetApplicationInstances().execute(application_context, {"application": "Google Chrome"})
 
     assert_success(result, {"instances": value})
-    application_context.services.application.get_instances.assert_called_once_with(
-        "Google Chrome"
-    )
+    application_context.services.application.get_instances.assert_called_once_with("Google Chrome")
 
 
 def test_get_application_instance_count(application_context):
     application_context.services.application.get_instance_count.return_value = 2
 
-    result = GetApplicationInstanceCount().execute(
-        application_context, {"application": "Google Chrome"}
-    )
+    result = GetApplicationInstanceCount().execute(application_context, {"application": "Google Chrome"})
 
     assert_success(result, {"count": 2})
-    application_context.services.application.get_instance_count.assert_called_once_with(
-        "Google Chrome"
-    )
+    application_context.services.application.get_instance_count.assert_called_once_with("Google Chrome")
 
 
 @pytest.mark.parametrize(
@@ -46,9 +38,7 @@ def test_get_application_instance_count(application_context):
         (QuitApplicationInstance, "quit_instance", "quit"),
     ],
 )
-def test_application_instance_mutations(
-    application_context, action_cls, method, key
-):
+def test_application_instance_mutations(application_context, action_cls, method, key):
     getattr(application_context.services.application, method).return_value = None
 
     result = action_cls().execute(
@@ -57,9 +47,7 @@ def test_application_instance_mutations(
     )
 
     assert_success(result, {"pid": 456, key: True})
-    getattr(application_context.services.application, method).assert_called_once_with(
-        "Google Chrome", 456
-    )
+    getattr(application_context.services.application, method).assert_called_once_with("Google Chrome", 456)
 
 
 @pytest.mark.parametrize(
@@ -72,9 +60,7 @@ def test_application_instance_mutations(
     ],
 )
 def test_instance_actions_require_application(application_context, action_cls, method):
-    result = action_cls().execute(
-        application_context, {}
-    )
+    result = action_cls().execute(application_context, {})
 
     assert_error(result, "MISSING_PARAM")
     getattr(application_context.services.application, method).assert_not_called()
@@ -85,9 +71,7 @@ def test_instance_actions_require_application(application_context, action_cls, m
     [ActivateApplicationInstance, QuitApplicationInstance],
 )
 def test_instance_mutations_require_pid(application_context, action_cls):
-    result = action_cls().execute(
-        application_context, {"application": "Google Chrome"}
-    )
+    result = action_cls().execute(application_context, {"application": "Google Chrome"})
 
     assert_error(result, "MISSING_PARAM")
     application_context.services.application.activate_instance.assert_not_called()
@@ -103,9 +87,7 @@ def test_instance_mutations_require_pid(application_context, action_cls):
         ("quit_instance", QuitApplicationInstance, {"application": "Chrome", "pid": 1}),
     ],
 )
-def test_instance_service_errors_are_wrapped(
-    application_context, method, action_cls, params
-):
+def test_instance_service_errors_are_wrapped(application_context, method, action_cls, params):
     getattr(application_context.services.application, method).side_effect = RuntimeError("instance failed")
 
     result = action_cls().execute(application_context, params)

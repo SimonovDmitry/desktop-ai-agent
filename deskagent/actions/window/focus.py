@@ -10,15 +10,11 @@ class ActivateWindow(Action):
     requires_confirmation = False
     reversible = False
     parameters_schema = {
-        "window_id": {
-            "type": "integer",
-            "required": True,
-            "description": "ID of the window to activate"
-        }
+        "window_id": {"type": "integer", "required": True, "description": "ID of the window to activate"}
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             context.services.window.focus.activate(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "active": True})
@@ -33,16 +29,10 @@ class FocusWindow(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = False
-    parameters_schema = {
-        "window_id": {
-            "type": "integer",
-            "required": True,
-            "description": "ID of the window to focus"
-        }
-    }
+    parameters_schema = {"window_id": {"type": "integer", "required": True, "description": "ID of the window to focus"}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             context.services.window.focus.focus(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "focused": True})
@@ -58,15 +48,11 @@ class BringWindowToFront(Action):
     requires_confirmation = False
     reversible = False
     parameters_schema = {
-        "window_id": {
-            "type": "integer",
-            "required": True,
-            "description": "ID of the window to bring to front"
-        }
+        "window_id": {"type": "integer", "required": True, "description": "ID of the window to bring to front"}
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             context.services.window.focus.bring_to_front(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "front": True})
@@ -82,15 +68,11 @@ class SendWindowToBack(Action):
     requires_confirmation = False
     reversible = False
     parameters_schema = {
-        "window_id": {
-            "type": "integer",
-            "required": True,
-            "description": "ID of the window to send to back"
-        }
+        "window_id": {"type": "integer", "required": True, "description": "ID of the window to send to back"}
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             context.services.window.focus.send_to_back(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "back": True})
@@ -106,15 +88,11 @@ class MinimizeWindow(Action):
     requires_confirmation = False
     reversible = True
     parameters_schema = {
-        "window_id": {
-            "type": "integer",
-            "required": True,
-            "description": "ID of the window to minimize"
-        }
+        "window_id": {"type": "integer", "required": True, "description": "ID of the window to minimize"}
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             context.services.window.focus.minimize(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "state": "minimized"})
@@ -130,15 +108,11 @@ class RestoreWindow(Action):
     requires_confirmation = False
     reversible = False
     parameters_schema = {
-        "window_id": {
-            "type": "integer",
-            "required": True,
-            "description": "ID of the window to restore"
-        }
+        "window_id": {"type": "integer", "required": True, "description": "ID of the window to restore"}
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             context.services.window.focus.restore(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "state": "normal"})
@@ -154,15 +128,11 @@ class MaximizeWindow(Action):
     requires_confirmation = False
     reversible = True
     parameters_schema = {
-        "window_id": {
-            "type": "integer",
-            "required": True,
-            "description": "ID of the window to maximize"
-        }
+        "window_id": {"type": "integer", "required": True, "description": "ID of the window to maximize"}
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             context.services.window.focus.maximize(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "state": "maximized"})
@@ -178,15 +148,11 @@ class UnmaximizeWindow(Action):
     requires_confirmation = False
     reversible = True
     parameters_schema = {
-        "window_id": {
-            "type": "integer",
-            "required": True,
-            "description": "ID of the window to unmaximize"
-        }
+        "window_id": {"type": "integer", "required": True, "description": "ID of the window to unmaximize"}
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             # Логически unmaximize это и есть restore
             context.services.window.focus.restore(win_id)
@@ -203,15 +169,11 @@ class ToggleWindowMaximize(Action):
     requires_confirmation = False
     reversible = True
     parameters_schema = {
-        "window_id": {
-            "type": "integer",
-            "required": True,
-            "description": "ID of the window to toggle"
-        }
+        "window_id": {"type": "integer", "required": True, "description": "ID of the window to toggle"}
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             new_state = context.services.window.focus.toggle_maximize(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "state": new_state})

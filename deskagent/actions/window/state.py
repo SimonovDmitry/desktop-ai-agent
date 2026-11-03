@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GetWindowState(Action):
@@ -10,12 +10,10 @@ class GetWindowState(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = False
-    parameters_schema = {
-        "window_id": {"type": "integer", "required": True, "description": "ID of the window"}
-    }
+    parameters_schema = {"window_id": {"type": "integer", "required": True, "description": "ID of the window"}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             state = context.services.window.state.get_state(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "state": state})
@@ -36,13 +34,13 @@ class SetWindowState(Action):
             "type": "string",
             "required": True,
             "enum": ["normal", "minimized", "maximized", "fullscreen", "hidden"],
-            "description": "Target state for the window"
-        }
+            "description": "Target state for the window",
+        },
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        state = parameters.get('state')
+        win_id = parameters.get("window_id")
+        state = parameters.get("state")
         try:
             context.services.window.state.set_state(win_id, state)
             return ActionResult(success=True, data={"window_id": win_id, "state": state})
@@ -59,7 +57,7 @@ class MinimizeWindow(Action):
     parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             context.services.window.state.minimize(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "state": "minimized"})
@@ -76,7 +74,7 @@ class MaximizeWindow(Action):
     parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             context.services.window.state.maximize(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "state": "maximized"})
@@ -93,7 +91,7 @@ class RestoreWindow(Action):
     parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             context.services.window.state.restore(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "state": "normal"})
@@ -109,7 +107,7 @@ class HideWindow(Action):
     parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             context.services.window.state.hide(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "hidden": True})
@@ -125,7 +123,7 @@ class ShowWindow(Action):
     parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             context.services.window.state.show(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "visible": True})
@@ -141,7 +139,7 @@ class ToggleWindowVisibility(Action):
     parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             new_visibility = context.services.window.state.toggle_visibility(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "visible": new_visibility})
@@ -157,7 +155,7 @@ class ToggleWindowState(Action):
     parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             new_state = context.services.window.state.toggle_state(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "state": new_state})

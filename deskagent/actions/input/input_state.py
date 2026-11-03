@@ -1,5 +1,21 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
+
+
+def _get_keyboard(context):
+    if hasattr(context.services, "system") and hasattr(context.services.system, "keyboard"):
+        return context.services.system.keyboard
+    if hasattr(context.services, "input") and hasattr(context.services.input, "state"):
+        return context.services.input.state
+    return getattr(context.services, "keyboard", None)
+
+
+def _get_mouse(context):
+    if hasattr(context.services, "system") and hasattr(context.services.system, "mouse"):
+        return context.services.system.mouse
+    if hasattr(context.services, "input") and hasattr(context.services.input, "state"):
+        return context.services.input.state
+    return getattr(context.services, "mouse", None)
 
 
 class GetKeyboardState(Action):
@@ -14,7 +30,11 @@ class GetKeyboardState(Action):
 
     def execute(self, context, parameters):
         try:
-            state = context.services.input.state.get_keyboard_state()
+            if hasattr(context.services, "input") and hasattr(context.services.input, "state"):
+                state = context.services.input.state.get_keyboard_state()
+            else:
+                kb = _get_keyboard(context)
+                state = kb.get_state() if hasattr(kb, "get_state") else {}
             return ActionResult(success=True, data=state)
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -29,7 +49,8 @@ class GetPressedKeys(Action):
 
     def execute(self, context, parameters):
         try:
-            keys = context.services.input.state.get_pressed_keys()
+            kb = _get_keyboard(context)
+            keys = kb.get_pressed_keys()
             return ActionResult(success=True, data={"keys": keys, "count": len(keys)})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -39,14 +60,14 @@ class IsKeyPressed(Action):
     name = "is_key_pressed"
     description = "Check if a specific key is currently pressed"
     category = ActionCategory.SYSTEM
-    parameters_schema = {
-        "key": {"type": "string", "required": True}
-    }
+    parameters_schema = {"key": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        key = parameters.get('key')
+        key = parameters.get("key")
         try:
-            is_pressed = context.services.input.state.is_key_pressed(key)
+            kb = _get_keyboard(context)
+            method = getattr(kb, "is_pressed", getattr(kb, "is_key_pressed", None))
+            is_pressed = method(key)
             return ActionResult(success=True, data={"key": key, "pressed": is_pressed})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -62,7 +83,9 @@ class GetMouseButtonState(Action):
 
     def execute(self, context, parameters):
         try:
-            state = context.services.input.state.get_mouse_button_state()
+            mouse = _get_mouse(context)
+            method = getattr(mouse, "get_button_state", getattr(mouse, "get_mouse_button_state", None))
+            state = method()
             return ActionResult(success=True, data=state)
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -72,14 +95,14 @@ class IsMouseButtonPressed(Action):
     name = "is_mouse_button_pressed"
     description = "Check if a specific mouse button is currently held down"
     category = ActionCategory.SYSTEM
-    parameters_schema = {
-        "button": {"type": "string", "required": True, "enum": ["left", "right", "middle"]}
-    }
+    parameters_schema = {"button": {"type": "string", "required": True, "enum": ["left", "right", "middle"]}}
 
     def execute(self, context, parameters):
-        btn = parameters.get('button')
+        btn = parameters.get("button")
         try:
-            is_pressed = context.services.input.state.is_mouse_button_pressed(btn)
+            mouse = _get_mouse(context)
+            method = getattr(mouse, "is_pressed", getattr(mouse, "is_mouse_button_pressed", None))
+            is_pressed = method(btn)
             return ActionResult(success=True, data={"button": btn, "pressed": is_pressed})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -94,7 +117,27 @@ class GetInputState(Action):
 
     def execute(self, context, parameters):
         try:
-            return ActionResult(success=True, data=context.services.input.state.get_input_state())
+            if (
+                hasattr(context.services, "input")
+                and hasattr(context.services.input, "state")
+                and hasattr(context.services.input.state, "get_input_state")
+            ):
+                return ActionResult(success=True, data=context.services.input.state.get_input_state())
+            kb = _get_keyboard(context)
+            mouse = _get_mouse(context)
+            kb_state = kb.get_state() if hasattr(kb, "get_state") else {}
+            if isinstance(kb_state, dict) and "pressed_keys" in kb_state:
+                kb_data = {"pressed_keys": kb_state["pressed_keys"]}
+            else:
+                kb_data = kb_state
+            mouse_pos = mouse.get_cursor_position() if hasattr(mouse, "get_cursor_position") else None
+            mouse_buttons = mouse.get_button_state() if hasattr(mouse, "get_button_state") else None
+            mouse_data = {}
+            if mouse_pos is not None:
+                mouse_data["position"] = mouse_pos
+            if mouse_buttons is not None:
+                mouse_data["buttons"] = mouse_buttons
+            return ActionResult(success=True, data={"keyboard": kb_data, "mouse": mouse_data})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -110,11 +153,23 @@ class ReleaseAllInput(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.input.state.release_all_input()
+            if (
+                hasattr(context.services, "input")
+                and hasattr(context.services.input, "state")
+                and hasattr(context.services.input.state, "release_all_input")
+            ):
+                context.services.input.state.release_all_input()
+            else:
+                kb = _get_keyboard(context)
+                mouse = _get_mouse(context)
+                if hasattr(kb, "release_all"):
+                    kb.release_all()
+                if hasattr(mouse, "release_all"):
+                    mouse.release_all()
 
-            return ActionResult(success=True, data={
-                "keys_released": True,
-                "mouse_buttons_released": True
-            }, message="System input has been reset.")
+            return ActionResult(
+                success=True,
+                data={"keys_released": True, "mouse_buttons_released": True},
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="PANIC_RESET_FAILED")

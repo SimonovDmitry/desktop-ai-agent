@@ -1,7 +1,7 @@
 import pytest
 
 from deskagent.actions.base import Action, ActionRegistry
-from deskagent.actions.types import ActionCategory, RiskLevel, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class DummyAction(Action):
@@ -43,4 +43,3 @@ def test_registry_can_register_multiple_actions():
     registry.register(AnotherAction)
 
     assert set(registry._actions) == {"dummy", "another"}
-

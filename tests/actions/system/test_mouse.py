@@ -74,18 +74,14 @@ def test_drag_mouse_requires_all_coordinates(context):
 
 
 def test_drag_mouse_success(context):
-    result = DragMouse().execute(
-        context, {"x1": 0, "y1": 0, "x2": 100, "y2": 200}
-    )
+    result = DragMouse().execute(context, {"x1": 0, "y1": 0, "x2": 100, "y2": 200})
     assert_success(result, {"from": (0, 0), "to": (100, 200)})
     context.services.system.mouse.drag_mouse.assert_called_once_with(0, 0, 100, 200)
 
 
 def test_drag_mouse_system_error(context):
     context.services.system.mouse.drag_mouse.side_effect = RuntimeError("drag failed")
-    result = DragMouse().execute(
-        context, {"x1": 0, "y1": 0, "x2": 100, "y2": 200}
-    )
+    result = DragMouse().execute(context, {"x1": 0, "y1": 0, "x2": 100, "y2": 200})
     assert_error(result, "SYSTEM_ERROR")
 
 

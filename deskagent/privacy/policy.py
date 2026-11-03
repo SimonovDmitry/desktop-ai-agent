@@ -36,22 +36,52 @@ class PolicyConfig:
     confirm_actions: tuple[str, ...] = ()
     allowed_applications: tuple[str, ...] = ()
     allowed_paths: tuple[str, ...] = ()
-    blocked_paths: tuple[str, ...] = field(default_factory=lambda: (
-        "~/.ssh", "~/.gnupg", "~/.aws", "~/Library/Keychains", "/System", "/etc",
-    ))
+    blocked_paths: tuple[str, ...] = field(
+        default_factory=lambda: (
+            "~/.ssh",
+            "~/.gnupg",
+            "~/.aws",
+            "~/Library/Keychains",
+            "/System",
+            "/etc",
+        )
+    )
 
 
 class ActionPolicy:
     """One fail-closed decision point between model output and execution."""
 
-    CONFIRM_TOKENS = frozenset({
-        "delete", "remove", "trash", "overwrite", "replace", "clear", "empty_trash",
-        "send_message", "send_mail", "email", "submit", "publish", "purchase", "payment",
-    })
-    CRITICAL_TOKENS = frozenset({
-        "camera", "webcam", "keychain", "password", "credential", "privacy",
-        "screen_recording", "microphone_permission", "format_disk",
-    })
+    CONFIRM_TOKENS = frozenset(
+        {
+            "delete",
+            "remove",
+            "trash",
+            "overwrite",
+            "replace",
+            "clear",
+            "empty_trash",
+            "send_message",
+            "send_mail",
+            "email",
+            "submit",
+            "publish",
+            "purchase",
+            "payment",
+        }
+    )
+    CRITICAL_TOKENS = frozenset(
+        {
+            "camera",
+            "webcam",
+            "keychain",
+            "password",
+            "credential",
+            "privacy",
+            "screen_recording",
+            "microphone_permission",
+            "format_disk",
+        }
+    )
 
     def __init__(self, config: PolicyConfig | None = None):
         self.config = config or PolicyConfig()
@@ -84,9 +114,7 @@ class ActionPolicy:
         semantic_confirmation = any(token in name for token in self.CONFIRM_TOKENS)
         if name in {"write_file", "write_text_file"}:
             semantic_confirmation = bool(parameters.get("overwrite", True))
-        medium_confirmation = risk is RiskLevel.MEDIUM and (
-            self.config.strict_mode or self.config.confirm_medium
-        )
+        medium_confirmation = risk is RiskLevel.MEDIUM and (self.config.strict_mode or self.config.confirm_medium)
         confirm = (
             action_class.requires_confirmation
             or risk in self.config.confirm_risks

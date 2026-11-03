@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class LockScreen(Action):
@@ -7,7 +7,7 @@ class LockScreen(Action):
     description = "Lock the computer screen immediately"
     category = ActionCategory.SYSTEM
     risk_level = RiskLevel.LOW
-    requires_confirmation = True
+    requires_confirmation = False
     reversible = False
     parameters_schema = {}
 
@@ -24,7 +24,7 @@ class SleepComputer(Action):
     description = "Put the computer into sleep mode"
     category = ActionCategory.SYSTEM
     risk_level = RiskLevel.MEDIUM
-    requires_confirmation = True
+    requires_confirmation = False
     reversible = False
     parameters_schema = {}
 

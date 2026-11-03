@@ -14,7 +14,6 @@ from deskagent.platform.base.input import (
     InputState,
 )
 
-
 INTERFACES = (
     InputKeyboard,
     InputMouse,
@@ -29,45 +28,104 @@ INTERFACES = (
 
 EXPECTED_METHODS = {
     InputKeyboard: {
-        "press_key", "release_key", "tap_key", "hold_key", "release_all_keys",
-        "press_keys", "type_text", "type_text_slowly", "paste_text", "copy_selection",
-        "cut_selection", "select_all", "delete_selection", "get_keyboard_state",
+        "press_key",
+        "release_key",
+        "tap_key",
+        "hold_key",
+        "release_all_keys",
+        "press_keys",
+        "type_text",
+        "type_text_slowly",
+        "paste_text",
+        "copy_selection",
+        "cut_selection",
+        "select_all",
+        "delete_selection",
+        "get_keyboard_state",
     },
     InputMouse: {
-        "get_mouse_position", "move_mouse", "move_mouse_relative", "click_mouse",
-        "double_click_mouse", "triple_click_mouse", "mouse_down", "mouse_up",
-        "drag_mouse", "drag_mouse_relative", "scroll_mouse", "horizontal_scroll_mouse",
-        "move_mouse_smoothly", "get_mouse_button_state",
+        "get_mouse_position",
+        "move_mouse",
+        "move_mouse_relative",
+        "click_mouse",
+        "double_click_mouse",
+        "triple_click_mouse",
+        "mouse_down",
+        "mouse_up",
+        "drag_mouse",
+        "drag_mouse_relative",
+        "scroll_mouse",
+        "horizontal_scroll_mouse",
+        "move_mouse_smoothly",
+        "get_mouse_button_state",
     },
     InputShortcuts: {
-        "press_shortcut", "release_shortcut", "execute_shortcut_sequence", "copy",
-        "paste", "cut", "undo", "redo", "save", "save_as", "find", "close", "quit",
+        "press_shortcut",
+        "release_shortcut",
+        "execute_shortcut_sequence",
+        "copy",
+        "paste",
+        "cut",
+        "undo",
+        "redo",
+        "save",
+        "save_as",
+        "find",
+        "close",
+        "quit",
         "switch_application",
     },
     InputHotkeys: {
-        "register_hotkey", "unregister_hotkey", "unregister_all_hotkeys",
-        "get_registered_hotkeys", "is_hotkey_registered", "trigger_hotkey",
+        "register_hotkey",
+        "unregister_hotkey",
+        "unregister_all_hotkeys",
+        "get_registered_hotkeys",
+        "is_hotkey_registered",
+        "trigger_hotkey",
     },
     InputClipboard: {
-        "copy_text", "paste_text", "get_selected_text", "replace_selected_text",
-        "append_to_clipboard", "clear_clipboard",
+        "copy_text",
+        "paste_text",
+        "get_selected_text",
+        "replace_selected_text",
+        "append_to_clipboard",
+        "clear_clipboard",
     },
     InputSelection: {
-        "select_all_text", "select_text", "select_word", "select_line",
-        "select_to_start", "select_to_end", "extend_selection", "clear_selection",
+        "select_all_text",
+        "select_text",
+        "select_word",
+        "select_line",
+        "select_to_start",
+        "select_to_end",
+        "extend_selection",
+        "clear_selection",
     },
     InputState: {
-        "get_keyboard_state", "get_pressed_keys", "is_key_pressed",
-        "get_mouse_button_state", "is_mouse_button_pressed", "get_input_state",
+        "get_keyboard_state",
+        "get_pressed_keys",
+        "is_key_pressed",
+        "get_mouse_button_state",
+        "is_mouse_button_pressed",
+        "get_input_state",
         "release_all_input",
     },
     InputGestures: {
-        "drag_gesture", "swipe_gesture", "click_and_hold", "move_and_click",
-        "move_and_double_click", "scroll_gesture", "multi_click_gesture",
+        "drag_gesture",
+        "swipe_gesture",
+        "click_and_hold",
+        "move_and_click",
+        "move_and_double_click",
+        "scroll_gesture",
+        "multi_click_gesture",
     },
     InputAutomation: {
-        "execute_input_sequence", "execute_input_sequence_with_delay", "wait_for_input",
-        "wait_for_key", "wait_for_mouse_click", "repeat_input_action",
+        "execute_input_sequence",
+        "execute_input_sequence_with_delay",
+        "wait_for_input",
+        "wait_for_key",
+        "wait_for_mouse_click",
+        "repeat_input_action",
         "cancel_input_automation",
     },
 }
@@ -84,9 +142,7 @@ def test_all_declared_input_methods_are_abstract():
         assert expected <= set(dir(interface))
         for name in expected:
             member = inspect.getattr_static(interface, name)
-            assert getattr(member, "__isabstractmethod__", False), (
-                f"{interface.__name__}.{name} must be abstract"
-            )
+            assert getattr(member, "__isabstractmethod__", False), f"{interface.__name__}.{name} must be abstract"
 
 
 def test_abstract_method_sets_match_the_declared_contract():
@@ -145,8 +201,10 @@ def _make_concrete_implementation(interface):
     """Build a minimal implementation to prove the ABC contract is complete."""
     namespace = {}
     for method in interface.__abstractmethods__:
+
         def implementation(self, *args, **kwargs):
             return None
+
         implementation.__name__ = method
         namespace[method] = implementation
     return type(f"Concrete{interface.__name__}", (interface,), namespace)
@@ -162,8 +220,5 @@ def test_a_complete_subclass_satisfies_each_interface(interface):
 @pytest.mark.parametrize("interface", INTERFACES)
 def test_no_interface_has_accidental_public_state(interface):
     # Interfaces are intentionally pure contracts; concrete state belongs in platform classes.
-    public_data = {
-        name for name, value in vars(interface).items()
-        if not name.startswith("_") and not callable(value)
-    }
+    public_data = {name for name, value in vars(interface).items() if not name.startswith("_") and not callable(value)}
     assert public_data == set()

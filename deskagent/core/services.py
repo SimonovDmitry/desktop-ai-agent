@@ -1,56 +1,127 @@
-from dataclasses import dataclass
 import platform
+from dataclasses import dataclass
 
-from deskagent.platform.base.system import (
-    SystemAudio, SystemClipboard, SystemDisplay, SystemInformation,
-    SystemMouse, SystemNetwork, SystemNotification, SystemPower
-)
 from deskagent.platform.base.application import (
-    ApplicationLifecycle, ApplicationInformation, ApplicationFocus,
-    ApplicationPreferences, ApplicationResources, ApplicationProcesses,
-    ApplicationInstances, ApplicationDocuments, ApplicationStartup
-)
-from deskagent.platform.base.window import (
-    WindowInformation, WindowFocus, WindowPosition, WindowSize, WindowState,
-    WindowAppearance, WindowHierarchy, WindowDisplay, WindowArrangement,
-    WindowGroups, WindowLifecycle
-)
-from deskagent.platform.base.input import (
-    InputKeyboard, InputMouse, InputShortcuts, InputHotkeys,
-    InputClipboard, InputSelection, InputState,
-    InputGestures, InputAutomation
+    ApplicationDocuments,
+    ApplicationFocus,
+    ApplicationInformation,
+    ApplicationInstances,
+    ApplicationLifecycle,
+    ApplicationPreferences,
+    ApplicationProcesses,
+    ApplicationResources,
+    ApplicationStartup,
 )
 from deskagent.platform.base.file import (
-    FileInformation, FileLifecycle, FileContent, FileSearch,
-    FileOrganization, FilePermissions, FileLinks, FileArchive,
-    FileComparison, FileDisk, FileTemporary, FileSystem
+    FileArchive,
+    FileComparison,
+    FileContent,
+    FileDisk,
+    FileInformation,
+    FileLifecycle,
+    FileLinks,
+    FileOrganization,
+    FilePermissions,
+    FileSearch,
+    FileSystem,
+    FileTemporary,
 )
-from deskagent.platform.macos.system import (
-    MacOSSystemAudio, MacOSSystemClipboard, MacOSSystemDisplay, MacOSSystemInformation,
-    MacOSSystemMouse, MacOSSystemNetwork, MacOSSystemNotification, MacOSSystemPower
+from deskagent.platform.base.input import (
+    InputAutomation,
+    InputClipboard,
+    InputGestures,
+    InputHotkeys,
+    InputKeyboard,
+    InputMouse,
+    InputSelection,
+    InputShortcuts,
+    InputState,
+)
+from deskagent.platform.base.system import (
+    SystemAudio,
+    SystemClipboard,
+    SystemDisplay,
+    SystemInformation,
+    SystemMouse,
+    SystemNetwork,
+    SystemNotification,
+    SystemPower,
+)
+from deskagent.platform.base.window import (
+    WindowAppearance,
+    WindowArrangement,
+    WindowDisplay,
+    WindowFocus,
+    WindowGroups,
+    WindowHierarchy,
+    WindowInformation,
+    WindowLifecycle,
+    WindowPosition,
+    WindowSize,
+    WindowState,
 )
 from deskagent.platform.macos.application import (
-    MacOSApplicationLifecycle, MacOSApplicationInformation, MacOSApplicationFocus,
-    MacOSApplicationInstances, MacOSApplicationPreferences, MacOSApplicationResources,
-    MacOSApplicationDocuments, MacOSApplicationProcesses, MacOSApplicationStartup
+    MacOSApplicationDocuments,
+    MacOSApplicationFocus,
+    MacOSApplicationInformation,
+    MacOSApplicationInstances,
+    MacOSApplicationLifecycle,
+    MacOSApplicationPreferences,
+    MacOSApplicationProcesses,
+    MacOSApplicationResources,
+    MacOSApplicationStartup,
+)
+from deskagent.platform.macos.file import (
+    MacOSFileArchive,
+    MacOSFileComparison,
+    MacOSFileContent,
+    MacOSFileDisk,
+    MacOSFileInformation,
+    MacOSFileLifecycle,
+    MacOSFileLinks,
+    MacOSFileOrganization,
+    MacOSFilePermissions,
+    MacOSFileSearch,
+    MacOSFileSystem,
+    MacOSFileTemporary,
+)
+from deskagent.platform.macos.input import (
+    MacOSInputAutomation,
+    MacOSInputClipboard,
+    MacOSInputGestures,
+    MacOSInputHotkeys,
+    MacOSInputKeyboard,
+    MacOSInputMouse,
+    MacOSInputSelection,
+    MacOSInputShortcuts,
+    MacOSInputState,
+)
+from deskagent.platform.macos.system import (
+    MacOSSystemAudio,
+    MacOSSystemClipboard,
+    MacOSSystemDisplay,
+    MacOSSystemInformation,
+    MacOSSystemMouse,
+    MacOSSystemNetwork,
+    MacOSSystemNotification,
+    MacOSSystemPower,
+)
+from deskagent.platform.macos.window import (
+    MacOSWindowAppearance,
+    MacOSWindowArrangement,
+    MacOSWindowDisplay,
+    MacOSWindowFocus,
+    MacOSWindowGroups,
+    MacOSWindowHierarchy,
+    MacOSWindowLifecycle,
+    MacOSWindowPosition,
+    MacOSWindowSize,
+    MacOSWindowState,
 )
 from deskagent.platform.macos.window import (
     MacOSWindowInformation as MacOSWindowInformation,
-    MacOSWindowFocus,
-    MacOSWindowPosition, MacOSWindowSize, MacOSWindowState,
-    MacOSWindowAppearance, MacOSWindowHierarchy, MacOSWindowDisplay,
-    MacOSWindowArrangement, MacOSWindowGroups, MacOSWindowLifecycle
 )
-from deskagent.platform.macos.input import (
-    MacOSInputKeyboard, MacOSInputMouse, MacOSInputShortcuts, MacOSInputHotkeys,
-    MacOSInputClipboard, MacOSInputSelection, MacOSInputState,
-    MacOSInputGestures, MacOSInputAutomation
-)
-from deskagent.platform.macos.file import (
-    MacOSFileInformation, MacOSFileLifecycle, MacOSFileContent, MacOSFileSearch,
-    MacOSFileOrganization, MacOSFilePermissions, MacOSFileLinks, MacOSFileArchive,
-    MacOSFileComparison, MacOSFileDisk, MacOSFileTemporary, MacOSFileSystem
-)
+
 
 @dataclass
 class SystemServices:
@@ -63,6 +134,7 @@ class SystemServices:
     notify: SystemNotification
     power: SystemPower
 
+
 @dataclass
 class ApplicationServices:
     lifecycle: ApplicationLifecycle
@@ -74,6 +146,7 @@ class ApplicationServices:
     instances: ApplicationInstances
     documents: ApplicationDocuments
     startup: ApplicationStartup
+
 
 @dataclass
 class WindowServices:
@@ -89,6 +162,7 @@ class WindowServices:
     groups: WindowGroups
     lifecycle: WindowLifecycle
 
+
 @dataclass
 class InputServices:
     keyboard: InputKeyboard
@@ -100,6 +174,7 @@ class InputServices:
     state: InputState
     gestures: InputGestures
     automation: InputAutomation
+
 
 @dataclass
 class FileServices:
@@ -116,6 +191,7 @@ class FileServices:
     temporary: FileTemporary
     system: FileSystem
 
+
 class MacOSSystemServices(SystemServices):
     def __init__(self):
         super().__init__(
@@ -128,6 +204,7 @@ class MacOSSystemServices(SystemServices):
             notify=MacOSSystemNotification(),
             power=MacOSSystemPower(),
         )
+
 
 class MacOSApplicationServices(ApplicationServices):
     def __init__(self):
@@ -143,6 +220,7 @@ class MacOSApplicationServices(ApplicationServices):
             startup=MacOSApplicationStartup(),
         )
 
+
 class MacOSWindowServices(WindowServices):
     def __init__(self):
         super().__init__(
@@ -156,8 +234,9 @@ class MacOSWindowServices(WindowServices):
             display=MacOSWindowDisplay(),
             arrangement=MacOSWindowArrangement(),
             groups=MacOSWindowGroups(),
-            lifecycle=MacOSWindowLifecycle()
+            lifecycle=MacOSWindowLifecycle(),
         )
+
 
 class MacOSInputServices(InputServices):
     def __init__(self):
@@ -170,8 +249,9 @@ class MacOSInputServices(InputServices):
             selection=MacOSInputSelection(),
             state=MacOSInputState(),
             gestures=MacOSInputGestures(),
-            automation=MacOSInputAutomation()
+            automation=MacOSInputAutomation(),
         )
+
 
 class MacOSFileServices(FileServices):
     def __init__(self):
@@ -187,8 +267,9 @@ class MacOSFileServices(FileServices):
             comparison=MacOSFileComparison(),
             disk=MacOSFileDisk(),
             temporary=MacOSFileTemporary(),
-            system=MacOSFileSystem()
+            system=MacOSFileSystem(),
         )
+
 
 @dataclass
 class Services:
@@ -219,7 +300,7 @@ class ServicesFactory:
                 application=MacOSApplicationServices(),
                 window=MacOSWindowServices(),
                 input=MacOSInputServices(),
-                file=MacOSFileServices()
+                file=MacOSFileServices(),
             )
 
         raise RuntimeError(f"Unsupported platform: {platform_name}")

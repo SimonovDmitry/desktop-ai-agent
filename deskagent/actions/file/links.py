@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class CreateSymbolicLink(Action):
@@ -9,11 +9,11 @@ class CreateSymbolicLink(Action):
     risk_level = RiskLevel.MEDIUM
     parameters_schema = {
         "target": {"type": "string", "required": True, "description": "Original file/folder path"},
-        "link": {"type": "string", "required": True, "description": "Path where the link will be created"}
+        "link": {"type": "string", "required": True, "description": "Path where the link will be created"},
     }
 
     def execute(self, context, parameters):
-        target, link = parameters.get('target'), parameters.get('link')
+        target, link = parameters.get("target"), parameters.get("link")
         try:
             context.services.file.links.create_symlink(target, link)
             return ActionResult(success=True, data={"created": True, "link": link, "target": target})
@@ -26,13 +26,10 @@ class CreateHardLink(Action):
     description = "Create a hard link to a file (pointing to the same inode)"
     category = ActionCategory.FILE
     risk_level = RiskLevel.MEDIUM
-    parameters_schema = {
-        "target": {"type": "string", "required": True},
-        "link": {"type": "string", "required": True}
-    }
+    parameters_schema = {"target": {"type": "string", "required": True}, "link": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        target, link = parameters.get('target'), parameters.get('link')
+        target, link = parameters.get("target"), parameters.get("link")
         try:
             context.services.file.links.create_hardlink(target, link)
             return ActionResult(success=True, data={"created": True, "link": link, "target": target})
@@ -47,7 +44,7 @@ class ReadSymbolicLink(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             target = context.services.file.links.read_symlink(path)
             return ActionResult(success=True, data={"link": path, "target": target})
@@ -62,10 +59,14 @@ class GetLinkTarget(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        p = parameters or {}
+        path = p.get("path") or p.get("link")
         try:
             real_target = context.services.file.links.get_final_target(path)
-            return ActionResult(success=True, data={"path": path, "real_target": real_target})
+            return ActionResult(
+                success=True,
+                data={"path": path, "target": real_target, "real_target": real_target},
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -77,10 +78,14 @@ class ResolvePath(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        p = parameters or {}
+        path = p.get("path") or p.get("link")
         try:
             resolved = context.services.file.links.resolve_full_path(path)
-            return ActionResult(success=True, data={"input": path, "resolved": resolved})
+            return ActionResult(
+                success=True,
+                data={"path": resolved, "resolved": resolved, "input": path},
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -94,7 +99,8 @@ class RemoveLink(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        p = parameters or {}
+        path = p.get("path") or p.get("link")
         try:
             context.services.file.links.remove_link(path)
             return ActionResult(success=True, data={"link_removed": True, "path": path})

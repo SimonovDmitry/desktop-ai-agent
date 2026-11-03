@@ -1,4 +1,5 @@
 import pytest
+from tests.actions.application.conftest import assert_error, assert_success
 
 from deskagent.actions.application.lifecycle import (
     ForceQuitApplication,
@@ -12,15 +13,12 @@ from deskagent.actions.application.lifecycle import (
     WaitForApplicationExit,
 )
 from deskagent.actions.types import RiskLevel
-from tests.application.conftest import assert_error, assert_success
 
 
 def test_launch_application_success(application_context):
     application_context.services.application.launch.return_value = 12345
 
-    result = LaunchApplication().execute(
-        application_context, {"application": "Safari"}
-    )
+    result = LaunchApplication().execute(application_context, {"application": "Safari"})
 
     assert_success(
         result,
@@ -42,17 +40,13 @@ def test_launch_application_with_arguments_forwards_arguments(application_contex
         result,
         {"application": "Google Chrome", "pid": 12345, "launched": True},
     )
-    application_context.services.application.launch.assert_called_once_with(
-        "Google Chrome", arguments=args
-    )
+    application_context.services.application.launch.assert_called_once_with("Google Chrome", arguments=args)
 
 
 def test_launch_application_hidden_success(application_context):
     application_context.services.application.launch_hidden.return_value = 12345
 
-    result = LaunchApplicationHidden().execute(
-        application_context, {"application": "Terminal"}
-    )
+    result = LaunchApplicationHidden().execute(application_context, {"application": "Terminal"})
 
     assert_success(
         result,
@@ -63,9 +57,7 @@ def test_launch_application_hidden_success(application_context):
             "hidden": True,
         },
     )
-    application_context.services.application.launch_hidden.assert_called_once_with(
-        "Terminal"
-    )
+    application_context.services.application.launch_hidden.assert_called_once_with("Terminal")
 
 
 @pytest.mark.parametrize(
@@ -84,19 +76,13 @@ def test_launch_application_hidden_success(application_context):
         ),
     ],
 )
-def test_lifecycle_actions_success(
-    application_context, action_cls, method, expected_data
-):
+def test_lifecycle_actions_success(application_context, action_cls, method, expected_data):
     getattr(application_context.services.application, method).return_value = None
 
-    result = action_cls().execute(
-        application_context, {"application": "Safari"}
-    )
+    result = action_cls().execute(application_context, {"application": "Safari"})
 
     assert_success(result, expected_data)
-    getattr(application_context.services.application, method).assert_called_once_with(
-        "Safari"
-    )
+    getattr(application_context.services.application, method).assert_called_once_with("Safari")
 
 
 def test_wait_for_application_success(application_context):
@@ -106,9 +92,7 @@ def test_wait_for_application_success(application_context):
         "waited": 4.2,
     }
 
-    result = WaitForApplication().execute(
-        application_context, {"application": "Photoshop", "timeout": 30}
-    )
+    result = WaitForApplication().execute(application_context, {"application": "Photoshop", "timeout": 30})
 
     assert_success(
         result,
@@ -119,9 +103,7 @@ def test_wait_for_application_success(application_context):
             "waited": 4.2,
         },
     )
-    application_context.services.application.wait_for_start.assert_called_once_with(
-        "Photoshop", 30
-    )
+    application_context.services.application.wait_for_start.assert_called_once_with("Photoshop", 30)
 
 
 def test_wait_for_application_exit_success(application_context):
@@ -130,17 +112,13 @@ def test_wait_for_application_exit_success(application_context):
         "waited": 2.5,
     }
 
-    result = WaitForApplicationExit().execute(
-        application_context, {"application": "Safari", "timeout": 30}
-    )
+    result = WaitForApplicationExit().execute(application_context, {"application": "Safari", "timeout": 30})
 
     assert_success(
         result,
         {"application": "Safari", "exited": True, "waited": 2.5},
     )
-    application_context.services.application.wait_for_exit.assert_called_once_with(
-        "Safari", 30
-    )
+    application_context.services.application.wait_for_exit.assert_called_once_with("Safari", 30)
 
 
 @pytest.mark.parametrize(
@@ -157,9 +135,7 @@ def test_wait_for_application_exit_success(application_context):
         (LaunchOrActivateApplication, "launch_or_activate", {}),
     ],
 )
-def test_lifecycle_actions_require_application(
-    application_context, action_cls, method, params
-):
+def test_lifecycle_actions_require_application(application_context, action_cls, method, params):
     result = action_cls().execute(application_context, params)
 
     assert_error(result, "MISSING_PARAM")
@@ -168,9 +144,7 @@ def test_lifecycle_actions_require_application(
 
 def test_wait_actions_reject_invalid_timeout(application_context):
     for action_cls in (WaitForApplication, WaitForApplicationExit):
-        result = action_cls().execute(
-            application_context, {"application": "Safari", "timeout": 0}
-        )
+        result = action_cls().execute(application_context, {"application": "Safari", "timeout": 0})
         assert_error(result, "INVALID_INPUT")
 
     application_context.services.application.wait_for_start.assert_not_called()
@@ -190,12 +164,8 @@ def test_wait_actions_reject_invalid_timeout(application_context):
         "launch_or_activate",
     ],
 )
-def test_lifecycle_service_errors_are_wrapped(
-    application_context, method
-):
-    getattr(application_context.services.application, method).side_effect = (
-        RuntimeError("boom")
-    )
+def test_lifecycle_service_errors_are_wrapped(application_context, method):
+    getattr(application_context.services.application, method).side_effect = RuntimeError("boom")
 
     if method == "launch":
         action = LaunchApplication()
@@ -234,9 +204,7 @@ def test_launch_or_activate_returns_platform_decision(application_context):
         "pid": 12345,
     }
 
-    result = LaunchOrActivateApplication().execute(
-        application_context, {"application": "Safari"}
-    )
+    result = LaunchOrActivateApplication().execute(application_context, {"application": "Safari"})
 
     assert_success(
         result,

@@ -31,8 +31,7 @@ class PermissionStatus:
         return self.state == PermissionState.GRANTED
 
     def to_dict(self):
-        return {"permission": self.permission.value, "state": self.state.value,
-                "instruction": self.instruction}
+        return {"permission": self.permission.value, "state": self.state.value, "instruction": self.instruction}
 
 
 @dataclass(frozen=True)
@@ -55,8 +54,12 @@ class PermissionReport:
 class PermissionManager:
     INSTRUCTIONS = {
         Permission.ACCESSIBILITY: "Enable the app in System Settings → Privacy & Security → Accessibility.",
-        Permission.SCREEN_RECORDING: "Enable the app in System Settings → Privacy & Security → Screen & System Audio Recording.",
-        Permission.AUTOMATION: "Allow the app to control the target app in System Settings → Privacy & Security → Automation.",
+        Permission.SCREEN_RECORDING: (
+            "Enable the app in System Settings → Privacy & Security → Screen & System Audio Recording."
+        ),
+        Permission.AUTOMATION: (
+            "Allow the app to control the target app in System Settings → Privacy & Security → Automation."
+        ),
         Permission.MICROPHONE: "Enable the app in System Settings → Privacy & Security → Microphone.",
         Permission.NOTIFICATIONS: "Enable notifications for the app in System Settings → Notifications.",
     }
@@ -67,13 +70,16 @@ class PermissionManager:
     def status(self, permission: Permission | str):
         permission = Permission(permission)
         if self.system != "darwin":
-            return PermissionStatus(permission, PermissionState.UNAVAILABLE, "Permission checks are implemented for macOS.")
+            return PermissionStatus(
+                permission, PermissionState.UNAVAILABLE, "Permission checks are implemented for macOS."
+            )
         checker = getattr(self, f"_{permission.value}")
         try:
             return PermissionStatus(permission, checker(), self.INSTRUCTIONS[permission])
         except Exception as exc:
-            return PermissionStatus(permission, PermissionState.UNAVAILABLE,
-                                    f"{self.INSTRUCTIONS[permission]} Checker error: {exc}")
+            return PermissionStatus(
+                permission, PermissionState.UNAVAILABLE, f"{self.INSTRUCTIONS[permission]} Checker error: {exc}"
+            )
 
     def check(self, permissions):
         return PermissionReport(tuple(self.status(permission) for permission in permissions))
@@ -81,8 +87,7 @@ class PermissionManager:
     def check_action(self, action):
         permissions = set(action.required_permissions)
         module = action.__module__
-        if (".actions.input." in module or ".actions.window." in module
-                or module.endswith("actions.system.mouse")):
+        if ".actions.input." in module or ".actions.window." in module or module.endswith("actions.system.mouse"):
             permissions.add(Permission.ACCESSIBILITY.value)
         if module.endswith("actions.system.notification"):
             permissions.add(Permission.NOTIFICATIONS.value)
@@ -91,11 +96,13 @@ class PermissionManager:
     @staticmethod
     def _accessibility():
         from ApplicationServices import AXIsProcessTrusted
+
         return PermissionState.GRANTED if AXIsProcessTrusted() else PermissionState.DENIED
 
     @staticmethod
     def _screen_recording():
         from Quartz import CGPreflightScreenCaptureAccess
+
         return PermissionState.GRANTED if CGPreflightScreenCaptureAccess() else PermissionState.DENIED
 
     @staticmethod
@@ -105,13 +112,16 @@ class PermissionManager:
     @staticmethod
     def _microphone():
         from AVFoundation import AVCaptureDevice, AVMediaTypeAudio
+
         status = int(AVCaptureDevice.authorizationStatusForMediaType_(AVMediaTypeAudio))
-        return {0: PermissionState.NOT_DETERMINED, 2: PermissionState.DENIED,
-                3: PermissionState.GRANTED}.get(status, PermissionState.UNKNOWN)
+        return {0: PermissionState.NOT_DETERMINED, 2: PermissionState.DENIED, 3: PermissionState.GRANTED}.get(
+            status, PermissionState.UNKNOWN
+        )
 
     @staticmethod
     def _notifications():
         from UserNotifications import UNUserNotificationCenter
+
         done, result = threading.Event(), {}
 
         def callback(settings):
@@ -125,6 +135,10 @@ class PermissionManager:
         UNUserNotificationCenter.currentNotificationCenter().getNotificationSettingsWithCompletionHandler_(callback)
         if not done.wait(2):
             return PermissionState.UNKNOWN
-        return {0: PermissionState.NOT_DETERMINED, 1: PermissionState.DENIED,
-                2: PermissionState.GRANTED, 3: PermissionState.GRANTED,
-                4: PermissionState.GRANTED}.get(result["status"], PermissionState.UNKNOWN)
+        return {
+            0: PermissionState.NOT_DETERMINED,
+            1: PermissionState.DENIED,
+            2: PermissionState.GRANTED,
+            3: PermissionState.GRANTED,
+            4: PermissionState.GRANTED,
+        }.get(result["status"], PermissionState.UNKNOWN)

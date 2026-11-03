@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class SetDisplayBrightness(Action):
@@ -15,17 +15,18 @@ class SetDisplayBrightness(Action):
             "required": True,
             "minimum": 0,
             "maximum": 100,
-            "description": "Brightness percentage (0-100)"
+            "description": "Brightness percentage (0-100)",
         }
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        level = params.get('brightness_level')
+        level = params.get("brightness_level")
 
         if level is None:
-            return ActionResult(success=False, error="Parameter 'brightness_level' is required",
-                                error_code="MISSING_PARAM")
+            return ActionResult(
+                success=False, error="Parameter 'brightness_level' is required", error_code="MISSING_PARAM"
+            )
 
         if not 0 <= level <= 100:
             return ActionResult(success=False, error="Brightness must be between 0 and 100", error_code="INVALID_INPUT")
@@ -50,8 +51,9 @@ class GetDisplayBrightness(Action):
         try:
             brightness = context.services.system.display.get_display_brightness()
             if brightness is None:
-                return ActionResult(success=False, error="Could not retrieve brightness level",
-                                    error_code="NOT_SUPPORTED")
+                return ActionResult(
+                    success=False, error="Could not retrieve brightness level", error_code="NOT_SUPPORTED"
+                )
 
             return ActionResult(success=True, data={"brightness": brightness})
         except Exception as exc:
@@ -83,17 +85,12 @@ class GetScreenSize(Action):
     requires_confirmation = False
     reversible = False
     parameters_schema = {
-        "display_id": {
-            "type": "integer",
-            "required": False,
-            "default": 1,
-            "description": "System ID of the display"
-        }
+        "display_id": {"type": "integer", "required": False, "default": 1, "description": "System ID of the display"}
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        display_id = params.get('display_id', 1)
+        display_id = params.get("display_id", 1)
 
         if display_id is None:
             display_id = 1
@@ -104,3 +101,33 @@ class GetScreenSize(Action):
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
+
+class SetResolution(Action):
+    name = "set_resolution"
+    description = "Set the resolution of a specific display"
+    category = ActionCategory.SYSTEM
+    risk_level = RiskLevel.MEDIUM
+    requires_confirmation = False
+    reversible = True
+    parameters_schema = {
+        "display_id": {"type": "integer", "required": True},
+        "width": {"type": "integer", "required": True},
+        "height": {"type": "integer", "required": True},
+    }
+
+    def execute(self, context, parameters):
+        params = parameters or {}
+        display_id = params.get("display_id")
+        width = params.get("width")
+        height = params.get("height")
+        if display_id is None or width is None or height is None:
+            return ActionResult(
+                success=False,
+                error="Parameters 'display_id', 'width', and 'height' are required",
+                error_code="MISSING_PARAM",
+            )
+        try:
+            context.services.system.display.set_resolution(display_id, width, height)
+            return ActionResult(success=True, data={"display_id": display_id, "width": width, "height": height})
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

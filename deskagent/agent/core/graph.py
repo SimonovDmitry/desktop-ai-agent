@@ -6,20 +6,28 @@ from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
-from deskagent.agent.llm.base import LLMProvider, LLMProviderError
-from deskagent.agent.llm.response import ToolCall
 from deskagent.agent.capabilities.routing import ToolRouter
 from deskagent.agent.capabilities.telemetry import Telemetry
 from deskagent.agent.capabilities.tools import ActionToolCatalog
 from deskagent.agent.core.models import ActionExecution, PlanStep
 from deskagent.agent.core.prompts import build_system_prompt
 from deskagent.agent.core.state import AgentState
+from deskagent.agent.llm.base import LLMProvider, LLMProviderError
+from deskagent.agent.llm.response import ToolCall
 from deskagent.privacy.confirmation import ConfirmationRequest, PreviewBuilder
 
 
 class AgentGraph:
-    def __init__(self, llm: LLMProvider, tools: ActionToolCatalog, max_iterations=8,
-                 max_tool_calls_per_iteration=6, checkpointer=None, router=None, telemetry=None):
+    def __init__(
+        self,
+        llm: LLMProvider,
+        tools: ActionToolCatalog,
+        max_iterations=8,
+        max_tool_calls_per_iteration=6,
+        checkpointer=None,
+        router=None,
+        telemetry=None,
+    ):
         if max_iterations < 1:
             raise ValueError("max_iterations must be at least 1")
         self.llm, self.tools = llm, tools
@@ -30,9 +38,12 @@ class AgentGraph:
     def _build(self, checkpointer):
         graph = StateGraph(AgentState)
         for name, node in (
-            ("route", self._route_tools), ("model", self._call_model),
-            ("prepare", self._prepare_tools), ("approval", self._request_approval),
-            ("tools", self._execute_tools), ("verify", self._verify),
+            ("route", self._route_tools),
+            ("model", self._call_model),
+            ("prepare", self._prepare_tools),
+            ("approval", self._request_approval),
+            ("tools", self._execute_tools),
+            ("verify", self._verify),
         ):
             graph.add_node(name, node)
         graph.add_edge(START, "route")
@@ -61,10 +72,18 @@ class AgentGraph:
             with self.telemetry.span("llm", iteration=iterations):
                 response = self.llm.generate(messages, tools=self.tools.schemas(state.get("selected_actions")))
         except LLMProviderError as exc:
-            return {"messages": [{"role": "assistant", "content": str(exc)}], "iterations": iterations, "error": str(exc)}
+            return {
+                "messages": [{"role": "assistant", "content": str(exc)}],
+                "iterations": iterations,
+                "error": str(exc),
+            }
         if response.tool_calls and iterations >= self.max_iterations:
             error = "Agent stopped after reaching the maximum number of iterations"
-            return {"messages": [{"role": "assistant", "content": error}], "iterations": iterations, "error": "MAX_ITERATIONS"}
+            return {
+                "messages": [{"role": "assistant", "content": error}],
+                "iterations": iterations,
+                "error": "MAX_ITERATIONS",
+            }
         if response.content:
             self._emit("token", response.content)
         message = {"role": "assistant", "content": response.content}
@@ -73,7 +92,7 @@ class AgentGraph:
         return {"messages": [message], "iterations": iterations, "error": None}
 
     def _prepare_tools(self, state: AgentState):
-        calls = self._tool_calls(state)[:self.max_tool_calls]
+        calls = self._tool_calls(state)[: self.max_tool_calls]
         pending, confirmations = [], []
         plan = list(state.get("plan", []))
         known_steps = {step.get("id") for step in plan}
@@ -93,11 +112,17 @@ class AgentGraph:
             call = ToolCall.from_value(item)
             policy = item.get("policy", {})
             self.tools.audit_decision(
-                call, policy, state.get("thread_id"),
+                call,
+                policy,
+                state.get("thread_id"),
                 confirmation.get("confirmation_id") if confirmation and policy.get("confirmation_required") else None,
             )
-        return {"pending_tool_calls": pending, "pending_confirmation": confirmation,
-                "confirmation_approved": None, "plan": plan}
+        return {
+            "pending_tool_calls": pending,
+            "pending_confirmation": confirmation,
+            "confirmation_approved": None,
+            "plan": plan,
+        }
 
     def _request_approval(self, state: AgentState):
         payload = state.get("pending_confirmation") or {}
@@ -127,12 +152,20 @@ class AgentGraph:
                     safety_error = execution.error
             if not policy.get("allowed", True) or (policy.get("confirmation_required") and not approved):
                 self.tools.audit_execution(
-                    execution, state.get("thread_id"), "not_executed", policy.get("risk"),
+                    execution,
+                    state.get("thread_id"),
+                    "not_executed",
+                    policy.get("risk"),
                 )
             executions.append(execution.to_dict())
             self._emit("action_finished", execution.to_dict())
-        return {"current_executions": executions, "action_count": state.get("action_count", 0) + len(executions),
-                "pending_confirmation": None, "confirmation_approved": None, "error": safety_error}
+        return {
+            "current_executions": executions,
+            "action_count": state.get("action_count", 0) + len(executions),
+            "pending_confirmation": None,
+            "confirmation_approved": None,
+            "error": safety_error,
+        }
 
     def _verify(self, state: AgentState):
         verified, plan = [], list(state.get("plan", []))
@@ -143,9 +176,15 @@ class AgentGraph:
                 if step.get("id") == execution.tool_call_id:
                     step["attempts"] = step.get("attempts", 0) + 1
                     step["status"] = "completed" if execution.success and execution.verified else "failed"
-        messages = [{"role": "tool", "name": item["name"], "tool_call_id": item["tool_call_id"],
-                     "content": json.dumps(ActionExecution.from_dict(item).tool_result(), ensure_ascii=False, default=str)}
-                    for item in verified]
+        messages = [
+            {
+                "role": "tool",
+                "name": item["name"],
+                "tool_call_id": item["tool_call_id"],
+                "content": json.dumps(ActionExecution.from_dict(item).tool_result(), ensure_ascii=False, default=str),
+            }
+            for item in verified
+        ]
         return {"messages": messages, "action_executions": verified, "current_executions": [], "plan": plan}
 
     def _after_model(self, state):

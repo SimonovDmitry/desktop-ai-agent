@@ -4,7 +4,7 @@ import json
 import sqlite3
 import threading
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -57,17 +57,31 @@ class AuditLog:
         self._connection.commit()
 
     def append(self, record: AuditRecord) -> int:
-        timestamp = record.timestamp or datetime.now(timezone.utc).isoformat()
+        timestamp = record.timestamp or datetime.now(UTC).isoformat()
         parameters = json.dumps(redact(record.parameters), ensure_ascii=False, sort_keys=True, default=str)
-        result = None if record.result is None else json.dumps(redact(record.result), ensure_ascii=False, sort_keys=True, default=str)
+        result = (
+            None
+            if record.result is None
+            else json.dumps(redact(record.result), ensure_ascii=False, sort_keys=True, default=str)
+        )
         with self._lock:
             cursor = self._connection.execute(
                 """INSERT INTO audit_logs
                    (timestamp, event, thread_id, tool_call_id, action, parameters_json,
                     risk, decision, confirmation_id, result_json)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (timestamp, record.event, record.thread_id, record.tool_call_id, record.action,
-                 parameters, record.risk, record.decision, record.confirmation_id, result),
+                (
+                    timestamp,
+                    record.event,
+                    record.thread_id,
+                    record.tool_call_id,
+                    record.action,
+                    parameters,
+                    record.risk,
+                    record.decision,
+                    record.confirmation_id,
+                    result,
+                ),
             )
             self._connection.commit()
             return int(cursor.lastrowid)

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import os
 import re
 import shlex
-import os
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -18,19 +19,55 @@ class GuardResult:
 class FilesystemGuard:
     """Resolve paths before comparing them, including non-existing targets."""
 
-    PATH_KEYS = frozenset({
-        "path", "file", "filename", "directory", "folder", "source",
-        "destination", "target", "output", "input_path",
-    })
-    MUTATION_TOKENS = frozenset({
-        "write", "create", "delete", "remove", "trash", "move", "rename",
-        "copy", "duplicate", "extract", "compress", "archive", "chmod",
-        "permission", "link", "save", "replace", "overwrite",
-    })
-    SECRET_NAMES = frozenset({
-        ".npmrc", ".pypirc", ".netrc", ".git-credentials", "credentials",
-        "credentials.json", "service-account.json", "id_rsa", "id_ed25519",
-    })
+    PATH_KEYS = frozenset(
+        {
+            "path",
+            "file",
+            "filename",
+            "directory",
+            "folder",
+            "source",
+            "destination",
+            "target",
+            "output",
+            "input_path",
+        }
+    )
+    MUTATION_TOKENS = frozenset(
+        {
+            "write",
+            "create",
+            "delete",
+            "remove",
+            "trash",
+            "move",
+            "rename",
+            "copy",
+            "duplicate",
+            "extract",
+            "compress",
+            "archive",
+            "chmod",
+            "permission",
+            "link",
+            "save",
+            "replace",
+            "overwrite",
+        }
+    )
+    SECRET_NAMES = frozenset(
+        {
+            ".npmrc",
+            ".pypirc",
+            ".netrc",
+            ".git-credentials",
+            "credentials",
+            "credentials.json",
+            "service-account.json",
+            "id_rsa",
+            "id_ed25519",
+        }
+    )
 
     def __init__(self, allowed_paths: Iterable[str] = (), blocked_paths: Iterable[str] = ()):
         self.allowed_paths = tuple(self._resolve(path) for path in allowed_paths)
@@ -98,16 +135,24 @@ class FilesystemGuard:
 class ShellGuard:
     """Reject shell syntax that turns a command into an arbitrary program."""
 
-    SHELL_NAMES = frozenset({
-        "shell", "command", "terminal", "subprocess", "execute_process",
-        "run_command", "run_shell", "execute_shell",
-    })
+    SHELL_NAMES = frozenset(
+        {
+            "shell",
+            "command",
+            "terminal",
+            "subprocess",
+            "execute_process",
+            "run_command",
+            "run_shell",
+            "execute_shell",
+        }
+    )
     COMMAND_KEYS = ("command", "cmd", "script", "shell")
     CRITICAL_PATTERNS = (
-        re.compile(r"(^|\s)(sudo|su)\b", re.I),
-        re.compile(r"\brm\s+(?:-[a-zA-Z]*[rf][a-zA-Z]*\s+)*(?:/|~|\$HOME)(?:\s|$)", re.I),
-        re.compile(r"\b(curl|wget)\b[^\n]*(\||&&|;)\s*(sh|bash|zsh|python)\b", re.I),
-        re.compile(r"\b(mkfs|diskutil\s+erase|dd\s+if=)\b", re.I),
+        re.compile(r"(^|\s)(sudo|su)\b", re.IGNORECASE),
+        re.compile(r"\brm\s+(?:-[a-zA-Z]*[rf][a-zA-Z]*\s+)*(?:/|~|\$HOME)(?:\s|$)", re.IGNORECASE),
+        re.compile(r"\b(curl|wget)\b[^\n]*(\||&&|;)\s*(sh|bash|zsh|python)\b", re.IGNORECASE),
+        re.compile(r"\b(mkfs|diskutil\s+erase|dd\s+if=)\b", re.IGNORECASE),
     )
     META_PATTERN = re.compile(r"(?:\||&&|\|\||;|`|\$\(|>|<|\n)")
 
@@ -132,7 +177,9 @@ class ShellGuard:
         if any(pattern.search(command) for pattern in self.CRITICAL_PATTERNS):
             return GuardResult(False, "Destructive or piped remote shell command is prohibited", "SHELL_PROHIBITED")
         if not self.allow_metacharacters and self.META_PATTERN.search(command):
-            return GuardResult(False, "Shell operators are prohibited; use a structured action", "SHELL_OPERATORS_BLOCKED")
+            return GuardResult(
+                False, "Shell operators are prohibited; use a structured action", "SHELL_OPERATORS_BLOCKED"
+            )
         try:
             executable = Path(shlex.split(command)[0]).name
         except (ValueError, IndexError):

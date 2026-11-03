@@ -1,15 +1,15 @@
 import pytest
+from tests.actions.application.conftest import assert_error, assert_success
 
 from deskagent.actions.application.processes import (
     GetApplicationChildProcesses,
     GetApplicationMainProcess,
-    GetApplicationProcessTree,
     GetApplicationProcesses,
+    GetApplicationProcessTree,
     ResumeApplication,
     SuspendApplication,
 )
 from deskagent.actions.types import RiskLevel
-from tests.application.conftest import assert_error, assert_success
 
 
 @pytest.mark.parametrize(
@@ -41,19 +41,13 @@ from tests.application.conftest import assert_error, assert_success
         ),
     ],
 )
-def test_process_query_actions(
-    application_context, action_cls, method, value, expected
-):
+def test_process_query_actions(application_context, action_cls, method, value, expected):
     getattr(application_context.services.application, method).return_value = value
 
-    result = action_cls().execute(
-        application_context, {"application": "Chrome"}
-    )
+    result = action_cls().execute(application_context, {"application": "Chrome"})
 
     assert_success(result, expected)
-    getattr(application_context.services.application, method).assert_called_once_with(
-        "Chrome"
-    )
+    getattr(application_context.services.application, method).assert_called_once_with("Chrome")
 
 
 @pytest.mark.parametrize(
@@ -63,19 +57,13 @@ def test_process_query_actions(
         (ResumeApplication, "resume", "resumed", True),
     ],
 )
-def test_process_control_actions(
-    application_context, action_cls, method, key, expected
-):
+def test_process_control_actions(application_context, action_cls, method, key, expected):
     getattr(application_context.services.application, method).return_value = None
 
-    result = action_cls().execute(
-        application_context, {"application": "Chrome"}
-    )
+    result = action_cls().execute(application_context, {"application": "Chrome"})
 
     assert_success(result, {"application": "Chrome", key: expected})
-    getattr(application_context.services.application, method).assert_called_once_with(
-        "Chrome"
-    )
+    getattr(application_context.services.application, method).assert_called_once_with("Chrome")
 
 
 @pytest.mark.parametrize(
@@ -120,9 +108,7 @@ def test_resume_application_does_not_require_confirmation():
 def test_process_service_errors_are_wrapped(application_context, method, action_cls):
     getattr(application_context.services.application, method).side_effect = RuntimeError("process failed")
 
-    result = action_cls().execute(
-        application_context, {"application": "Chrome"}
-    )
+    result = action_cls().execute(application_context, {"application": "Chrome"})
 
     assert_error(result, "SYSTEM_ERROR")
     assert result.error == "process failed"

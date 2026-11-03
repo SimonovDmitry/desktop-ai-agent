@@ -4,12 +4,12 @@ import time
 
 import Quartz
 from AppKit import (
+    NSApplicationActivateIgnoringOtherApps,
     NSEvent,
     NSPasteboard,
     NSScreen,
     NSStringPboardType,
     NSWorkspace,
-    NSApplicationActivateIgnoringOtherApps
 )
 
 from deskagent.platform.base.input import (
@@ -21,40 +21,62 @@ from deskagent.platform.base.input import (
     InputMouse,
     InputSelection,
     InputShortcuts,
-    InputState
+    InputState,
 )
 
 
 class MacOSInputKeyboard(InputKeyboard):
     KEY_MAP = {
-        'a': 0x00, 's': 0x01, 'd': 0x02, 'f': 0x03, 'h': 0x04, 'g': 0x05, 'z': 0x06, 'x': 0x07,
-        'c': 0x08, 'v': 0x09, 'b': 0x0B, 'q': 0x0C, 'w': 0x0D, 'e': 0x0E, 'r': 0x0F, 'y': 0x10,
-        't': 0x11, '1': 0x12, '2': 0x13, '3': 0x14, '4': 0x15, '6': 0x16, '5': 0x17, '9': 0x19,
-        '7': 0x1A, '8': 0x1C, '0': 0x1D,
-
-        'enter': 0x24,
-        'return': 0x24,
-        'tab': 0x30,
-        'space': 0x31,
-        'delete': 0x33,
-        'backspace': 0x33,
-        'escape': 0x35,
-        'shift': 0x38,
-        'cmd': 0x37,
-        'command': 0x37,
-        'option': 0x3A,
-        'alt': 0x3A,
-        'ctrl': 0x3B,
-        'control': 0x3B
+        "a": 0x00,
+        "s": 0x01,
+        "d": 0x02,
+        "f": 0x03,
+        "h": 0x04,
+        "g": 0x05,
+        "z": 0x06,
+        "x": 0x07,
+        "c": 0x08,
+        "v": 0x09,
+        "b": 0x0B,
+        "q": 0x0C,
+        "w": 0x0D,
+        "e": 0x0E,
+        "r": 0x0F,
+        "y": 0x10,
+        "t": 0x11,
+        "1": 0x12,
+        "2": 0x13,
+        "3": 0x14,
+        "4": 0x15,
+        "6": 0x16,
+        "5": 0x17,
+        "9": 0x19,
+        "7": 0x1A,
+        "8": 0x1C,
+        "0": 0x1D,
+        "enter": 0x24,
+        "return": 0x24,
+        "tab": 0x30,
+        "space": 0x31,
+        "delete": 0x33,
+        "backspace": 0x33,
+        "escape": 0x35,
+        "shift": 0x38,
+        "cmd": 0x37,
+        "command": 0x37,
+        "option": 0x3A,
+        "alt": 0x3A,
+        "ctrl": 0x3B,
+        "control": 0x3B,
     }
 
     MODIFIER_MASKS = {
-        'shift': Quartz.kCGEventFlagMaskShift,
-        'cmd': Quartz.kCGEventFlagMaskCommand,
-        'command': Quartz.kCGEventFlagMaskCommand,
-        'option': Quartz.kCGEventFlagMaskAlternate,
-        'alt': Quartz.kCGEventFlagMaskAlternate,
-        'ctrl': Quartz.kCGEventFlagMaskControl,
+        "shift": Quartz.kCGEventFlagMaskShift,
+        "cmd": Quartz.kCGEventFlagMaskCommand,
+        "command": Quartz.kCGEventFlagMaskCommand,
+        "option": Quartz.kCGEventFlagMaskAlternate,
+        "alt": Quartz.kCGEventFlagMaskAlternate,
+        "ctrl": Quartz.kCGEventFlagMaskControl,
     }
 
     def __init__(self):
@@ -70,7 +92,8 @@ class MacOSInputKeyboard(InputKeyboard):
 
     def press_key(self, key):
         keycode = self._get_keycode(key)
-        if keycode is None: return
+        if keycode is None:
+            return
 
         key_lower = key.lower()
         if key_lower in self.MODIFIER_MASKS:
@@ -83,7 +106,8 @@ class MacOSInputKeyboard(InputKeyboard):
 
     def release_key(self, key):
         keycode = self._get_keycode(key)
-        if keycode is None: return
+        if keycode is None:
+            return
 
         key_lower = key.lower()
         if key_lower in self.MODIFIER_MASKS:
@@ -143,11 +167,11 @@ class MacOSInputKeyboard(InputKeyboard):
     def type_text(self, text):
         for char in text:
             event = Quartz.CGEventCreateKeyboardEvent(None, 0, True)
-            Quartz.CGEventKeyboardSetUnicodeString(event, len(char.encode('utf-16-le')) // 2, char)
+            Quartz.CGEventKeyboardSetUnicodeString(event, len(char.encode("utf-16-le")) // 2, char)
             Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
 
             up_event = Quartz.CGEventCreateKeyboardEvent(None, 0, False)
-            Quartz.CGEventKeyboardSetUnicodeString(up_event, len(char.encode('utf-16-le')) // 2, char)
+            Quartz.CGEventKeyboardSetUnicodeString(up_event, len(char.encode("utf-16-le")) // 2, char)
             Quartz.CGEventPost(Quartz.kCGHIDEventTap, up_event)
 
     def type_text_slowly(self, text, interval=0.05):
@@ -160,27 +184,27 @@ class MacOSInputKeyboard(InputKeyboard):
         pb.clearContents()
         pb.setString_forType_(text, NSStringPboardType)
 
-        self.press_key('cmd')
-        self.tap_key('v')
-        self.release_key('cmd')
+        self.press_key("cmd")
+        self.tap_key("v")
+        self.release_key("cmd")
 
     def copy_selection(self):
-        self.press_key('cmd')
-        self.tap_key('c')
-        self.release_key('cmd')
+        self.press_key("cmd")
+        self.tap_key("c")
+        self.release_key("cmd")
 
     def cut_selection(self):
-        self.press_key('cmd')
-        self.tap_key('x')
-        self.release_key('cmd')
+        self.press_key("cmd")
+        self.tap_key("x")
+        self.release_key("cmd")
 
     def select_all(self):
-        self.press_key('cmd')
-        self.tap_key('a')
-        self.release_key('cmd')
+        self.press_key("cmd")
+        self.tap_key("a")
+        self.release_key("cmd")
 
     def delete_selection(self):
-        self.tap_key('delete')
+        self.tap_key("delete")
 
     def get_keyboard_state(self):
         return {
@@ -190,8 +214,8 @@ class MacOSInputKeyboard(InputKeyboard):
                 "shift": bool(self._current_flags & Quartz.kCGEventFlagMaskShift),
                 "option": bool(self._current_flags & Quartz.kCGEventFlagMaskAlternate),
                 "control": bool(self._current_flags & Quartz.kCGEventFlagMaskControl),
-                "caps_lock": bool(self._current_flags & Quartz.kCGEventFlagMaskAlphaShift)
-            }
+                "caps_lock": bool(self._current_flags & Quartz.kCGEventFlagMaskAlphaShift),
+            },
         }
 
 
@@ -203,20 +227,20 @@ class MacOSInputMouse(InputMouse):
                 "down": Quartz.kCGEventLeftMouseDown,
                 "up": Quartz.kCGEventLeftMouseUp,
                 "drag": Quartz.kCGEventLeftMouseDragged,
-                "button": Quartz.kCGMouseButtonLeft
+                "button": Quartz.kCGMouseButtonLeft,
             },
             "right": {
                 "down": Quartz.kCGEventRightMouseDown,
                 "up": Quartz.kCGEventRightMouseUp,
                 "drag": Quartz.kCGEventRightMouseDragged,
-                "button": Quartz.kCGMouseButtonRight
+                "button": Quartz.kCGMouseButtonRight,
             },
             "middle": {
                 "down": Quartz.kCGEventOtherMouseDown,
                 "up": Quartz.kCGEventOtherMouseUp,
                 "drag": Quartz.kCGEventOtherMouseDragged,
-                "button": Quartz.kCGMouseButtonCenter
-            }
+                "button": Quartz.kCGMouseButtonCenter,
+            },
         }
 
     def _get_screen_height(self):
@@ -224,9 +248,7 @@ class MacOSInputMouse(InputMouse):
 
     def _post_click_event(self, x, y, button, event_type, click_count=1):
         btn_info = self.BUTTON_MAP.get(button, self.BUTTON_MAP["left"])
-        event = Quartz.CGEventCreateMouseEvent(
-            self.event_source, event_type, (x, y), btn_info["button"]
-        )
+        event = Quartz.CGEventCreateMouseEvent(self.event_source, event_type, (x, y), btn_info["button"])
         Quartz.CGEventSetIntegerValueField(event, Quartz.kCGMouseEventClickState, click_count)
         Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
 
@@ -235,19 +257,16 @@ class MacOSInputMouse(InputMouse):
         return {"x": int(pos.x), "y": int(self._get_screen_height() - pos.y)}
 
     def move_mouse(self, x, y):
-        event = Quartz.CGEventCreateMouseEvent(
-            self.event_source, Quartz.kCGEventMouseMoved, (x, y), 0
-        )
+        event = Quartz.CGEventCreateMouseEvent(self.event_source, Quartz.kCGEventMouseMoved, (x, y), 0)
         Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
         return {"x": x, "y": y, "moved": True}
 
     def move_mouse_relative(self, dx, dy):
         curr = self.get_mouse_position()
-        new_x, new_y = curr['x'] + dx, curr['y'] + dy
+        new_x, new_y = curr["x"] + dx, curr["y"] + dy
         return self.move_mouse(new_x, new_y)
 
     def click_mouse(self, button="left"):
-        pos = self.get_mouse_position()
         self.mouse_down(button)
         time.sleep(0.01)
         self.mouse_up(button)
@@ -255,29 +274,29 @@ class MacOSInputMouse(InputMouse):
 
     def double_click_mouse(self, button="left"):
         pos = self.get_mouse_position()
-        self._post_click_event(pos['x'], pos['y'], button, self.BUTTON_MAP[button]["down"], 1)
-        self._post_click_event(pos['x'], pos['y'], button, self.BUTTON_MAP[button]["up"], 1)
-        self._post_click_event(pos['x'], pos['y'], button, self.BUTTON_MAP[button]["down"], 2)
-        self._post_click_event(pos['x'], pos['y'], button, self.BUTTON_MAP[button]["up"], 2)
+        self._post_click_event(pos["x"], pos["y"], button, self.BUTTON_MAP[button]["down"], 1)
+        self._post_click_event(pos["x"], pos["y"], button, self.BUTTON_MAP[button]["up"], 1)
+        self._post_click_event(pos["x"], pos["y"], button, self.BUTTON_MAP[button]["down"], 2)
+        self._post_click_event(pos["x"], pos["y"], button, self.BUTTON_MAP[button]["up"], 2)
         return {"button": button, "clicked": True, "click_count": 2}
 
     def triple_click_mouse(self, button="left"):
         pos = self.get_mouse_position()
         for i in range(1, 4):
-            self._post_click_event(pos['x'], pos['y'], button, self.BUTTON_MAP[button]["down"], i)
-            self._post_click_event(pos['x'], pos['y'], button, self.BUTTON_MAP[button]["up"], i)
+            self._post_click_event(pos["x"], pos["y"], button, self.BUTTON_MAP[button]["down"], i)
+            self._post_click_event(pos["x"], pos["y"], button, self.BUTTON_MAP[button]["up"], i)
         return {"button": button, "click_count": 3}
 
     def mouse_down(self, button):
         pos = self.get_mouse_position()
         event_type = self.BUTTON_MAP[button]["down"]
-        self._post_click_event(pos['x'], pos['y'], button, event_type)
+        self._post_click_event(pos["x"], pos["y"], button, event_type)
         return {"button": button, "pressed": True}
 
     def mouse_up(self, button):
         pos = self.get_mouse_position()
         event_type = self.BUTTON_MAP[button]["up"]
-        self._post_click_event(pos['x'], pos['y'], button, event_type)
+        self._post_click_event(pos["x"], pos["y"], button, event_type)
         return {"button": button, "released": True}
 
     def drag_mouse(self, x1, y1, x2, y2, button="left", duration=0.5):
@@ -300,7 +319,7 @@ class MacOSInputMouse(InputMouse):
 
     def drag_mouse_relative(self, dx, dy, button="left", duration=0.5):
         curr = self.get_mouse_position()
-        return self.drag_mouse(curr['x'], curr['y'], curr['x'] + dx, curr['y'] + dy, button, duration)
+        return self.drag_mouse(curr["x"], curr["y"], curr["x"] + dx, curr["y"] + dy, button, duration)
 
     def scroll_mouse(self, clicks):
         event = Quartz.CGEventCreateScrollWheelEvent(self.event_source, Quartz.kCGScrollEventUnitLine, 1, clicks)
@@ -308,15 +327,13 @@ class MacOSInputMouse(InputMouse):
         return {"clicks": clicks, "scrolled": True}
 
     def horizontal_scroll_mouse(self, clicks):
-        event = Quartz.CGEventCreateScrollWheelEvent(
-            self.event_source, Quartz.kCGScrollEventUnitLine, 2, 0, clicks
-        )
+        event = Quartz.CGEventCreateScrollWheelEvent(self.event_source, Quartz.kCGScrollEventUnitLine, 2, 0, clicks)
         Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
         return {"clicks": clicks, "scrolled": True, "direction": "horizontal"}
 
     def move_mouse_smoothly(self, x, y, duration=0.5):
         curr = self.get_mouse_position()
-        x1, y1 = curr['x'], curr['y']
+        x1, y1 = curr["x"], curr["y"]
         steps = 30
         for i in range(1, steps + 1):
             t = i / steps
@@ -329,11 +346,7 @@ class MacOSInputMouse(InputMouse):
 
     def get_mouse_button_state(self):
         state = NSEvent.pressedMouseButtons()
-        return {
-            "left": bool(state & 1),
-            "right": bool(state & 2),
-            "middle": bool(state & 4)
-        }
+        return {"left": bool(state & 1), "right": bool(state & 2), "middle": bool(state & 4)}
 
 
 class MacOSInputShortcuts(InputShortcuts):
@@ -341,7 +354,7 @@ class MacOSInputShortcuts(InputShortcuts):
         self.kb = MacOSInputKeyboard()
 
     def _parse_and_execute(self, shortcut, press=True):
-        keys = shortcut.lower().replace(" ", "").split('+')
+        keys = shortcut.lower().replace(" ", "").split("+")
         modifiers = [k for k in keys if k in self.kb.MODIFIER_MASKS]
         normal_keys = [k for k in keys if k not in self.kb.MODIFIER_MASKS]
 
@@ -431,7 +444,7 @@ class MacOSInputHotkeys(InputHotkeys):
         self._stop_event = threading.Event()
 
     def _parse_hotkey(self, hotkey_str):
-        parts = hotkey_str.lower().replace(" ", "").split('+')
+        parts = hotkey_str.lower().replace(" ", "").split("+")
         keycode = self.kb._get_keycode(parts[-1])
 
         mask = 0
@@ -443,12 +456,12 @@ class MacOSInputHotkeys(InputHotkeys):
 
     def _event_tap_callback(self, proxy, type, event, refcon):
         if type == Quartz.kCGEventKeyDown:
-            keycode = Quartz.CGEventGetIntegerValueField(event, Quartz.kCGKeyboardEventKeycode)
-            flags = Quartz.CGEventGetFlags(event) & (
-                    Quartz.kCGEventFlagMaskCommand |
-                    Quartz.kCGEventFlagMaskShift |
-                    Quartz.kCGEventFlagMaskAlternate |
-                    Quartz.kCGEventFlagMaskControl
+            _ = Quartz.CGEventGetIntegerValueField(event, Quartz.kCGKeyboardEventKeycode)
+            _ = Quartz.CGEventGetFlags(event) & (
+                Quartz.kCGEventFlagMaskCommand
+                | Quartz.kCGEventFlagMaskShift
+                | Quartz.kCGEventFlagMaskAlternate
+                | Quartz.kCGEventFlagMaskControl
             )
         return event
 
@@ -463,7 +476,7 @@ class MacOSInputHotkeys(InputHotkeys):
                 Quartz.kCGEventTapOptionListenOnly,
                 Quartz.kCGEventMaskBit(Quartz.kCGEventKeyDown),
                 self._event_tap_callback,
-                None
+                None,
             )
 
             if not tap:
@@ -490,7 +503,7 @@ class MacOSInputHotkeys(InputHotkeys):
             if (mask, keycode) in self._hotkeys:
                 del self._hotkeys[(mask, keycode)]
             return {"hotkey": hotkey, "unregistered": True}
-        except:
+        except Exception:
             return {"hotkey": hotkey, "unregistered": False}
 
     def unregister_all_hotkeys(self):
@@ -528,10 +541,7 @@ class MacOSInputClipboard(InputClipboard):
         time.sleep(0.15)
         text = self._get_system_clipboard()
 
-        return {
-            "copied": True,
-            "text": text if text else ""
-        }
+        return {"copied": True, "text": text if text else ""}
 
     def paste_text(self, text):
 
@@ -540,19 +550,13 @@ class MacOSInputClipboard(InputClipboard):
         self._set_system_clipboard(text)
         self.shortcuts.paste()
 
-        return {
-            "pasted": True,
-            "text_length": len(text)
-        }
+        return {"pasted": True, "text_length": len(text)}
 
     def get_selected_text(self):
-        old_content = self._get_system_clipboard()
+        self._get_system_clipboard()
         res = self.copy_text()
 
-        return {
-            "selected": True,
-            "text": res["text"]
-        }
+        return {"selected": True, "text": res["text"]}
 
     def replace_selected_text(self, text):
         return self.paste_text(text)
@@ -563,10 +567,7 @@ class MacOSInputClipboard(InputClipboard):
 
         self._set_system_clipboard(new_text)
 
-        return {
-            "appended": True,
-            "text_length": len(new_text)
-        }
+        return {"appended": True, "text_length": len(new_text)}
 
     def clear_clipboard(self):
         self.pb.clearContents()
@@ -719,7 +720,7 @@ class MacOSInputState(InputState):
             "shift": Quartz.kCGEventFlagMaskShift,
             "option": Quartz.kCGEventFlagMaskAlternate,
             "control": Quartz.kCGEventFlagMaskControl,
-            "caps_lock": Quartz.kCGEventFlagMaskAlphaShift
+            "caps_lock": Quartz.kCGEventFlagMaskAlphaShift,
         }
 
     def get_keyboard_state(self):
@@ -751,11 +752,7 @@ class MacOSInputState(InputState):
 
     def get_mouse_button_state(self):
         state = NSEvent.pressedMouseButtons()
-        return {
-            "left": bool(state & 1),
-            "right": bool(state & 2),
-            "middle": bool(state & 4)
-        }
+        return {"left": bool(state & 1), "right": bool(state & 2), "middle": bool(state & 4)}
 
     def is_mouse_button_pressed(self, button):
         states = self.get_mouse_button_state()
@@ -767,16 +764,11 @@ class MacOSInputState(InputState):
         screen_h = NSScreen.mainScreen().frame().size.height
 
         return {
-            "keyboard": {
-                "pressed_keys": kb["pressed_keys"]
-            },
+            "keyboard": {"pressed_keys": kb["pressed_keys"]},
             "mouse": {
-                "position": {
-                    "x": int(m_pos.x),
-                    "y": int(screen_h - m_pos.y)
-                },
-                "buttons": self.get_mouse_button_state()
-            }
+                "position": {"x": int(m_pos.x), "y": int(screen_h - m_pos.y)},
+                "buttons": self.get_mouse_button_state(),
+            },
         }
 
     def release_all_input(self):
@@ -793,11 +785,8 @@ class MacOSInputState(InputState):
                     self.mouse.mouse_up(btn)
                 mouse_ok = True
 
-            return {
-                "keys_released": keys_ok,
-                "mouse_buttons_released": mouse_ok
-            }
-        except Exception as e:
+            return {"keys_released": keys_ok, "mouse_buttons_released": mouse_ok}
+        except Exception:
             return {"keys_released": keys_ok, "mouse_buttons_released": mouse_ok}
 
 
@@ -860,25 +849,25 @@ class MacOSInputAutomation(InputAutomation):
         self._cancel_flags = {}
 
     def _dispatch_action(self, action):
-        atype = action.get('type')
+        atype = action.get("type")
 
         if atype == "move_mouse":
-            self.mouse.move_mouse(action['x'], action['y'])
+            self.mouse.move_mouse(action["x"], action["y"])
         elif atype == "click":
-            self.mouse.click_mouse(action.get('button', 'left'))
+            self.mouse.click_mouse(action.get("button", "left"))
         elif atype == "double_click":
-            self.mouse.double_click_mouse(action.get('button', 'left'))
+            self.mouse.double_click_mouse(action.get("button", "left"))
         elif atype == "scroll":
-            self.mouse.scroll_mouse(action['clicks'])
+            self.mouse.scroll_mouse(action["clicks"])
 
         elif atype == "type_text":
-            self.kb.type_text(action['text'])
+            self.kb.type_text(action["text"])
         elif atype == "press_key":
-            self.kb.press_key(action['key'])
+            self.kb.press_key(action["key"])
         elif atype == "tap_key":
-            self.kb.tap_key(action['key'])
+            self.kb.tap_key(action["key"])
         elif atype == "press_shortcut":
-            MacOSInputShortcuts().press_shortcut(action['shortcut'])
+            MacOSInputShortcuts().press_shortcut(action["shortcut"])
 
     def execute_input_sequence(self, actions):
         executed = 0
@@ -887,7 +876,7 @@ class MacOSInputAutomation(InputAutomation):
                 self._dispatch_action(action)
                 executed += 1
             return {"completed": True, "executed": executed, "failed": 0}
-        except Exception as e:
+        except Exception:
             return {"completed": False, "executed": executed, "failed": len(actions) - executed}
 
     def execute_input_sequence_with_delay(self, actions, delay=0.5):
@@ -906,7 +895,8 @@ class MacOSInputAutomation(InputAutomation):
         while time.time() - start_time < timeout:
             if input_type == "mouse_click":
                 m_state = state_service.get_mouse_button_state()
-                if any(m_state.values()): return {"triggered": True, "input_type": "mouse_click"}
+                if any(m_state.values()):
+                    return {"triggered": True, "input_type": "mouse_click"}
             elif input_type == "key_press":
                 if state_service.get_pressed_keys()["count"] > 0:
                     return {"triggered": True, "input_type": "key_press"}

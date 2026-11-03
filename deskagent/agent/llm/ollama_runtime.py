@@ -60,8 +60,10 @@ class OllamaRuntime:
         if not self.config.auto_start:
             raise LLMProviderError(f"Ollama server is unavailable: {self.config.base_url}")
         subprocess.Popen(
-            [self.config.ollama_binary, "serve"], stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL, start_new_session=True,
+            [self.config.ollama_binary, "serve"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
         )
         deadline = time.monotonic() + self.config.startup_timeout
         while time.monotonic() < deadline:

@@ -1,4 +1,5 @@
 import pytest
+from tests.actions.application.conftest import assert_error, assert_success
 
 from deskagent.actions.application.resources import (
     GetApplicationCPUUsage,
@@ -7,7 +8,6 @@ from deskagent.actions.application.resources import (
     GetApplicationResourceUsage,
     GetTopResourceApplications,
 )
-from tests.application.conftest import assert_error, assert_success
 
 
 @pytest.mark.parametrize(
@@ -44,19 +44,13 @@ from tests.application.conftest import assert_error, assert_success
         ),
     ],
 )
-def test_resource_actions(
-    application_context, action_cls, method, service_value, expected
-):
+def test_resource_actions(application_context, action_cls, method, service_value, expected):
     getattr(application_context.services.application, method).return_value = service_value
 
-    result = action_cls().execute(
-        application_context, {"application": "Safari"}
-    )
+    result = action_cls().execute(application_context, {"application": "Safari"})
 
     assert_success(result, expected)
-    getattr(application_context.services.application, method).assert_called_once_with(
-        "Safari"
-    )
+    getattr(application_context.services.application, method).assert_called_once_with("Safari")
 
 
 @pytest.mark.parametrize(
@@ -76,15 +70,11 @@ def test_get_top_resource_applications(application_context, resource, limit):
         result,
         {"resource": resource, "applications": value},
     )
-    application_context.services.application.get_top_resource_applications.assert_called_once_with(
-        resource, limit
-    )
+    application_context.services.application.get_top_resource_applications.assert_called_once_with(resource, limit)
 
 
 @pytest.mark.parametrize("resource", ["", "gpu", None])
-def test_get_top_resource_applications_rejects_invalid_resource(
-    application_context, resource
-):
+def test_get_top_resource_applications_rejects_invalid_resource(application_context, resource):
     result = GetTopResourceApplications().execute(
         application_context,
         {"resource": resource, "limit": 10},
@@ -95,9 +85,7 @@ def test_get_top_resource_applications_rejects_invalid_resource(
 
 
 @pytest.mark.parametrize("limit", [0, -1])
-def test_get_top_resource_applications_rejects_invalid_limit(
-    application_context, limit
-):
+def test_get_top_resource_applications_rejects_invalid_limit(application_context, limit):
     result = GetTopResourceApplications().execute(
         application_context,
         {"resource": "cpu", "limit": limit},
@@ -124,9 +112,7 @@ def test_resource_actions_require_application(application_context, action_cls, m
 
 
 def test_get_top_resource_applications_requires_resource(application_context):
-    result = GetTopResourceApplications().execute(
-        application_context, {"limit": 10}
-    )
+    result = GetTopResourceApplications().execute(application_context, {"limit": 10})
 
     assert_error(result, "MISSING_PARAM")
     application_context.services.application.get_top_resource_applications.assert_not_called()

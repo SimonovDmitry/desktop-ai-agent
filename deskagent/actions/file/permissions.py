@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GetFilePermissions(Action):
@@ -10,7 +10,7 @@ class GetFilePermissions(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             perms = context.services.file.permissions.get_permissions(path)
             return ActionResult(success=True, data=perms)
@@ -25,7 +25,7 @@ class GetFileOwner(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             owner = context.services.file.permissions.get_owner(path)
             return ActionResult(success=True, data={"owner": owner})
@@ -40,7 +40,7 @@ class GetFileGroup(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             group = context.services.file.permissions.get_group(path)
             return ActionResult(success=True, data={"group": group})
@@ -56,11 +56,11 @@ class SetFilePermissions(Action):
     requires_confirmation = True
     parameters_schema = {
         "path": {"type": "string", "required": True},
-        "mode": {"type": "string", "required": True, "description": "Octal mode like '0644'"}
+        "mode": {"type": "string", "required": True, "description": "Octal mode like '0644'"},
     }
 
     def execute(self, context, parameters):
-        path, mode = parameters.get('path'), parameters.get('mode')
+        path, mode = parameters.get("path"), parameters.get("mode")
         try:
             context.services.file.permissions.set_permissions(path, mode)
             return ActionResult(success=True, data={"path": path, "new_mode": mode})
@@ -76,14 +76,19 @@ class AddFilePermission(Action):
     parameters_schema = {
         "path": {"type": "string", "required": True},
         "target": {"type": "string", "required": True, "enum": ["owner", "group", "others"]},
-        "permission": {"type": "string", "required": True, "enum": ["read", "write", "execute"]}
+        "permission": {"type": "string", "required": True, "enum": ["read", "write", "execute"]},
     }
 
     def execute(self, context, parameters):
-        p = parameters
+        p = parameters or {}
+        path = p.get("path")
+        target = p.get("target")
+        permission = p.get("permission")
+        if not target and permission and "_" in permission:
+            target, permission = permission.split("_", 1)
         try:
-            context.services.file.permissions.add_permission(p['path'], p['target'], p['permission'])
-            return ActionResult(success=True, data={"status": "added", "permission": p['permission']})
+            context.services.file.permissions.add_permission(path, target, permission)
+            return ActionResult(success=True, data={"status": "added", "permission": p.get("permission")})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -96,14 +101,19 @@ class RemoveFilePermission(Action):
     parameters_schema = {
         "path": {"type": "string", "required": True},
         "target": {"type": "string", "required": True, "enum": ["owner", "group", "others"]},
-        "permission": {"type": "string", "required": True, "enum": ["read", "write", "execute"]}
+        "permission": {"type": "string", "required": True, "enum": ["read", "write", "execute"]},
     }
 
     def execute(self, context, parameters):
-        p = parameters
+        p = parameters or {}
+        path = p.get("path")
+        target = p.get("target")
+        permission = p.get("permission")
+        if not target and permission and "_" in permission:
+            target, permission = permission.split("_", 1)
         try:
-            context.services.file.permissions.remove_permission(p['path'], p['target'], p['permission'])
-            return ActionResult(success=True, data={"status": "removed", "permission": p['permission']})
+            context.services.file.permissions.remove_permission(path, target, permission)
+            return ActionResult(success=True, data={"status": "removed", "permission": p.get("permission")})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -114,13 +124,10 @@ class SetFileOwner(Action):
     category = ActionCategory.FILE
     risk_level = RiskLevel.HIGH
     requires_confirmation = True
-    parameters_schema = {
-        "path": {"type": "string", "required": True},
-        "owner": {"type": "string", "required": True}
-    }
+    parameters_schema = {"path": {"type": "string", "required": True}, "owner": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path, owner = parameters.get('path'), parameters.get('owner')
+        path, owner = parameters.get("path"), parameters.get("owner")
         try:
             context.services.file.permissions.set_owner(path, owner)
             return ActionResult(success=True, data={"path": path, "new_owner": owner})
@@ -133,13 +140,11 @@ class SetFileGroup(Action):
     description = "Change the group of a file"
     category = ActionCategory.FILE
     risk_level = RiskLevel.MEDIUM
-    parameters_schema = {
-        "path": {"type": "string", "required": True},
-        "group": {"type": "string", "required": True}
-    }
+    requires_confirmation = True
+    parameters_schema = {"path": {"type": "string", "required": True}, "group": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path, group = parameters.get('path'), parameters.get('group')
+        path, group = parameters.get("path"), parameters.get("group")
         try:
             context.services.file.permissions.set_group(path, group)
             return ActionResult(success=True, data={"path": path, "new_group": group})
@@ -154,7 +159,7 @@ class IsFileReadable(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             result = context.services.file.permissions.can_read(path)
             return ActionResult(success=True, data={"readable": result})
@@ -169,7 +174,7 @@ class IsFileWritable(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             result = context.services.file.permissions.can_write(path)
             return ActionResult(success=True, data={"writable": result})
@@ -184,7 +189,7 @@ class IsFileExecutable(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             result = context.services.file.permissions.can_execute(path)
             return ActionResult(success=True, data={"executable": result})

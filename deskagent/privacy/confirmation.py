@@ -2,14 +2,23 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Any
 
-
-SENSITIVE_KEYS = frozenset({
-    "password", "passphrase", "token", "secret", "api_key", "authorization",
-    "cookie", "private_key", "credential",
-})
+SENSITIVE_KEYS = frozenset(
+    {
+        "password",
+        "passphrase",
+        "token",
+        "secret",
+        "api_key",
+        "authorization",
+        "cookie",
+        "private_key",
+        "credential",
+    }
+)
 
 
 def redact(value: Any, key: str = "") -> Any:
@@ -51,7 +60,7 @@ class ConfirmationRequest:
         return True
 
     @classmethod
-    def from_dict(cls, value: dict[str, Any]) -> "ConfirmationRequest":
+    def from_dict(cls, value: dict[str, Any]) -> ConfirmationRequest:
         return cls(
             str(value.get("confirmation_id", "")),
             str(value.get("question", "Approve actions?")),

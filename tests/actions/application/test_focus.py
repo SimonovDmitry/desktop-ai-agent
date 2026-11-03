@@ -1,4 +1,5 @@
 import pytest
+from tests.actions.application.conftest import assert_error, assert_success
 
 from deskagent.actions.application.focus import (
     ActivateApplication,
@@ -10,7 +11,6 @@ from deskagent.actions.application.focus import (
     RestoreApplication,
     ShowApplication,
 )
-from tests.application.conftest import assert_error, assert_success
 
 
 @pytest.mark.parametrize(
@@ -27,14 +27,10 @@ from tests.application.conftest import assert_error, assert_success
 def test_focus_mutation_actions(application_context, action_cls, method, expected):
     getattr(application_context.services.application, method).return_value = None
 
-    result = action_cls().execute(
-        application_context, {"application": "Safari"}
-    )
+    result = action_cls().execute(application_context, {"application": "Safari"})
 
     assert_success(result, expected)
-    getattr(application_context.services.application, method).assert_called_once_with(
-        "Safari"
-    )
+    getattr(application_context.services.application, method).assert_called_once_with("Safari")
 
 
 def test_get_application_visibility(application_context):
@@ -43,27 +39,19 @@ def test_get_application_visibility(application_context):
         "hidden": False,
     }
 
-    result = GetApplicationVisibility().execute(
-        application_context, {"application": "Safari"}
-    )
+    result = GetApplicationVisibility().execute(application_context, {"application": "Safari"})
 
     assert_success(result, {"visible": True, "hidden": False})
-    application_context.services.application.get_visibility.assert_called_once_with(
-        "Safari"
-    )
+    application_context.services.application.get_visibility.assert_called_once_with("Safari")
 
 
 def test_get_application_focus_state(application_context):
     application_context.services.application.get_focus_state.return_value = True
 
-    result = GetApplicationFocusState().execute(
-        application_context, {"application": "Safari"}
-    )
+    result = GetApplicationFocusState().execute(application_context, {"application": "Safari"})
 
     assert_success(result, {"focused": True})
-    application_context.services.application.get_focus_state.assert_called_once_with(
-        "Safari"
-    )
+    application_context.services.application.get_focus_state.assert_called_once_with("Safari")
 
 
 @pytest.mark.parametrize(
@@ -102,9 +90,7 @@ def test_focus_actions_require_application(application_context, action_cls, meth
 def test_focus_service_errors_are_wrapped(application_context, method, action_cls):
     getattr(application_context.services.application, method).side_effect = RuntimeError("focus failed")
 
-    result = action_cls().execute(
-        application_context, {"application": "Safari"}
-    )
+    result = action_cls().execute(application_context, {"application": "Safari"})
 
     assert_error(result, "SYSTEM_ERROR")
     assert result.error == "focus failed"

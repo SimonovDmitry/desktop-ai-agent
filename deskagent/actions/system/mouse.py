@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GetCursorPosition(Action):
@@ -29,13 +29,13 @@ class MoveMouse(Action):
     reversible = True
     parameters_schema = {
         "x": {"type": "integer", "required": True, "description": "Target X coordinate"},
-        "y": {"type": "integer", "required": True, "description": "Target Y coordinate"}
+        "y": {"type": "integer", "required": True, "description": "Target Y coordinate"},
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        x = params.get('x')
-        y = params.get('y')
+        x = params.get("x")
+        y = params.get("y")
 
         if x is None or y is None:
             return ActionResult(success=False, error="Parameters 'x' and 'y' are required", error_code="MISSING_PARAM")
@@ -60,16 +60,19 @@ class Click(Action):
             "required": False,
             "default": "left",
             "enum": ["left", "right", "middle"],
-            "description": "Mouse button to click"
+            "description": "Mouse button to click",
         }
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        button = params.get('button', 'left')
+        button = params.get("button", "left")
 
         if button is None:
-            button = 'left'
+            button = "left"
+
+        if button not in ("left", "right", "middle"):
+            return ActionResult(success=False, error=f"Invalid button: {button}", error_code="INVALID_BUTTON")
 
         try:
             context.services.system.mouse.click(button)
@@ -86,20 +89,18 @@ class DoubleClick(Action):
     requires_confirmation = False
     reversible = True
     parameters_schema = {
-        "button": {
-            "type": "string",
-            "required": False,
-            "default": "left",
-            "enum": ["left", "right", "middle"]
-        }
+        "button": {"type": "string", "required": False, "default": "left", "enum": ["left", "right", "middle"]}
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        button = params.get('button', 'left')
+        button = params.get("button", "left")
 
         if button is None:
-            button = 'left'
+            button = "left"
+
+        if button not in ("left", "right", "middle"):
+            return ActionResult(success=False, error=f"Invalid button: {button}", error_code="INVALID_BUTTON")
 
         try:
             context.services.system.mouse.double_click(button)
@@ -120,17 +121,18 @@ class DragMouse(Action):
         "x1": {"type": "integer", "required": True},
         "y1": {"type": "integer", "required": True},
         "x2": {"type": "integer", "required": True},
-        "y2": {"type": "integer", "required": True}
+        "y2": {"type": "integer", "required": True},
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        x1, y1 = params.get('x1'), params.get('y1')
-        x2, y2 = params.get('x2'), params.get('y2')
+        x1, y1 = params.get("x1"), params.get("y1")
+        x2, y2 = params.get("x2"), params.get("y2")
 
         if any(v is None for v in (x1, y1, x2, y2)):
-            return ActionResult(success=False, error="Parameters 'x1', 'y1', 'x2', and 'y2' are required",
-                                error_code="MISSING_PARAM")
+            return ActionResult(
+                success=False, error="Parameters 'x1', 'y1', 'x2', and 'y2' are required", error_code="MISSING_PARAM"
+            )
 
         try:
             context.services.system.mouse.drag_mouse(x1, y1, x2, y2)
@@ -148,13 +150,16 @@ class ScrollMouse(Action):
     requires_confirmation = False
     reversible = True
     parameters_schema = {
-        "clicks": {"type": "integer", "required": True,
-                   "description": "Number of clicks to scroll (positive for up, negative for down)"}
+        "clicks": {
+            "type": "integer",
+            "required": True,
+            "description": "Number of clicks to scroll (positive for up, negative for down)",
+        }
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        clicks = params.get('clicks')
+        clicks = params.get("clicks")
 
         if clicks is None:
             return ActionResult(success=False, error="Parameter 'clicks' is required", error_code="MISSING_PARAM")

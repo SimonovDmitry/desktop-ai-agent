@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GetApplicationPermissions(Action):
@@ -10,16 +10,12 @@ class GetApplicationPermissions(Action):
     requires_confirmation = False
     reversible = False
     parameters_schema = {
-        "application": {
-            "type": "string",
-            "required": True,
-            "description": "Name of the application to check"
-        }
+        "application": {"type": "string", "required": True, "description": "Name of the application to check"}
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         if not app_name:
             return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
 
@@ -38,12 +34,19 @@ class GetAccessibilityPermission(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
+
         try:
-            granted = context.services.application.preferences.get_accessibility_status(app_name)
+            srv = context.services.application.preferences
+            if hasattr(srv, "has_accessibility_permission"):
+                granted = srv.has_accessibility_permission(app_name)
+            else:
+                granted = srv.get_accessibility_status(app_name)
             return ActionResult(success=True, data={"granted": granted})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetAutomationPermission(Action):
@@ -54,12 +57,19 @@ class GetAutomationPermission(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
+
         try:
-            granted = context.services.application.preferences.get_automation_status(app_name)
+            srv = context.services.application.preferences
+            if hasattr(srv, "has_automation_permission"):
+                granted = srv.has_automation_permission(app_name)
+            else:
+                granted = srv.get_automation_status(app_name)
             return ActionResult(success=True, data={"granted": granted})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetNotificationPermission(Action):
@@ -70,12 +80,19 @@ class GetNotificationPermission(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
+
         try:
-            granted = context.services.application.preferences.get_notification_status(app_name)
+            srv = context.services.application.preferences
+            if hasattr(srv, "has_notification_permission"):
+                granted = srv.has_notification_permission(app_name)
+            else:
+                granted = srv.get_notification_status(app_name)
             return ActionResult(success=True, data={"granted": granted})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetDefaultApplication(Action):
@@ -83,23 +100,24 @@ class GetDefaultApplication(Action):
     description = "Find which application is set as default for a specific file type"
     category = ActionCategory.APPLICATION
     parameters_schema = {
-        "file_type": {
-            "type": "string",
-            "required": True,
-            "description": "File extension (e.g. '.pdf') or UTI"
-        }
+        "file_type": {"type": "string", "required": True, "description": "File extension (e.g. '.pdf') or UTI"}
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        file_type = params.get('file_type')
-        if not file_type: return ActionResult(success=False, error="Missing file_type")
+        file_type = params.get("file_type")
+        if not file_type:
+            return ActionResult(success=False, error="Parameter 'file_type' is required", error_code="MISSING_PARAM")
 
         try:
-            app_name = context.services.application.preferences.get_default_app(file_type)
+            srv = context.services.application.preferences
+            if hasattr(srv, "get_default_application"):
+                app_name = srv.get_default_application(file_type)
+            else:
+                app_name = srv.get_default_app(file_type)
             return ActionResult(success=True, data={"file_type": file_type, "application": app_name})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class OpenWithApplication(Action):
@@ -108,20 +126,23 @@ class OpenWithApplication(Action):
     category = ActionCategory.APPLICATION
     parameters_schema = {
         "path": {"type": "string", "required": True},
-        "application": {"type": "string", "required": True}
+        "application": {"type": "string", "required": True},
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        path = params.get('path')
-        app_name = params.get('application')
-        if not path or not app_name: return ActionResult(success=False, error="Missing path or application")
+        path = params.get("path")
+        app_name = params.get("application")
+        if not path or not app_name:
+            return ActionResult(
+                success=False, error="Parameters 'path' and 'application' are required", error_code="MISSING_PARAM"
+            )
 
         try:
             context.services.application.preferences.open_with(path, app_name)
             return ActionResult(success=True, data={"opened": True, "path": path, "application": app_name})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class OpenApplicationPreferences(Action):
@@ -132,12 +153,19 @@ class OpenApplicationPreferences(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
+
         try:
-            context.services.application.preferences.open_app_prefs(app_name)
+            srv = context.services.application.preferences
+            if hasattr(srv, "open_preferences"):
+                srv.open_preferences(app_name)
+            else:
+                srv.open_app_prefs(app_name)
             return ActionResult(success=True, data={"opened": True, "application": app_name})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class OpenApplicationSystemSettings(Action):
@@ -150,18 +178,25 @@ class OpenApplicationSystemSettings(Action):
             "type": "string",
             "required": True,
             "enum": ["accessibility", "automation", "notifications", "general"],
-            "description": "System settings section to open"
-        }
+            "description": "System settings section to open",
+        },
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
-        section = params.get('section')
-        if not app_name or not section: return ActionResult(success=False, error="Missing parameters")
+        app_name = params.get("application")
+        section = params.get("section")
+        if not app_name or not section:
+            return ActionResult(
+                success=False, error="Parameters 'application' and 'section' are required", error_code="MISSING_PARAM"
+            )
 
         try:
-            context.services.application.preferences.open_system_settings(app_name, section)
+            srv = context.services.application.preferences
+            if hasattr(srv, "open_system_settings"):
+                srv.open_system_settings(app_name, section)
+            else:
+                srv.open_system_prefs(app_name, section)
             return ActionResult(success=True, data={"opened": True, "section": section})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

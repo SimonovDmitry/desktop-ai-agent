@@ -1,5 +1,23 @@
+import time
+
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
+
+
+def _get_keyboard(context):
+    if hasattr(context.services, "system") and hasattr(context.services.system, "keyboard"):
+        return context.services.system.keyboard
+    if hasattr(context.services, "input") and hasattr(context.services.input, "keyboard"):
+        return context.services.input.keyboard
+    return getattr(context.services, "keyboard", None)
+
+
+def _get_clipboard(context):
+    if hasattr(context.services, "system") and hasattr(context.services.system, "clipboard"):
+        return context.services.system.clipboard
+    if hasattr(context.services, "input") and hasattr(context.services.input, "clipboard"):
+        return context.services.input.clipboard
+    return getattr(context.services, "clipboard", None)
 
 
 class CopyText(Action):
@@ -11,12 +29,10 @@ class CopyText(Action):
 
     def execute(self, context, parameters):
         try:
-            text = context.services.input.clipboard.copy_text()
-
-            return ActionResult(success=True, data={
-                "copied": True,
-                "text": text or ""
-            })
+            _get_keyboard(context).copy()
+            time.sleep(0.05)
+            text = _get_clipboard(context).get_clipboard()
+            return ActionResult(success=True, data={"copied": True, "text": text or ""})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
@@ -27,22 +43,18 @@ class PasteText(Action):
     description = "Place specific text into the clipboard and trigger the 'Paste' command"
     category = ActionCategory.SYSTEM
     risk_level = RiskLevel.LOW
-    parameters_schema = {
-        "text": {"type": "string", "required": True, "description": "Text to paste"}
-    }
+    parameters_schema = {"text": {"type": "string", "required": True, "description": "Text to paste"}}
 
     def execute(self, context, parameters):
-        text = parameters.get('text')
+        p = parameters or {}
+        text = p.get("text")
         if text is None:
             return ActionResult(success=False, error="Parameter 'text' is required", error_code="MISSING_PARAM")
 
         try:
-            context.services.input.clipboard.paste_text(text)
-
-            return ActionResult(success=True, data={
-                "pasted": True,
-                "text_length": len(text)
-            })
+            _get_clipboard(context).set_clipboard(text)
+            _get_keyboard(context).paste()
+            return ActionResult(success=True, data={"pasted": True, "text_length": len(text)})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -55,11 +67,12 @@ class GetSelectedText(Action):
 
     def execute(self, context, parameters):
         try:
-            selected_text = context.services.input.clipboard.get_selected_text()
-            return ActionResult(success=True, data={
-                "selected": True,
-                "text": selected_text or ""
-            })
+            cb = _get_clipboard(context)
+            cb.get_clipboard()
+            _get_keyboard(context).copy()
+            time.sleep(0.05)
+            selected_text = cb.get_clipboard()
+            return ActionResult(success=True, data={"selected": True, "text": selected_text or ""})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -69,21 +82,18 @@ class ReplaceSelectedText(Action):
     description = "Replace the current selection with new text"
     category = ActionCategory.SYSTEM
     risk_level = RiskLevel.MEDIUM
-    parameters_schema = {
-        "text": {"type": "string", "required": True}
-    }
+    parameters_schema = {"text": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        text = parameters.get('text')
-        if text is None: return ActionResult(success=False, error="Missing text")
+        p = parameters or {}
+        text = p.get("text")
+        if text is None:
+            return ActionResult(success=False, error="Missing text", error_code="MISSING_PARAM")
 
         try:
-            context.services.input.clipboard.replace_selected_text(text)
-
-            return ActionResult(success=True, data={
-                "replaced": True,
-                "text_length": len(text)
-            })
+            _get_clipboard(context).set_clipboard(text)
+            _get_keyboard(context).paste()
+            return ActionResult(success=True, data={"replaced": True, "text_length": len(text)})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -94,20 +104,23 @@ class AppendToClipboard(Action):
     category = ActionCategory.SYSTEM
     parameters_schema = {
         "text": {"type": "string", "required": True},
-        "separator": {"type": "string", "required": False, "default": "\n"}
+        "separator": {"type": "string", "required": False, "default": "\n"},
     }
 
     def execute(self, context, parameters):
-        text = parameters.get('text')
-        separator = parameters.get('separator', "\n")
+        p = parameters or {}
+        text = p.get("text", "")
+        separator = p.get("separator", "\n")
 
         try:
-            context.services.input.clipboard.append_to_clipboard(text, separator)
-            new_content = text
-            return ActionResult(success=True, data={
-                "appended": True,
-                "text_length": len(new_content)
-            })
+            cb = _get_clipboard(context)
+            current = cb.get_clipboard()
+            if current:
+                expected = f"{current}{separator}{text}"
+            else:
+                expected = text
+            cb.set_clipboard(expected)
+            return ActionResult(success=True, data={"appended": True, "text_length": len(expected)})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -120,7 +133,13 @@ class ClearClipboard(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.input.clipboard.clear_clipboard()
+            cb = _get_clipboard(context)
+            if hasattr(cb, "clean_clipboard"):
+                cb.clean_clipboard()
+            elif hasattr(cb, "clear_clipboard"):
+                cb.clear_clipboard()
+            elif hasattr(cb, "clear"):
+                cb.clear()
             return ActionResult(success=True, data={"cleared": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))

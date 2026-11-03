@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GetClipboard(Action):
@@ -15,7 +15,7 @@ class GetClipboard(Action):
         try:
             content = context.services.system.clipboard.get_clipboard()
             if content is None:
-                return ActionResult(success=True, data={"content": ""}, error="Clipboard is empty")
+                return ActionResult(success=True, data={"content": ""})
 
             return ActionResult(success=True, data={"content": content})
         except Exception as exc:
@@ -30,16 +30,12 @@ class SetClipboard(Action):
     requires_confirmation = False
     reversible = True
     parameters_schema = {
-        "text": {
-            "type": "string",
-            "required": True,
-            "description": "Text content to be placed on the clipboard"
-        }
+        "text": {"type": "string", "required": True, "description": "Text content to be placed on the clipboard"}
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        text = params.get('text')
+        text = params.get("text")
 
         if text is None:
             return ActionResult(success=False, error="Parameter 'text' is required", error_code="MISSING_PARAM")

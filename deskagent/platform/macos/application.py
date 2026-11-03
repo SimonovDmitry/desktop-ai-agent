@@ -1,22 +1,32 @@
 import os
 import plistlib
 import subprocess
-import time
-import psutil
 import tempfile
-from UniformTypeIdentifiers import UTType
-from AppKit import (NSWorkspace, NSURL, NSApplicationActivateIgnoringOtherApps, NSRunningApplication)
+import time
+
+import psutil
+from AppKit import NSURL, NSApplicationActivateIgnoringOtherApps, NSWorkspace
 from ApplicationServices import AXIsProcessTrusted
-from deskagent.platform.base.application import (ApplicationDocuments, ApplicationFocus, ApplicationInformation,
-                                                 ApplicationInstances, ApplicationLifecycle, ApplicationPreferences,
-                                                 ApplicationProcesses, ApplicationResources, ApplicationStartup)
+from UniformTypeIdentifiers import UTType
+
+from deskagent.platform.base.application import (
+    ApplicationDocuments,
+    ApplicationFocus,
+    ApplicationInformation,
+    ApplicationInstances,
+    ApplicationLifecycle,
+    ApplicationPreferences,
+    ApplicationProcesses,
+    ApplicationResources,
+    ApplicationStartup,
+)
 
 
 class MacOSApplicationLifecycle(ApplicationLifecycle):
     def _get_pid_by_name(self, app_name):
-        for proc in psutil.process_iter(['pid', 'name']):
-            if app_name.lower() in proc.info['name'].lower():
-                return proc.info['pid']
+        for proc in psutil.process_iter(["pid", "name"]):
+            if app_name.lower() in proc.info["name"].lower():
+                return proc.info["pid"]
         return None
 
     def launch(self, app_name, arguments=None):
@@ -63,7 +73,7 @@ class MacOSApplicationLifecycle(ApplicationLifecycle):
                     "application": app_name,
                     "started": True,
                     "pid": pid,
-                    "waited": round(time.time() - start_time, 2)
+                    "waited": round(time.time() - start_time, 2),
                 }
             time.sleep(0.5)
         raise TimeoutError(f"Application {app_name} failed to start within {timeout}s")
@@ -72,11 +82,7 @@ class MacOSApplicationLifecycle(ApplicationLifecycle):
         start_time = time.time()
         while time.time() - start_time < timeout:
             if not self._get_pid_by_name(app_name):
-                return {
-                    "application": app_name,
-                    "exited": True,
-                    "waited": round(time.time() - start_time, 2)
-                }
+                return {"application": app_name, "exited": True, "waited": round(time.time() - start_time, 2)}
             time.sleep(0.5)
         raise TimeoutError(f"Application {app_name} failed to exit within {timeout}s")
 
@@ -88,18 +94,10 @@ class MacOSApplicationLifecycle(ApplicationLifecycle):
 
         if target_app:
             target_app.activateWithOptions_(NSApplicationActivateIgnoringOtherApps)
-            return {
-                "application": app_name,
-                "action": "activated",
-                "pid": target_app.processIdentifier()
-            }
+            return {"application": app_name, "action": "activated", "pid": target_app.processIdentifier()}
         else:
             result = self.launch(app_name)
-            return {
-                "application": app_name,
-                "action": "launched",
-                "pid": result["pid"]
-            }
+            return {"application": app_name, "action": "launched", "pid": result["pid"]}
 
 
 class MacOSApplicationInformation(ApplicationInformation):
@@ -113,7 +111,7 @@ class MacOSApplicationInformation(ApplicationInformation):
     def _get_bundle_info(self, app_path):
         plist_path = os.path.join(app_path, "Contents/Info.plist")
         if os.path.exists(plist_path):
-            with open(plist_path, 'rb') as f:
+            with open(plist_path, "rb") as f:
                 return plistlib.load(f)
         return {}
 
@@ -122,11 +120,9 @@ class MacOSApplicationInformation(ApplicationInformation):
         apps = []
         for app in workspace.runningApplications():
             if app.activationPolicy() == 0:
-                apps.append({
-                    "name": app.localizedName(),
-                    "pid": app.processIdentifier(),
-                    "bundle_id": app.bundleIdentifier()
-                })
+                apps.append(
+                    {"name": app.localizedName(), "pid": app.processIdentifier(), "bundle_id": app.bundleIdentifier()}
+                )
         return apps
 
     def get_installed(self):
@@ -140,7 +136,7 @@ class MacOSApplicationInformation(ApplicationInformation):
 
     def find(self, query, limit=10):
         all_apps = self.get_installed()
-        results = [a for a in all_apps if query.lower() in a['name'].lower()]
+        results = [a for a in all_apps if query.lower() in a["name"].lower()]
         return results[:limit]
 
     def get_info(self, app_name):
@@ -157,7 +153,7 @@ class MacOSApplicationInformation(ApplicationInformation):
             "path": path,
             "bundle_id": plist.get("CFBundleIdentifier"),
             "version": plist.get("CFBundleShortVersionString"),
-            "architecture": self.get_architecture(app_name)
+            "architecture": self.get_architecture(app_name),
         }
 
     def get_status(self, app_name):
@@ -172,7 +168,7 @@ class MacOSApplicationInformation(ApplicationInformation):
             "running": True,
             "visible": not app.isHidden(),
             "active": active_app and active_app.processIdentifier() == app.processIdentifier(),
-            "pid": app.processIdentifier()
+            "pid": app.processIdentifier(),
         }
 
     def is_running(self, app_name):
@@ -181,11 +177,7 @@ class MacOSApplicationInformation(ApplicationInformation):
     def get_active(self):
         app = NSWorkspace.sharedWorkspace().frontmostApplication()
         if app:
-            return {
-                "name": app.localizedName(),
-                "pid": app.processIdentifier(),
-                "bundle_id": app.bundleIdentifier()
-            }
+            return {"name": app.localizedName(), "pid": app.processIdentifier(), "bundle_id": app.bundleIdentifier()}
         return None
 
     def get_pid(self, app_name):
@@ -221,7 +213,7 @@ class MacOSApplicationInformation(ApplicationInformation):
         app = self._get_running_app_by_name(app_name)
         if app:
             arch_code = app.executableArchitecture()
-            return "arm64" if arch_code == 0x0100000c else "x86_64"
+            return "arm64" if arch_code == 0x0100000C else "x86_64"
 
         exec_path = self.get_executable_path(app_name)
         if exec_path:
@@ -257,7 +249,7 @@ class MacOSApplicationPreferences(ApplicationPreferences):
         return {
             "accessibility": self.get_accessibility_status(app_name),
             "automation": self.get_automation_status(app_name),
-            "notifications": self.get_notification_status(app_name)
+            "notifications": self.get_notification_status(app_name),
         }
 
     def get_accessibility_status(self, app_name=None):
@@ -276,7 +268,7 @@ class MacOSApplicationPreferences(ApplicationPreferences):
 
     def get_default_app(self, file_type):
         workspace = NSWorkspace.sharedWorkspace()
-        ext = file_type.lstrip('.')
+        ext = file_type.lstrip(".")
 
         try:
             ut_type = UTType.typeWithFilenameExtension_(ext)
@@ -289,7 +281,7 @@ class MacOSApplicationPreferences(ApplicationPreferences):
 
         test_path = os.path.join(tempfile.gettempdir(), f"agent_check.{ext}")
         try:
-            with open(test_path, 'w') as f:
+            with open(test_path, "w"):
                 pass
 
             temp_url = NSURL.fileURLWithPath_(test_path)
@@ -326,7 +318,7 @@ class MacOSApplicationPreferences(ApplicationPreferences):
             "accessibility": "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
             "automation": "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation",
             "notifications": "x-apple.systempreferences:com.apple.Notifications-Settings.extension",
-            "general": "x-apple.systempreferences:com.apple.PreferenceSync.General"
+            "general": "x-apple.systempreferences:com.apple.PreferenceSync.General",
         }
 
         url = sections.get(section.lower(), sections["general"])
@@ -393,7 +385,7 @@ class MacOSApplicationFocus(ApplicationFocus):
             subprocess.run(["osascript", "-e", script], check=True)
             self.activate(app_name)
             return {"application": app_name, "restored": True}
-        except Exception as e:
+        except Exception:
             self.activate(app_name)
             return {"application": app_name, "restored": "partial (activated only)"}
 
@@ -418,9 +410,9 @@ class MacOSApplicationFocus(ApplicationFocus):
 class MacOSApplicationResources(ApplicationResources):
     def _get_all_matching_processes(self, app_name):
         processes = []
-        for proc in psutil.process_iter(['pid', 'name']):
+        for proc in psutil.process_iter(["pid", "name"]):
             try:
-                if app_name.lower() in proc.info['name'].lower():
+                if app_name.lower() in proc.info["name"].lower():
                     processes.append(proc)
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
@@ -445,10 +437,7 @@ class MacOSApplicationResources(ApplicationResources):
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
 
-        return {
-            "bytes": total_bytes,
-            "mb": round(total_bytes / (1024 * 1024), 2)
-        }
+        return {"bytes": total_bytes, "mb": round(total_bytes / (1024 * 1024), 2)}
 
     def get_disk_usage(self, app_name):
         procs = self._get_all_matching_processes(app_name)
@@ -462,10 +451,7 @@ class MacOSApplicationResources(ApplicationResources):
             except (psutil.NoSuchProcess, psutil.AccessDenied, AttributeError):
                 continue
 
-        return {
-            "read_bytes": read_bytes,
-            "write_bytes": write_bytes
-        }
+        return {"read_bytes": read_bytes, "write_bytes": write_bytes}
 
     def get_resource_usage(self, app_name):
         cpu = self.get_cpu_usage(app_name)
@@ -477,24 +463,24 @@ class MacOSApplicationResources(ApplicationResources):
             "memory_bytes": mem["bytes"],
             "memory_mb": mem["mb"],
             "read_bytes": disk["read_bytes"],
-            "write_bytes": disk["write_bytes"]
+            "write_bytes": disk["write_bytes"],
         }
 
     def get_top_resource_apps(self, resource_type, limit=10):
         app_stats = {}
-        for proc in psutil.process_iter(['cpu_percent']):
+        for proc in psutil.process_iter(["cpu_percent"]):
             try:
                 proc.cpu_percent()
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
 
         time.sleep(0.1)
-        for proc in psutil.process_iter(['name', 'cpu_percent', 'memory_info']):
+        for proc in psutil.process_iter(["name", "cpu_percent", "memory_info"]):
             try:
                 info = proc.info
-                name = info['name']
-                cpu = info.get('cpu_percent') or 0.0
-                mem_info = info.get('memory_info')
+                name = info["name"]
+                cpu = info.get("cpu_percent") or 0.0
+                mem_info = info.get("memory_info")
                 rss = mem_info.rss if mem_info else 0
 
                 if name not in app_stats:
@@ -516,13 +502,12 @@ class MacOSApplicationResources(ApplicationResources):
 
 
 class MacOSApplicationProcesses(ApplicationProcesses):
-
     def _find_all(self, app_name):
 
         found = []
-        for proc in psutil.process_iter(['pid', 'name']):
+        for proc in psutil.process_iter(["pid", "name"]):
             try:
-                if app_name.lower() in proc.info['name'].lower():
+                if app_name.lower() in proc.info["name"].lower():
                     found.append(proc)
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
@@ -533,11 +518,7 @@ class MacOSApplicationProcesses(ApplicationProcesses):
         result = []
         for p in procs:
             try:
-                result.append({
-                    "pid": p.pid,
-                    "name": p.name(),
-                    "cpu_percent": p.cpu_percent(interval=0.1)
-                })
+                result.append({"pid": p.pid, "name": p.name(), "cpu_percent": p.cpu_percent(interval=0.1)})
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
         return result
@@ -570,11 +551,7 @@ class MacOSApplicationProcesses(ApplicationProcesses):
 
         def build_node(proc):
             try:
-                return {
-                    "pid": proc.pid,
-                    "name": proc.name(),
-                    "children": [build_node(c) for c in proc.children()]
-                }
+                return {"pid": proc.pid, "name": proc.name(), "children": [build_node(c) for c in proc.children()]}
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 return {"pid": proc.pid, "status": "access_denied"}
 
@@ -604,20 +581,13 @@ class MacOSApplicationProcesses(ApplicationProcesses):
 
 
 class MacOSApplicationInstances(ApplicationInstances):
-
     def _get_apps_by_name(self, app_name):
         workspace = NSWorkspace.sharedWorkspace()
-        return [app for app in workspace.runningApplications()
-                if app.localizedName().lower() == app_name.lower()]
+        return [app for app in workspace.runningApplications() if app.localizedName().lower() == app_name.lower()]
 
     def get_all(self, app_name):
         apps = self._get_apps_by_name(app_name)
-        return [
-            {
-                "pid": app.processIdentifier(),
-                "name": app.localizedName()
-            } for app in apps
-        ]
+        return [{"pid": app.processIdentifier(), "name": app.localizedName()} for app in apps]
 
     def get_count(self, app_name):
         apps = self._get_apps_by_name(app_name)
@@ -670,7 +640,10 @@ class MacOSApplicationStartup(ApplicationStartup):
         if not path:
             raise FileNotFoundError(f"Could not find the path to the application {app_name}")
 
-        script = f'tell application "System Events" to make login item at end with properties {{path:"{path}", hidden:false}}'
+        script = (
+            'tell application "System Events" to make login item at end with properties '
+            f'{{path:"{path}", hidden:false}}'
+        )
         subprocess.run(["osascript", "-e", script], check=True)
         return {"application": app_name, "added": True}
 
@@ -716,18 +689,11 @@ class MacOSApplicationDocuments(ApplicationDocuments):
                 subprocess.run(["open", path], check=True)
                 opened_files.append(path)
 
-        return {
-            "opened": opened_files,
-            "count": len(opened_files)
-        }
+        return {"opened": opened_files, "count": len(opened_files)}
 
     def open_url_with(self, url, app_name):
         subprocess.run(["open", "-a", app_name, url], check=True)
-        return {
-            "opened": True,
-            "url": url,
-            "application": app_name
-        }
+        return {"opened": True, "url": url, "application": app_name}
 
     def reveal_app(self, app_name):
         path = self._get_app_path(app_name)
@@ -744,7 +710,7 @@ class MacOSApplicationDocuments(ApplicationDocuments):
 
         plist_path = os.path.join(app_path, "Contents/Info.plist")
         try:
-            with open(plist_path, 'rb') as f:
+            with open(plist_path, "rb") as f:
                 plist = plistlib.load(f)
                 exec_name = plist.get("CFBundleExecutable")
                 if exec_name:

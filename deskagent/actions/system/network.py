@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GetNetworkStatus(Action):
@@ -30,13 +30,13 @@ class GetIPAddress(Action):
         "interface": {
             "type": "string",
             "required": False,
-            "description": "The name of the network interface (e.g., 'en0')"
+            "description": "The name of the network interface (e.g., 'en0')",
         }
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        interface = params.get('interface')
+        interface = params.get("interface")
 
         try:
             ips = context.services.system.network.get_ip_address(interface)
@@ -138,16 +138,12 @@ class PingHost(Action):
     requires_confirmation = False
     reversible = False
     parameters_schema = {
-        "host": {
-            "type": "string",
-            "required": True,
-            "description": "IP address or domain name to ping"
-        }
+        "host": {"type": "string", "required": True, "description": "IP address or domain name to ping"}
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        host = params.get('host')
+        host = params.get("host")
 
         if host is None:
             return ActionResult(success=False, error="Parameter 'host' is required", error_code="MISSING_PARAM")

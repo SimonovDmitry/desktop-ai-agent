@@ -12,9 +12,7 @@ ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 
 def add_llm_arguments(parser: argparse.ArgumentParser):
     parser.add_argument("--config", help="YAML configuration path")
-    parser.add_argument(
-        "--provider", choices=("ollama", "openai_compatible", "gigachat", "mlx")
-    )
+    parser.add_argument("--provider", choices=("ollama", "openai_compatible", "gigachat", "mlx"))
     parser.add_argument("--model", help="Model tag or local model path")
     parser.add_argument("--weights", help="GGUF file or Safetensors directory for Ollama import")
     parser.add_argument("--base-url", help="Provider URL")
@@ -44,10 +42,7 @@ def resolve_llm(args) -> tuple[Settings, LLMConfig]:
         api_key = args.api_key or os.getenv("GIGACHAT_CREDENTIALS", "")
         api_scope = args.api_scope or os.getenv("GIGACHAT_SCOPE", "")
         if not api_key:
-            raise ValueError(
-                "GigaChat credentials are required: set GIGACHAT_CREDENTIALS in .env "
-                "or pass --api-key"
-            )
+            raise ValueError("GigaChat credentials are required: set GIGACHAT_CREDENTIALS in .env or pass --api-key")
     else:
         base_url = args.base_url or settings.llm.base_url
         api_key = args.api_key or settings.llm.api_key or "ollama"
@@ -55,10 +50,15 @@ def resolve_llm(args) -> tuple[Settings, LLMConfig]:
     if provider == "openai_compatible" and not base_url:
         raise ValueError("--base-url is required for openai_compatible")
     return settings, LLMConfig(
-        provider=provider, model=model, weights=args.weights, base_url=base_url or "",
-        api_key=api_key, api_scope=api_scope,
+        provider=provider,
+        model=model,
+        weights=args.weights,
+        base_url=base_url or "",
+        api_key=api_key,
+        api_scope=api_scope,
         context_window=args.context_window or settings.llm.context_window,
         max_tokens=args.max_tokens or settings.llm.max_tokens,
-        manage_runtime=provider == "ollama", auto_start=not args.no_start,
+        manage_runtime=provider == "ollama",
+        auto_start=not args.no_start,
         auto_pull=not args.no_pull,
     )

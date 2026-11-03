@@ -54,18 +54,31 @@ def main(argv=None):
     print(response.content)
     if response.pending_confirmation:
         print(json.dumps(response.pending_confirmation, ensure_ascii=False))
-        print("Resume:", shlex.join(_resume_command(args, llm_config.provider, llm_config.model,
-                                                     response.thread_id)))
+        print("Resume:", shlex.join(_resume_command(args, llm_config.provider, llm_config.model, response.thread_id)))
     return 1 if response.error else 0
 
 
 def _resume_command(args, provider, model, thread_id):
-    command = [sys.executable, str(Path(__file__).resolve()), "--provider", provider,
-               "--model", model, "--thread-id", thread_id, "--approve"]
-    for option, value in (("--config", args.config), ("--base-url", args.base_url),
-                          ("--api-scope", args.api_scope),
-                          ("--weights", args.weights), ("--checkpoints", args.checkpoints),
-                          ("--context-window", args.context_window), ("--max-tokens", args.max_tokens)):
+    command = [
+        sys.executable,
+        str(Path(__file__).resolve()),
+        "--provider",
+        provider,
+        "--model",
+        model,
+        "--thread-id",
+        thread_id,
+        "--approve",
+    ]
+    for option, value in (
+        ("--config", args.config),
+        ("--base-url", args.base_url),
+        ("--api-scope", args.api_scope),
+        ("--weights", args.weights),
+        ("--checkpoints", args.checkpoints),
+        ("--context-window", args.context_window),
+        ("--max-tokens", args.max_tokens),
+    ):
         if value is not None:
             command += [option, str(value)]
     if args.no_pull:

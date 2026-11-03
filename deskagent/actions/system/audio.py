@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class SetVolume(Action):
@@ -15,13 +15,13 @@ class SetVolume(Action):
             "required": True,
             "minimum": 0,
             "maximum": 100,
-            "description": "Volume level percentage (0-100)"
+            "description": "Volume level percentage (0-100)",
         }
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        volume = params.get('volume')
+        volume = params.get("volume")
 
         if volume is None:
             return ActionResult(success=False, error="Parameter 'volume' is required", error_code="MISSING_PARAM")
@@ -50,13 +50,13 @@ class IncreaseVolume(Action):
             "default": 10,
             "minimum": 1,
             "maximum": 50,
-            "description": "Percentage to increase"
+            "description": "Percentage to increase",
         }
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        step = params.get('step', 10)
+        step = params.get("step", 10)
 
         if step is None:
             step = 10
@@ -85,13 +85,13 @@ class DecreaseVolume(Action):
             "default": 10,
             "minimum": 1,
             "maximum": 50,
-            "description": "Percentage to decrease"
+            "description": "Percentage to decrease",
         }
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        step = params.get('step', 10)
+        step = params.get("step", 10)
 
         if step is None:
             step = 10

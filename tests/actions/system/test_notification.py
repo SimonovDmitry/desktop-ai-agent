@@ -20,29 +20,21 @@ def test_send_notification_success(context):
         result,
         {"title": "Title", "message": "Hello", "subtitle": "DeskAgent"},
     )
-    context.services.system.notify.send_notification.assert_called_once_with(
-        "Title", "Hello", "DeskAgent"
-    )
+    context.services.system.notify.send_notification.assert_called_once_with("Title", "Hello", "DeskAgent")
 
 
 def test_send_notification_without_subtitle(context):
-    result = SendNotification().execute(
-        context, {"title": "Title", "message": "Hello"}
-    )
+    result = SendNotification().execute(context, {"title": "Title", "message": "Hello"})
     assert_success(
         result,
         {"title": "Title", "message": "Hello", "subtitle": None},
     )
-    context.services.system.notify.send_notification.assert_called_once_with(
-        "Title", "Hello", None
-    )
+    context.services.system.notify.send_notification.assert_called_once_with("Title", "Hello", None)
 
 
 def test_send_notification_system_error(context):
     context.services.system.notify.send_notification.side_effect = RuntimeError("notify failed")
-    result = SendNotification().execute(
-        context, {"title": "Title", "message": "Hello"}
-    )
+    result = SendNotification().execute(context, {"title": "Title", "message": "Hello"})
     assert_error(result, "SYSTEM_ERROR")
 
 

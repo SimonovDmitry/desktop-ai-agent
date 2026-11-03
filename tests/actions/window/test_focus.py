@@ -1,6 +1,6 @@
-import pytest
 from deskagent.actions.window.focus import *
-from ._helpers import run_success_cases, run_exception_cases
+
+from ._helpers import run_exception_cases, run_success_cases
 
 CASES = [
     (ActivateWindow, "focus.activate", {"window_id": 401}, {"window_id": 401, "active": True}, None),
@@ -11,11 +11,19 @@ CASES = [
     (RestoreWindow, "focus.restore", {"window_id": 406}, {"window_id": 406, "state": "normal"}, None),
     (MaximizeWindow, "focus.maximize", {"window_id": 407}, {"window_id": 407, "state": "maximized"}, None),
     (UnmaximizeWindow, "focus.restore", {"window_id": 408}, {"window_id": 408, "state": "normal"}, None),
-    (ToggleWindowMaximize, "focus.toggle_maximize", {"window_id": 409}, {"window_id": 409, "state": "maximized"}, "maximized"),
+    (
+        ToggleWindowMaximize,
+        "focus.toggle_maximize",
+        {"window_id": 409},
+        {"window_id": 409, "state": "maximized"},
+        "maximized",
+    ),
 ]
+
 
 def test_success(window_context):
     run_success_cases(window_context, CASES)
+
 
 def test_service_exception(window_context):
     run_exception_cases(window_context, CASES)

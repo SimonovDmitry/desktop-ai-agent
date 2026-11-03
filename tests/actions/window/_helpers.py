@@ -1,6 +1,6 @@
 def target_for(context, path):
     obj = context.services.window
-    for part in path.split('.'):
+    for part in path.split("."):
         obj = getattr(obj, part)
     return obj
 

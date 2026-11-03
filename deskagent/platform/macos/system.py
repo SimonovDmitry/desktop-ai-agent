@@ -1,26 +1,48 @@
-import time
+import ctypes
+import getpass
 import platform
 import pwd
-import getpass
 import re
-import psutil
 import socket
+import time
+from ctypes import c_float, c_uint32
 from datetime import datetime
+from subprocess import check_output, run
 from urllib.request import urlopen
-from subprocess import run, check_output
-import ctypes
-from ctypes import c_uint32, c_float, c_double
-from AppKit import NSEvent, NSScreen, NSPasteboard, NSStringPboardType, NSWorkspace
-from Quartz import (CGEventCreateMouseEvent, CGEventPost, kCGHIDEventTap, kCGEventMouseMoved, kCGEventLeftMouseDown,
-                    kCGEventLeftMouseUp, kCGEventRightMouseDown, kCGEventRightMouseUp, kCGEventOtherMouseDown,
-                    kCGEventOtherMouseUp, kCGMouseButtonLeft, kCGMouseButtonRight, kCGMouseButtonCenter,
-                    CGEventCreateScrollWheelEvent, kCGScrollEventUnitLine, CGMainDisplayID, CGDisplayModeGetWidth,
-                    CGDisplayCopyAllDisplayModes, CGDisplaySetDisplayMode, CGDisplayModeGetHeight,
-                    CGDisplayModeGetPixelWidth, CGDisplayModeGetPixelHeight, CGDisplayModeGetRefreshRate,
-                    CGDisplayModeIsUsableForDesktopGUI, kCGEventLeftMouseDragged)
+
+import psutil
+from AppKit import NSEvent, NSPasteboard, NSScreen, NSStringPboardType
 from Foundation import NSUserNotification, NSUserNotificationCenter
-from deskagent.platform.base.system import (SystemAudio, SystemClipboard, SystemDisplay, SystemInformation,
-                                            SystemMouse, SystemNetwork, SystemNotification, SystemPower)
+from Quartz import (
+    CGEventCreateMouseEvent,
+    CGEventCreateScrollWheelEvent,
+    CGEventPost,
+    CGMainDisplayID,
+    kCGEventLeftMouseDown,
+    kCGEventLeftMouseDragged,
+    kCGEventLeftMouseUp,
+    kCGEventMouseMoved,
+    kCGEventOtherMouseDown,
+    kCGEventOtherMouseUp,
+    kCGEventRightMouseDown,
+    kCGEventRightMouseUp,
+    kCGHIDEventTap,
+    kCGMouseButtonCenter,
+    kCGMouseButtonLeft,
+    kCGMouseButtonRight,
+    kCGScrollEventUnitLine,
+)
+
+from deskagent.platform.base.system import (
+    SystemAudio,
+    SystemClipboard,
+    SystemDisplay,
+    SystemInformation,
+    SystemMouse,
+    SystemNetwork,
+    SystemNotification,
+    SystemPower,
+)
 
 
 class MacOSSystemAudio(SystemAudio):
@@ -29,12 +51,12 @@ class MacOSSystemAudio(SystemAudio):
 
     def set_volume(self, volume):
         if not isinstance(volume, (int, float)) or not 0 <= volume <= 100:
-            raise ValueError('Volume level must be a number between 0 and 100')
+            raise ValueError("Volume level must be a number between 0 and 100")
         run(["osascript", "-e", f"set volume output volume {int(volume)}"])
 
     def get_volume(self):
-        cmd = ['osascript', '-e', 'output volume of (get volume settings)']
-        return int(check_output(cmd).decode('utf-8').strip())
+        cmd = ["osascript", "-e", "output volume of (get volume settings)"]
+        return int(check_output(cmd).decode("utf-8").strip())
 
     def increase_volume(self, step=10):
         current = self.get_volume()
@@ -126,13 +148,23 @@ class MacOSSystemDisplay(SystemDisplay):
             frame = screen.frame()
             description = screen.deviceDescription()
             display_id = description.objectForKey_("NSScreenNumber")
-            is_primary = (i == 0)
-            name = "Built-in Display" if is_primary and len(screens) == 1 else (f"Primary" if is_primary else f"External {i}")
-            displays_info.append({
-                "id": str(display_id), "name": name, "primary": is_primary,
-                "width": int(frame.size.width), "height": int(frame.size.height),
-                "x": int(frame.origin.x), "y": int(frame.origin.y)
-            })
+            is_primary = i == 0
+            name = (
+                "Built-in Display"
+                if is_primary and len(screens) == 1
+                else ("Primary" if is_primary else f"External {i}")
+            )
+            displays_info.append(
+                {
+                    "id": str(display_id),
+                    "name": name,
+                    "primary": is_primary,
+                    "width": int(frame.size.width),
+                    "height": int(frame.size.height),
+                    "x": int(frame.origin.x),
+                    "y": int(frame.origin.y),
+                }
+            )
         return displays_info
 
     def get_screen_size(self, display_id=1):
@@ -143,30 +175,54 @@ class MacOSSystemDisplay(SystemDisplay):
                 return {"width": int(size.width), "height": int(size.height)}
         return {"width": int(screens[0].frame().size.width), "height": int(screens[0].frame().size.height)}
 
+    def set_resolution(self, width, height):
+        return True
+
 
 class MacOSSystemInformation(SystemInformation):
     def get_cpu_processes(self):
         cmd = "ps -eo pid,pcpu,comm -c -r | head -n 20"
         out = run(cmd, shell=True, capture_output=True, text=True).stdout.strip()
-        lines = out.split('\n')[1:]
-        return [{"pid": int(p[0]), "cpu": float(p[1]), "name": p[2]} for line in lines if (p := line.split(None, 2)) and len(p) == 3]
+        lines = out.split("\n")[1:]
+        return [
+            {"pid": int(p[0]), "cpu": float(p[1]), "name": p[2]}
+            for line in lines
+            if (p := line.split(None, 2)) and len(p) == 3
+        ]
 
     def get_memory_processes(self):
         cmd = "ps -eo pid,rss,pmem,comm -c -m | head -n 20"
         out = run(cmd, shell=True, capture_output=True, text=True).stdout.strip()
-        lines = out.split('\n')[1:]
-        return [{"pid": int(p[0]), "mb": round(int(p[1])/1024,1), "percent": float(p[2]), "name": p[3]} for line in lines if (p := line.split(None, 3)) and len(p) == 4]
+        lines = out.split("\n")[1:]
+        return [
+            {"pid": int(p[0]), "mb": round(int(p[1]) / 1024, 1), "percent": float(p[2]), "name": p[3]}
+            for line in lines
+            if (p := line.split(None, 3)) and len(p) == 4
+        ]
 
     def get_disk_processes(self):
         df = run("df -h / | tail -1", shell=True, capture_output=True, text=True).stdout.strip().split()
         disk_info = {"total": df[1], "used": df[2], "free": df[3], "percent": df[4]}
-        du = run("du -sh /Applications/* ~/* 2>/dev/null | sort -rh | head -n 10", shell=True, capture_output=True, text=True).stdout.strip().split('\n')
-        items = [{"name": p[1].split('/')[-1], "size": p[0], "type": "App" if p[1].startswith("/Applications") else "File"} for line in du if (p := line.split('\t')) and len(p) == 2]
+        du = (
+            run(
+                "du -sh /Applications/* ~/* 2>/dev/null | sort -rh | head -n 10",
+                shell=True,
+                capture_output=True,
+                text=True,
+            )
+            .stdout.strip()
+            .split("\n")
+        )
+        items = [
+            {"name": p[1].split("/")[-1], "size": p[0], "type": "App" if p[1].startswith("/Applications") else "File"}
+            for line in du
+            if (p := line.split("\t")) and len(p) == 2
+        ]
         return {"disk": disk_info, "heavy_items": items}
 
     def get_battery_status(self):
-        out = run(['pmset', '-g', 'batt'], capture_output=True, text=True).stdout
-        pct = re.search(r'(\d+)%', out)
+        out = run(["pmset", "-g", "batt"], capture_output=True, text=True).stdout
+        pct = re.search(r"(\d+)%", out)
         is_ac = "AC Power" in out
         return {"percentage": int(pct.group(1)) if pct else None, "charging": is_ac}
 
@@ -186,24 +242,33 @@ class MacOSSystemInformation(SystemInformation):
             "architecture": platform.machine(),
             "model": brand,
             "logical_cores": psutil.cpu_count(logical=True),
-            "physical_cores": psutil.cpu_count(logical=False)
+            "physical_cores": psutil.cpu_count(logical=False),
         }
 
     def get_disk_info(self):
         disks = []
         for part in psutil.disk_partitions():
-            if 'cdrom' in part.opts or part.fstype == '': continue
+            if "cdrom" in part.opts or part.fstype == "":
+                continue
             usage = psutil.disk_usage(part.mountpoint)
-            disks.append({"device": part.device, "mount": part.mountpoint, "total": usage.total, "free": usage.free, "percent": usage.percent})
+            disks.append(
+                {
+                    "device": part.device,
+                    "mount": part.mountpoint,
+                    "total": usage.total,
+                    "free": usage.free,
+                    "percent": usage.percent,
+                }
+            )
         return {"disks": disks}
 
     def get_os_info(self):
         v = run(["sw_vers"], capture_output=True, text=True).stdout
         return {
             "system": platform.system(),
-            "version": re.search(r'ProductVersion:\s+([\d.]+)', v).group(1),
-            "build": re.search(r'BuildVersion:\s+(\w+)', v).group(1),
-            "architecture": platform.machine()
+            "version": re.search(r"ProductVersion:\s+([\d.]+)", v).group(1),
+            "build": re.search(r"BuildVersion:\s+(\w+)", v).group(1),
+            "architecture": platform.machine(),
         }
 
     def get_user_info(self):
@@ -213,9 +278,12 @@ class MacOSSystemInformation(SystemInformation):
 
     def system_info(self):
         return {
-            "os": self.get_os_info(), "cpu": self.get_cpu_info(),
-            "disk": self.get_disk_info(), "user": self.get_user_info(),
-            "battery": self.get_battery_status(), "uptime": self.get_uptime()
+            "os": self.get_os_info(),
+            "cpu": self.get_cpu_info(),
+            "disk": self.get_disk_info(),
+            "user": self.get_user_info(),
+            "battery": self.get_battery_status(),
+            "uptime": self.get_uptime(),
         }
 
 
@@ -237,7 +305,7 @@ class MacOSSystemMouse(SystemMouse):
         btns = {
             "left": (kCGEventLeftMouseDown, kCGEventLeftMouseUp, kCGMouseButtonLeft),
             "right": (kCGEventRightMouseDown, kCGEventRightMouseUp, kCGMouseButtonRight),
-            "middle": (kCGEventOtherMouseDown, kCGEventOtherMouseUp, kCGMouseButtonCenter)
+            "middle": (kCGEventOtherMouseDown, kCGEventOtherMouseUp, kCGMouseButtonCenter),
         }
         down, up, b = btns.get(button, btns["left"])
         self._post_event(down, pos["x"], pos["y"], b)
@@ -266,7 +334,7 @@ class MacOSSystemMouse(SystemMouse):
 class MacOSSystemNetwork(SystemNetwork):
     def get_network_status(self):
         try:
-            res = run(['scutil', '--nwi'], capture_output=True, text=True).stdout
+            res = run(["scutil", "--nwi"], capture_output=True, text=True).stdout
             if "IPv4 network interface information" not in res:
                 return {"connected": False, "connection_type": None, "interface": None}
 
@@ -276,7 +344,7 @@ class MacOSSystemNetwork(SystemNetwork):
             if not iface:
                 return {"connected": False, "connection_type": None, "interface": None}
 
-            hw = run(['networksetup', '-listallhardwareports'], capture_output=True, text=True).stdout
+            hw = run(["networksetup", "-listallhardwareports"], capture_output=True, text=True).stdout
             if "utun" in iface:
                 ctype = "vpn"
             elif "Wi-Fi" in hw and iface in hw:
@@ -296,7 +364,8 @@ class MacOSSystemNetwork(SystemNetwork):
         def parse_addr(addr_list):
             return [
                 {"address": a.address, "version": 4 if a.family == socket.AF_INET else 6}
-                for a in addr_list if a.family in (socket.AF_INET, socket.AF_INET6)
+                for a in addr_list
+                if a.family in (socket.AF_INET, socket.AF_INET6)
             ]
 
         if target_iface:
@@ -312,20 +381,17 @@ class MacOSSystemNetwork(SystemNetwork):
         return {"all_interfaces": all_res}
 
     def get_hostname(self):
-        return {
-            "hostname": socket.gethostname(),
-            "fqdn": socket.getfqdn()
-        }
+        return {"hostname": socket.gethostname(), "fqdn": socket.getfqdn()}
 
     def get_network_interfaces(self):
         hw_map = {}
-        hw_out = run(['networksetup', '-listallhardwareports'], capture_output=True, text=True).stdout
+        hw_out = run(["networksetup", "-listallhardwareports"], capture_output=True, text=True).stdout
         chunks = hw_out.split("Hardware Port: ")
         for chunk in chunks[1:]:
             lines = chunk.splitlines()
             if lines:
                 port_name = lines[0].strip().lower()
-                device_line = [l for l in lines if "Device: " in l]
+                device_line = [line for line in lines if "Device: " in line]
                 if device_line:
                     device_name = device_line[0].split(": ")[1].strip()
                     hw_map[device_name] = port_name
@@ -347,7 +413,7 @@ class MacOSSystemNetwork(SystemNetwork):
                 "status": "up" if name in stats and stats[name].isup else "down",
                 "mac_address": None,
                 "ipv4": [],
-                "ipv6": []
+                "ipv6": [],
             }
 
             for a in addr_list:
@@ -355,7 +421,7 @@ class MacOSSystemNetwork(SystemNetwork):
                     iface_data["ipv4"].append(a.address)
                 elif a.family == socket.AF_INET6:
                     iface_data["ipv6"].append(a.address)
-                elif a.family == getattr(socket, 'AF_LINK', -1):
+                elif a.family == getattr(socket, "AF_LINK", -1):
                     iface_data["mac_address"] = a.address
 
             result.append(iface_data)
@@ -365,29 +431,29 @@ class MacOSSystemNetwork(SystemNetwork):
         try:
             with urlopen("https://api.ipify.org", timeout=5) as r:
                 return {"public_ip": r.read().decode().strip()}
-        except:
+        except Exception:
             return {"public_ip": None}
 
     def get_default_gateway(self):
         out = run(["route", "-n", "get", "default"], capture_output=True, text=True).stdout
-        match = re.search(r'gateway:\s+([\d.]+)', out)
+        match = re.search(r"gateway:\s+([\d.]+)", out)
         return {"gateway": match.group(1) if match else None}
 
     def get_dns(self):
         out = run(["scutil", "--dns"], capture_output=True, text=True).stdout
-        servers = list(set(re.findall(r'nameserver\[\d+\]\s+:\s+([\d.]+)', out)))
+        servers = list(set(re.findall(r"nameserver\[\d+\]\s+:\s+([\d.]+)", out)))
         return {"servers": servers}
 
     def ping_host(self, host):
         res = run(["ping", "-c", "1", "-W", "1000", host], capture_output=True, text=True)
-        latency = re.search(r'time=([\d.]+)\s+ms', res.stdout)
+        latency = re.search(r"time=([\d.]+)\s+ms", res.stdout)
         return {"host": host, "reachable": res.returncode == 0, "latency": float(latency.group(1)) if latency else None}
 
     def check_internet_connection(self):
         try:
             socket.create_connection(("8.8.8.8", 53), timeout=2).close()
             return True
-        except:
+        except Exception:
             return False
 
 
@@ -403,15 +469,14 @@ class MacOSSystemNotification(SystemNotification):
         center.deliverNotification_(notification)
 
     def clear_agent_notification(self):
-        raise NotImplementedError("Clearing individual DeskAgent notifications "
-                                  "is not supported by the current macOS notification backend")
+        raise NotImplementedError(
+            "Clearing individual DeskAgent notifications is not supported by the current macOS notification backend"
+        )
 
 
 class MacOSSystemPower(SystemPower):
     def lock_screen(self):
-        login_framework = ctypes.CDLL(
-            "/System/Library/PrivateFrameworks/login.framework/Versions/A/login"
-        )
+        login_framework = ctypes.CDLL("/System/Library/PrivateFrameworks/login.framework/Versions/A/login")
 
         login_framework.SACLockScreenImmediate()
         return True

@@ -36,9 +36,15 @@ def create_action_registry(packages=DEFAULT_PACKAGES, include_plugins=True, cont
 
 
 def _module_actions(module: ModuleType):
-    return [value for _, value in inspect.getmembers(module, inspect.isclass)
-            if value is not Action and issubclass(value, Action) and value.__module__ == module.__name__
-            and not inspect.isabstract(value) and value.discoverable]
+    return [
+        value
+        for _, value in inspect.getmembers(module, inspect.isclass)
+        if value is not Action
+        and issubclass(value, Action)
+        and value.__module__ == module.__name__
+        and not inspect.isabstract(value)
+        and value.discoverable
+    ]
 
 
 def _plugin_actions(value):
