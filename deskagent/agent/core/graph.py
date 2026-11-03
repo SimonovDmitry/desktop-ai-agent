@@ -14,7 +14,7 @@ from deskagent.agent.capabilities.tools import ActionToolCatalog
 from deskagent.agent.core.models import ActionExecution, PlanStep
 from deskagent.agent.core.prompts import build_system_prompt
 from deskagent.agent.core.state import AgentState
-from deskagent.safety.confirmation import ConfirmationRequest, PreviewBuilder
+from deskagent.privacy.confirmation import ConfirmationRequest, PreviewBuilder
 
 
 class AgentGraph:

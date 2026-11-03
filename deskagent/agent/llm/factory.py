@@ -10,6 +10,9 @@ def create_llm(config: LLMConfig | None = None) -> LLMProvider:
         return OllamaLLM(resolved_config)
     if resolved_config.provider == "openai_compatible":
         return OpenAICompatibleLLM(resolved_config)
+    if resolved_config.provider == "gigachat":
+        from deskagent.agent.llm.gigachat import GigaChatLLM
+        return GigaChatLLM(resolved_config)
     if resolved_config.provider == "mlx":
         from deskagent.agent.llm.mlx import MLXLLM
         return MLXLLM(resolved_config)

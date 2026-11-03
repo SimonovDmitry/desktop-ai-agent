@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from deskagent.actions.types import RiskLevel
-from deskagent.safety.guards import FilesystemGuard, ShellGuard
+from deskagent.privacy.guards import FilesystemGuard, ShellGuard
 
 
 @dataclass(frozen=True)
