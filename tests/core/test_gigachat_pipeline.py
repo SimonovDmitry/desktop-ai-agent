@@ -86,7 +86,7 @@ def test_gigachat_provider_supports_tools_and_streaming(monkeypatch):
     assert llm._model.options["credentials"] == "secret"
     assert llm._model.options["scope"] == "GIGACHAT_API_PERS"
     assert llm._model.options["ca_bundle_file"].endswith(
-        "certs/russian_trusted_root_ca_pem.crt"
+        "models/gigachat/russian_trusted_root_ca_pem.crt"
     )
     assert llm._model.tools == tools
     assert response.content == "done"

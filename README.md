@@ -34,8 +34,8 @@ python scripts/run_llm.py --provider gigachat --stream "Привет"
 ```
 
 Для TLS используется включённый в проект корневой сертификат НУЦ Минцифры из
-`certs/russian_trusted_root_ca_pem.crt`. При необходимости его можно переопределить
-через `GIGACHAT_CA_BUNDLE_FILE`. Отключать проверку TLS не следует.
+`models/gigachat/russian_trusted_root_ca_pem.crt`. При необходимости его можно
+переопределить через `GIGACHAT_CA_BUNDLE_FILE`. Отключать проверку TLS не следует.
 
 Параметры локальных провайдеров можно хранить в `config.yaml` или переменных
 окружения `DESKAGENT_*`. Аргументы командной строки имеют приоритет над `.env` и

@@ -8,7 +8,10 @@ from deskagent.agent.llm.config import LLMConfig
 from deskagent.agent.llm.response import LLMResponse, ToolCall
 
 BUNDLED_CA = (
-    Path(__file__).resolve().parents[3] / "certs" / "russian_trusted_root_ca_pem.crt"
+    Path(__file__).resolve().parents[3]
+    / "models"
+    / "gigachat"
+    / "russian_trusted_root_ca_pem.crt"
 )
 
 
