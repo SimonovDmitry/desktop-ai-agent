@@ -1,26 +1,34 @@
-import os
-import stat
-import pathlib
-import mimetypes
-import datetime
-import shutil
 import base64
-import fnmatch
-import hashlib
-import pwd
-import grp
-import zipfile
-import tarfile
+import datetime
 import difflib
+import fnmatch
+import grp
+import hashlib
+import mimetypes
+import os
+import pathlib
+import pwd
+import shutil
+import stat
 import subprocess
+import tarfile
 import tempfile
+import zipfile
 
 from deskagent.platform.base.file import (
-    FileInformation, FileLifecycle, FileContent, FileSearch,
-    FileOrganization, FilePermissions, FileLinks, FileArchive,
-    FileComparison, FileDisk, FileTemporary, FileSystem, FileSystem
+    FileArchive,
+    FileComparison,
+    FileContent,
+    FileDisk,
+    FileInformation,
+    FileLifecycle,
+    FileLinks,
+    FileOrganization,
+    FilePermissions,
+    FileSearch,
+    FileSystem,
+    FileTemporary,
 )
-
 
 
 class MacOSFileInformation(FileInformation):
@@ -39,7 +47,7 @@ class MacOSFileInformation(FileInformation):
             "mime_type": self.get_mime_type(full_path),
             "created_at": self.get_created_at(full_path),
             "modified_at": self.get_modified_at(full_path),
-            "accessed_at": self.get_accessed_at(full_path)
+            "accessed_at": self.get_accessed_at(full_path),
         }
 
     def get_metadata(self, path):
@@ -52,8 +60,8 @@ class MacOSFileInformation(FileInformation):
             "permissions": oct(s.st_mode & 0o777),
             "owner_id": s.st_uid,
             "group_id": s.st_gid,
-            "is_hidden": os.path.basename(full_path).startswith('.'),
-            "is_symlink": os.path.islink(full_path)
+            "is_hidden": os.path.basename(full_path).startswith("."),
+            "is_symlink": os.path.islink(full_path),
         }
 
     def get_size(self, path):
@@ -111,7 +119,7 @@ class MacOSFileInformation(FileInformation):
         return {
             "readable": os.access(full_path, os.R_OK),
             "writable": os.access(full_path, os.W_OK),
-            "executable": os.access(full_path, os.X_OK)
+            "executable": os.access(full_path, os.X_OK),
         }
 
 
@@ -121,7 +129,7 @@ class MacOSFileLifecycle(FileLifecycle):
 
     def create(self, path, content=""):
         full_path = self._resolve_path(path)
-        with open(full_path, 'w', encoding='utf-8') as f:
+        with open(full_path, "w", encoding="utf-8") as f:
             f.write(content)
         return True
 
@@ -135,13 +143,16 @@ class MacOSFileLifecycle(FileLifecycle):
 
     def move_to_trash(self, path):
         full_path = self._resolve_path(path)
-        cmd = f"osascript -e 'tell application \"Finder\" to delete POSIX file \"{full_path}\"'"
+        cmd = f'osascript -e \'tell application "Finder" to delete POSIX file "{full_path}"\''
         os.system(cmd)
         return True
 
     def restore(self, path):
         name = os.path.basename(path)
-        cmd = f"osascript -e 'tell application \"Finder\" to move (every item of trash whose name is \"{name}\") to desktop'"
+        cmd = (
+            "osascript -e 'tell application \"Finder\" to move "
+            f'(every item of trash whose name is "{name}") to desktop\''
+        )
         os.system(cmd)
         return True
 
@@ -194,7 +205,7 @@ class MacOSFileContent(FileContent):
         p = self._resolve_path(path)
         if not os.path.exists(p):
             raise FileNotFoundError(f"File not found: {p}")
-        with open(p, 'r', encoding=encoding) as f:
+        with open(p, "r", encoding=encoding) as f:
             content = f.read()
         return content, len(content)
 
@@ -202,7 +213,7 @@ class MacOSFileContent(FileContent):
         p = self._resolve_path(path)
         if not os.path.exists(p):
             raise FileNotFoundError(f"File not found: {p}")
-        with open(p, 'r', encoding=encoding) as f:
+        with open(p, "r", encoding=encoding) as f:
             return f.read()
 
     def read_binary(self, path, max_bytes=1048576):
@@ -212,9 +223,9 @@ class MacOSFileContent(FileContent):
 
         size = os.path.getsize(p)
 
-        with open(p, 'rb') as f:
+        with open(p, "rb") as f:
             data = f.read(max_bytes)
-        return base64.b64encode(data).decode('utf-8'), size
+        return base64.b64encode(data).decode("utf-8"), size
 
     def write(self, path, content, overwrite=True):
         p = self._resolve_path(path)
@@ -222,21 +233,21 @@ class MacOSFileContent(FileContent):
             raise FileExistsError(f"File already exists: {p}")
 
         os.makedirs(os.path.dirname(p), exist_ok=True)
-        with open(p, 'w', encoding='utf-8') as f:
+        with open(p, "w", encoding="utf-8") as f:
             written = f.write(content)
         return written
 
     def write_text(self, path, content, encoding="utf-8"):
         p = self._resolve_path(path)
         os.makedirs(os.path.dirname(p), exist_ok=True)
-        with open(p, 'w', encoding=encoding) as f:
+        with open(p, "w", encoding=encoding) as f:
             f.write(content)
         return True
 
     def append(self, path, content):
         p = self._resolve_path(path)
         os.makedirs(os.path.dirname(p), exist_ok=True)
-        with open(p, 'a', encoding='utf-8') as f:
+        with open(p, "a", encoding="utf-8") as f:
             f.write(content)
         return True
 
@@ -245,9 +256,9 @@ class MacOSFileContent(FileContent):
         if not os.path.exists(p):
             return self.write(p, content)
 
-        with open(p, 'r', encoding='utf-8') as f:
+        with open(p, "r", encoding="utf-8") as f:
             current_data = f.read()
-        with open(p, 'w', encoding='utf-8') as f:
+        with open(p, "w", encoding="utf-8") as f:
             f.write(content + current_data)
         return True
 
@@ -255,10 +266,10 @@ class MacOSFileContent(FileContent):
         p = self._resolve_path(path)
         if not os.path.exists(p):
             raise FileNotFoundError(f"File not found: {p}")
-        with open(p, 'r', encoding='utf-8') as f:
+        with open(p, "r", encoding="utf-8") as f:
             data = f.read()
         new_data = data[:position] + content + data[position:]
-        with open(p, 'w', encoding='utf-8') as f:
+        with open(p, "w", encoding="utf-8") as f:
             f.write(new_data)
         return True
 
@@ -266,11 +277,11 @@ class MacOSFileContent(FileContent):
         p = self._resolve_path(path)
         if not os.path.exists(p):
             raise FileNotFoundError(f"File not found: {p}")
-        with open(p, 'r', encoding='utf-8') as f:
+        with open(p, "r", encoding="utf-8") as f:
             data = f.read()
         count = data.count(old)
         new_data = data.replace(old, new)
-        with open(p, 'w', encoding='utf-8') as f:
+        with open(p, "w", encoding="utf-8") as f:
             f.write(new_data)
         return count
 
@@ -278,7 +289,7 @@ class MacOSFileContent(FileContent):
         p = self._resolve_path(path)
         if not os.path.exists(p):
             return False
-        with open(p, 'w') as f:
+        with open(p, "w"):
             pass
         return True
 
@@ -287,9 +298,9 @@ class MacOSFileContent(FileContent):
         if not os.path.exists(p):
             return ""
         try:
-            with open(p, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(p, "r", encoding="utf-8", errors="ignore") as f:
                 return f.read(limit)
-        except:
+        except Exception:
             return "[Error reading preview]"
 
 
@@ -298,11 +309,7 @@ class MacOSFileSearch(FileSearch):
         return str(pathlib.Path(path).expanduser().resolve())
 
     def _get_file_info(self, path):
-        return {
-            "path": path,
-            "name": os.path.basename(path),
-            "size": os.path.getsize(path)
-        }
+        return {"path": path, "name": os.path.basename(path), "size": os.path.getsize(path)}
 
     def find(self, directory, pattern="*", recursive=True):
         root_dir = self._resolve_path(directory)
@@ -324,8 +331,8 @@ class MacOSFileSearch(FileSearch):
         return self.find(directory, pattern=name, recursive=recursive)
 
     def find_by_extension(self, directory, extension, recursive=True):
-        if not extension.startswith('.'):
-            extension = '.' + extension
+        if not extension.startswith("."):
+            extension = "." + extension
         return self.find(directory, pattern=f"*{extension}", recursive=recursive)
 
     def find_by_type(self, directory, f_type, recursive=True):
@@ -335,7 +342,7 @@ class MacOSFileSearch(FileSearch):
             "video": [".mp4", ".mov", ".avi", ".mkv", ".wmv"],
             "audio": [".mp3", ".wav", ".flac", ".m4a", ".aac"],
             "archive": [".zip", ".tar", ".gz", ".rar", ".7z"],
-            "code": [".py", ".js", ".html", ".css", ".cpp", ".c", ".java", ".swift"]
+            "code": [".py", ".js", ".html", ".css", ".cpp", ".c", ".java", ".swift"],
         }
         extensions = type_map.get(f_type.lower(), [])
         root_dir = self._resolve_path(directory)
@@ -385,10 +392,10 @@ class MacOSFileSearch(FileSearch):
                 full_path = os.path.join(root, file)
                 try:
                     if os.path.isfile(full_path):
-                        with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
                             if query in f.read():
                                 results.append(self._get_file_info(full_path))
-                except:
+                except Exception:
                     continue
         return results
 
@@ -411,7 +418,7 @@ class MacOSFileSearch(FileSearch):
                 full_path = os.path.join(root, file)
                 if os.path.isfile(full_path):
                     all_files.append(self._get_file_info(full_path))
-        all_files.sort(key=lambda x: x['size'], reverse=True)
+        all_files.sort(key=lambda x: x["size"], reverse=True)
         return all_files[:limit]
 
     def find_duplicates(self, directory, recursive=True):
@@ -422,10 +429,10 @@ class MacOSFileSearch(FileSearch):
                 full_path = os.path.join(root, file)
                 if os.path.isfile(full_path):
                     try:
-                        h = hashlib.md5(
-                            open(full_path, 'rb').read(1024 * 1024)).hexdigest()
+                        with open(full_path, "rb") as f:
+                            h = hashlib.md5(f.read(1024 * 1024)).hexdigest()
                         hashes.setdefault(h, []).append(full_path)
-                    except:
+                    except Exception:
                         continue
 
         return [{"hash": h, "files": paths} for h, paths in hashes.items() if len(paths) > 1]
@@ -453,7 +460,6 @@ class MacOSFileOrganization(FileOrganization):
         for f in files:
             src = self._resolve_path(f)
             if os.path.exists(src):
-
                 new_path = shutil.copy2(src, dest_dir)
                 results.append({"source": src, "result": new_path})
         return results
@@ -494,8 +500,8 @@ class MacOSFileOrganization(FileOrganization):
 
             ext = pathlib.Path(filename).suffix.lower()
             for rule in rules:
-                if ext in [e.lower() for e in rule['extension']]:
-                    dest = self._resolve_path(rule['destination'])
+                if ext in [e.lower() for e in rule["extension"]]:
+                    dest = self._resolve_path(rule["destination"])
                     os.makedirs(dest, exist_ok=True)
                     shutil.move(full_path, dest)
                     report.append({"file": filename, "to": dest})
@@ -504,26 +510,23 @@ class MacOSFileOrganization(FileOrganization):
 
     def group_by_type(self, directory):
         type_rules = [
-            {'extension': ['.jpg', '.jpeg', '.png', '.gif', '.webp'], 'destination': 'Images'},
-            {'extension': ['.mp4', '.mov', '.avi', '.mkv'], 'destination': 'Video'},
-            {'extension': ['.pdf', '.doc', '.docx', '.txt', '.pages'], 'destination': 'Documents'},
-            {'extension': ['.zip', '.tar', '.gz', '.rar'], 'destination': 'Archives'},
-            {'extension': ['.py', '.js', '.html', '.css', '.cpp'], 'destination': 'Code'}
+            {"extension": [".jpg", ".jpeg", ".png", ".gif", ".webp"], "destination": "Images"},
+            {"extension": [".mp4", ".mov", ".avi", ".mkv"], "destination": "Video"},
+            {"extension": [".pdf", ".doc", ".docx", ".txt", ".pages"], "destination": "Documents"},
+            {"extension": [".zip", ".tar", ".gz", ".rar"], "destination": "Archives"},
+            {"extension": [".py", ".js", ".html", ".css", ".cpp"], "destination": "Code"},
         ]
         dir_path = self._resolve_path(directory)
         rules = []
         for r in type_rules:
-            rules.append({
-                'extension': r['extension'],
-                'destination': os.path.join(dir_path, r['destination'])
-            })
+            rules.append({"extension": r["extension"], "destination": os.path.join(dir_path, r["destination"])})
 
         results = self.apply_rules(dir_path, rules)
 
         groups = {}
         for item in results:
-            folder = os.path.basename(item['to'])
-            groups.setdefault(folder, []).append(item['file'])
+            folder = os.path.basename(item["to"])
+            groups.setdefault(folder, []).append(item["file"])
         return groups
 
     def group_by_date(self, directory, granularity="month"):
@@ -550,17 +553,21 @@ class MacOSFileOrganization(FileOrganization):
         dir_path = self._resolve_path(directory)
         files = [f for f in os.listdir(dir_path) if os.path.isfile(os.path.join(dir_path, f))]
 
-        key_func = None
         if by == "size":
-            key_func = lambda x: os.path.getsize(os.path.join(dir_path, x))
+            def key_func(x):
+                return os.path.getsize(os.path.join(dir_path, x))
         elif by == "modified":
-            key_func = lambda x: os.path.getmtime(os.path.join(dir_path, x))
+            def key_func(x):
+                return os.path.getmtime(os.path.join(dir_path, x))
         elif by == "created":
-            key_func = lambda x: os.stat(os.path.join(dir_path, x)).st_birthtime
+            def key_func(x):
+                return os.stat(os.path.join(dir_path, x)).st_birthtime
         elif by == "extension":
-            key_func = lambda x: pathlib.Path(x).suffix
+            def key_func(x):
+                return pathlib.Path(x).suffix
         else:
-            key_func = lambda x: x.lower()
+            def key_func(x):
+                return x.lower()
 
         files.sort(key=key_func, reverse=(order == "desc"))
         return files
@@ -569,7 +576,8 @@ class MacOSFileOrganization(FileOrganization):
         root_dir = self._resolve_path(directory)
         count = 0
         for root, dirs, files in os.walk(root_dir, topdown=False):
-            if root == root_dir: continue
+            if root == root_dir:
+                continue
 
             for name in files:
                 src = os.path.join(root, name)
@@ -588,7 +596,7 @@ class MacOSFileOrganization(FileOrganization):
 
             try:
                 os.rmdir(root)
-            except:
+            except Exception:
                 pass
         return count
 
@@ -621,18 +629,18 @@ class MacOSFilePermissions(FilePermissions):
             "owner": {
                 "read": bool(mode & stat.S_IRUSR),
                 "write": bool(mode & stat.S_IWUSR),
-                "execute": bool(mode & stat.S_IXUSR)
+                "execute": bool(mode & stat.S_IXUSR),
             },
             "group": {
                 "read": bool(mode & stat.S_IRGRP),
                 "write": bool(mode & stat.S_IWGRP),
-                "execute": bool(mode & stat.S_IXGRP)
+                "execute": bool(mode & stat.S_IXGRP),
             },
             "others": {
                 "read": bool(mode & stat.S_IROTH),
                 "write": bool(mode & stat.S_IWOTH),
-                "execute": bool(mode & stat.S_IXOTH)
-            }
+                "execute": bool(mode & stat.S_IXOTH),
+            },
         }
 
     def set_permissions(self, path, mode):
@@ -735,7 +743,7 @@ class MacOSFileArchive(FileArchive):
         dest = self._resolve_path(destination)
 
         if fmt == "zip":
-            with zipfile.ZipFile(dest, 'w', zipfile.ZIP_DEFLATED) as zf:
+            with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED) as zf:
                 for f in files:
                     f_path = self._resolve_path(f)
                     if os.path.isfile(f_path):
@@ -763,17 +771,17 @@ class MacOSFileArchive(FileArchive):
     def list_contents(self, archive):
         path = self._resolve_path(archive)
         if zipfile.is_zipfile(path):
-            with zipfile.ZipFile(path, 'r') as zf:
+            with zipfile.ZipFile(path, "r") as zf:
                 return zf.namelist()
         elif tarfile.is_tarfile(path):
-            with tarfile.open(path, 'r') as tf:
+            with tarfile.open(path, "r") as tf:
                 return tf.getnames()
         return []
 
     def add_files(self, archive, files):
         path = self._resolve_path(archive)
         if zipfile.is_zipfile(path):
-            with zipfile.ZipFile(path, 'a') as zf:
+            with zipfile.ZipFile(path, "a") as zf:
                 for f in files:
                     f_path = self._resolve_path(f)
                     zf.write(f_path, os.path.basename(f_path))
@@ -782,14 +790,14 @@ class MacOSFileArchive(FileArchive):
 
     def remove_files(self, archive, names):
         path = self._resolve_path(archive)
-        if not zipfile.is_zipfile(path): return False
+        if not zipfile.is_zipfile(path):
+            return False
 
         temp_arc = path + ".temp"
-        with zipfile.ZipFile(path, 'r') as zin:
-            with zipfile.ZipFile(temp_arc, 'w') as zout:
-                for item in zin.infolist():
-                    if item.filename not in names:
-                        zout.writestr(item, zin.read(item.filename))
+        with zipfile.ZipFile(path, "r") as zin, zipfile.ZipFile(temp_arc, "w") as zout:
+            for item in zin.infolist():
+                if item.filename not in names:
+                    zout.writestr(item, zin.read(item.filename))
 
         os.replace(temp_arc, path)
         return True
@@ -798,13 +806,14 @@ class MacOSFileArchive(FileArchive):
         path = self._resolve_path(archive)
         try:
             if zipfile.is_zipfile(path):
-                with zipfile.ZipFile(path, 'r') as zf:
+                with zipfile.ZipFile(path, "r") as zf:
                     return zf.testzip() is None
             elif tarfile.is_tarfile(path):
-                with tarfile.open(path, 'r') as tf:
-                    for member in tf: pass
+                with tarfile.open(path, "r") as tf:
+                    for member in tf:
+                        pass
                 return True
-        except:
+        except Exception:
             return False
         return False
 
@@ -816,18 +825,14 @@ class MacOSFileArchive(FileArchive):
 
         if zipfile.is_zipfile(path):
             fmt = "zip"
-            with zipfile.ZipFile(path, 'r') as zf:
+            with zipfile.ZipFile(path, "r") as zf:
                 entries = len(zf.infolist())
         elif tarfile.is_tarfile(path):
             fmt = "tar"
-            with tarfile.open(path, 'r') as tf:
+            with tarfile.open(path, "r") as tf:
                 entries = len(tf.getmembers())
 
-        return {
-            "format": fmt,
-            "size": size,
-            "entries": entries
-        }
+        return {"format": fmt, "size": size, "entries": entries}
 
 
 class MacOSFileComparison(FileComparison):
@@ -854,20 +859,13 @@ class MacOSFileComparison(FileComparison):
         h1 = self.get_hash(p1)
         h2 = self.get_hash(p2)
 
-        return {
-            "identical": h1 == h2,
-            "size_equal": True,
-            "hash_equal": h1 == h2
-        }
+        return {"identical": h1 == h2, "size_equal": True, "hash_equal": h1 == h2}
 
     def compare_contents(self, f1, f2):
         identical = self.is_identical(f1, f2)
         diff = [] if identical else self.get_diff(f1, f2)
 
-        return {
-            "identical": identical,
-            "differences_count": len(diff)
-        }
+        return {"identical": identical, "differences_count": len(diff)}
 
     def verify_hash(self, path, expected, alg="sha256"):
 
@@ -878,13 +876,10 @@ class MacOSFileComparison(FileComparison):
 
         p1, p2 = self._resolve_path(f1), self._resolve_path(f2)
 
-        with open(p1, 'r', encoding='utf-8', errors='ignore') as file1:
-            with open(p2, 'r', encoding='utf-8', errors='ignore') as file2:
+        with open(p1, "r", encoding="utf-8", errors="ignore") as file1:
+            with open(p2, "r", encoding="utf-8", errors="ignore") as file2:
                 diff = difflib.unified_diff(
-                    file1.readlines(),
-                    file2.readlines(),
-                    fromfile=os.path.basename(p1),
-                    tofile=os.path.basename(p2)
+                    file1.readlines(), file2.readlines(), fromfile=os.path.basename(p1), tofile=os.path.basename(p2)
                 )
                 return list(diff)
 
@@ -919,11 +914,7 @@ class MacOSFileDisk(FileDisk):
                 if not os.path.islink(fp):
                     total_size += os.path.getsize(fp)
 
-        return {
-            "size": total_size,
-            "files": file_count,
-            "directories": dir_count
-        }
+        return {"size": total_size, "files": file_count, "directories": dir_count}
 
     def get_system_usage(self, path="/"):
         p = self._resolve_path(path)
@@ -932,7 +923,7 @@ class MacOSFileDisk(FileDisk):
             "total": usage.total,
             "used": usage.used,
             "free": usage.free,
-            "percent": round((usage.used / usage.total) * 100, 2)
+            "percent": round((usage.used / usage.total) * 100, 2),
         }
 
     def find_largest_files(self, path="/", limit=10, recursive=True):
@@ -946,7 +937,7 @@ class MacOSFileDisk(FileDisk):
                     try:
                         if not os.path.islink(fp):
                             all_files.append({"path": fp, "size": os.path.getsize(fp)})
-                    except:
+                    except Exception:
                         continue
         else:
             for f in os.listdir(root_dir):
@@ -954,7 +945,7 @@ class MacOSFileDisk(FileDisk):
                 if os.path.isfile(fp) and not os.path.islink(fp):
                     all_files.append({"path": fp, "size": os.path.getsize(fp)})
 
-        all_files.sort(key=lambda x: x['size'], reverse=True)
+        all_files.sort(key=lambda x: x["size"], reverse=True)
         return all_files[:limit]
 
     def find_largest_directories(self, path, limit=5):
@@ -966,11 +957,11 @@ class MacOSFileDisk(FileDisk):
                 item_path = os.path.join(root_dir, item)
                 if os.path.isdir(item_path) and not os.path.islink(item_path):
                     usage = self.get_directory_usage(item_path)
-                    dir_sizes.append({"path": item_path, "size": usage['size']})
-        except:
+                    dir_sizes.append({"path": item_path, "size": usage["size"]})
+        except Exception:
             pass
 
-        dir_sizes.sort(key=lambda x: x['size'], reverse=True)
+        dir_sizes.sort(key=lambda x: x["size"], reverse=True)
         return dir_sizes[:limit]
 
     def get_statistics(self, path="/"):
@@ -980,7 +971,7 @@ class MacOSFileDisk(FileDisk):
         return {
             "disk": sys_usage,
             "largest_files": self.find_largest_files(p, limit=5),
-            "largest_directories": self.find_largest_directories(p, limit=5)
+            "largest_directories": self.find_largest_directories(p, limit=5),
         }
 
 
@@ -993,7 +984,7 @@ class MacOSFileTemporary(FileTemporary):
 
         try:
             if content:
-                with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
                     f.write(content)
             else:
                 os.close(fd)
@@ -1036,7 +1027,7 @@ class MacOSFileTemporary(FileTemporary):
                     else:
                         os.remove(full_path)
                     count += 1
-                except:
+                except Exception:
                     continue
         return count
 
@@ -1047,17 +1038,17 @@ class MacOSFileSystem(FileSystem):
 
     def open(self, path):
         p = self._resolve_path(path)
-        subprocess.run(['open', p], check=True)
+        subprocess.run(["open", p], check=True)
         return True
 
     def open_with(self, path, application):
         p = self._resolve_path(path)
-        subprocess.run(['open', '-a', application, p], check=True)
+        subprocess.run(["open", "-a", application, p], check=True)
         return True
 
     def reveal(self, path):
         p = self._resolve_path(path)
-        subprocess.run(['open', '-R', p], check=True)
+        subprocess.run(["open", "-R", p], check=True)
         return True
 
     def get_default_app(self, path):
@@ -1069,7 +1060,7 @@ class MacOSFileSystem(FileSystem):
             return name of file app_path
         end tell
         '''
-        result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
+        result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
         return result.stdout.strip() if result.returncode == 0 else "Unknown"
 
     def set_default_app(self, path, application):
@@ -1080,17 +1071,17 @@ class MacOSFileSystem(FileSystem):
             set default application of item theFile to application "{application}"
         end tell
         '''
-        result = subprocess.run(['osascript', '-e', script])
+        result = subprocess.run(["osascript", "-e", script])
         return result.returncode == 0
 
     def lock(self, path):
         p = self._resolve_path(path)
-        subprocess.run(['chflags', 'uchg', p], check=True)
+        subprocess.run(["chflags", "uchg", p], check=True)
         return True
 
     def unlock(self, path):
         p = self._resolve_path(path)
-        subprocess.run(['chflags', 'nouchg', p], check=True)
+        subprocess.run(["chflags", "nouchg", p], check=True)
         return True
 
     def is_locked(self, path):

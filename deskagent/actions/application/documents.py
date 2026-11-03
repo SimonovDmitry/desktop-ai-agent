@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class OpenDocument(Action):
@@ -9,17 +9,11 @@ class OpenDocument(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = False
-    parameters_schema = {
-        "path": {
-            "type": "string",
-            "required": True,
-            "description": "Full path to the document/file"
-        }
-    }
+    parameters_schema = {"path": {"type": "string", "required": True, "description": "Full path to the document/file"}}
 
     def execute(self, context, parameters):
         params = parameters or {}
-        path = params.get('path')
+        path = params.get("path")
         if not path:
             return ActionResult(success=False, error="Parameter 'path' is required", error_code="MISSING_PARAM")
 
@@ -35,17 +29,11 @@ class OpenMultipleDocuments(Action):
     description = "Open several files simultaneously using their default applications"
     category = ActionCategory.APPLICATION
     risk_level = RiskLevel.LOW
-    parameters_schema = {
-        "paths": {
-            "type": "list",
-            "required": True,
-            "description": "List of full paths to files"
-        }
-    }
+    parameters_schema = {"paths": {"type": "list", "required": True, "description": "List of full paths to files"}}
 
     def execute(self, context, parameters):
         params = parameters or {}
-        paths = params.get('paths')
+        paths = params.get("paths")
         if not isinstance(paths, list):
             return ActionResult(success=False, error="Parameter 'paths' must be a list", error_code="INVALID_INPUT")
 
@@ -63,13 +51,13 @@ class OpenURLWithApplication(Action):
     risk_level = RiskLevel.LOW
     parameters_schema = {
         "url": {"type": "string", "required": True, "description": "The URL to open"},
-        "application": {"type": "string", "required": True, "description": "App name (e.g., 'Safari')"}
+        "application": {"type": "string", "required": True, "description": "App name (e.g., 'Safari')"},
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        url = params.get('url')
-        app_name = params.get('application')
+        url = params.get("url")
+        app_name = params.get("application")
         if not url or not app_name:
             return ActionResult(success=False, error="URL and Application are required", error_code="MISSING_PARAM")
 
@@ -89,7 +77,7 @@ class RevealApplicationInFileManager(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             path = context.services.application.documents.reveal_app(app_name)
             return ActionResult(success=True, data={"revealed": True, "path": path})
@@ -106,7 +94,7 @@ class RevealApplicationExecutable(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             path = context.services.application.documents.reveal_executable(app_name)
             return ActionResult(success=True, data={"revealed": True, "path": path})

@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class CreateArchive(Action):
@@ -10,19 +10,27 @@ class CreateArchive(Action):
     parameters_schema = {
         "files": {"type": "list", "required": True, "description": "List of paths to include"},
         "destination": {"type": "string", "required": True, "description": "Path to the resulting archive"},
-        "format": {"type": "string", "required": False, "default": "zip", "enum": ["zip", "tar", "gztar", "bztar", "xztar"]}
+        "format": {
+            "type": "string",
+            "required": False,
+            "default": "zip",
+            "enum": ["zip", "tar", "gztar", "bztar", "xztar"],
+        },
     }
 
     def execute(self, context, parameters):
         p = parameters
         try:
-            result = context.services.file.archive.create(p['files'], p['destination'], p.get('format', 'zip'))
-            return ActionResult(success=True, data={
-                "created": True,
-                "path": p['destination'],
-                "files_count": len(p['files']),
-                "size": result.get('size')
-            })
+            result = context.services.file.archive.create(p["files"], p["destination"], p.get("format", "zip"))
+            return ActionResult(
+                success=True,
+                data={
+                    "created": True,
+                    "path": p["destination"],
+                    "files_count": len(p["files"]),
+                    "size": result.get("size"),
+                },
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -34,11 +42,11 @@ class ExtractArchive(Action):
     risk_level = RiskLevel.MEDIUM
     parameters_schema = {
         "archive": {"type": "string", "required": True},
-        "destination": {"type": "string", "required": True}
+        "destination": {"type": "string", "required": True},
     }
 
     def execute(self, context, parameters):
-        archive, dest = parameters.get('archive'), parameters.get('destination')
+        archive, dest = parameters.get("archive"), parameters.get("destination")
         try:
             context.services.file.archive.extract(archive, dest)
             return ActionResult(success=True, data={"extracted": True, "destination": dest})
@@ -53,7 +61,7 @@ class ListArchiveContents(Action):
     parameters_schema = {"archive": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        archive = parameters.get('archive')
+        archive = parameters.get("archive")
         try:
             contents = context.services.file.archive.list_contents(archive)
             return ActionResult(success=True, data={"entries": contents, "count": len(contents)})
@@ -66,13 +74,10 @@ class AddToArchive(Action):
     description = "Add new files to an existing archive"
     category = ActionCategory.FILE
     risk_level = RiskLevel.MEDIUM
-    parameters_schema = {
-        "archive": {"type": "string", "required": True},
-        "files": {"type": "list", "required": True}
-    }
+    parameters_schema = {"archive": {"type": "string", "required": True}, "files": {"type": "list", "required": True}}
 
     def execute(self, context, parameters):
-        archive, files = parameters.get('archive'), parameters.get('files')
+        archive, files = parameters.get("archive"), parameters.get("files")
         try:
             context.services.file.archive.add_files(archive, files)
             return ActionResult(success=True, data={"added": True, "count": len(files)})
@@ -88,11 +93,11 @@ class RemoveFromArchive(Action):
     requires_confirmation = True
     parameters_schema = {
         "archive": {"type": "string", "required": True},
-        "file_names": {"type": "list", "required": True, "description": "Internal paths inside the archive"}
+        "file_names": {"type": "list", "required": True, "description": "Internal paths inside the archive"},
     }
 
     def execute(self, context, parameters):
-        archive, names = parameters.get('archive'), parameters.get('file_names')
+        archive, names = parameters.get("archive"), parameters.get("file_names")
         try:
             context.services.file.archive.remove_files(archive, names)
             return ActionResult(success=True, data={"removed": True, "count": len(names)})
@@ -107,7 +112,7 @@ class TestArchive(Action):
     parameters_schema = {"archive": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        archive = parameters.get('archive')
+        archive = parameters.get("archive")
         try:
             is_valid = context.services.file.archive.test(archive)
             return ActionResult(success=True, data={"valid": is_valid})
@@ -122,7 +127,7 @@ class GetArchiveInfo(Action):
     parameters_schema = {"archive": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        archive = parameters.get('archive')
+        archive = parameters.get("archive")
         try:
             info = context.services.file.archive.get_info(archive)
             return ActionResult(success=True, data=info)

@@ -3,7 +3,9 @@ import re
 
 class ToolRouter:
     KEYWORDS = {
-        "system": "battery charge volume sound display network notification system заряд громк звук экран сеть уведомлен",
+        "system": (
+            "battery charge volume sound display network notification system заряд громк звук экран сеть уведомлен"
+        ),
         "application": "app application launch open quit running active приложение открыть запусти закрой",
         "window": "window focus minimize maximize move resize окно сверни разверни перемести размер",
         "input": "click type keyboard mouse shortcut paste select нажми введи клавиат мышь вставь выдели",
@@ -38,8 +40,12 @@ class ToolRouter:
         query = request.lower()
         words = set(re.findall(r"[\w.-]+", query))
         categories = {name for name, keys in self.KEYWORDS.items() if any(key in query for key in keys.split())}
-        intents = {token for keys, values in self.INTENTS.items() if any(key in query for key in keys.split())
-                   for token in values.split()}
+        intents = {
+            token
+            for keys, values in self.INTENTS.items()
+            if any(key in query for key in keys.split())
+            for token in values.split()
+        }
         scored = []
         for name in names:
             action = registry.get(name)
@@ -50,5 +56,5 @@ class ToolRouter:
             scored.append((score, name))
         selected = [name for score, name in sorted(scored, key=lambda item: (-item[0], item[1])) if score]
         if not selected:
-            selected = names[:self.max_tools]
-        return selected[:self.max_tools]
+            selected = names[: self.max_tools]
+        return selected[: self.max_tools]

@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GetApplicationInstances(Action):
@@ -9,17 +9,11 @@ class GetApplicationInstances(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = False
-    parameters_schema = {
-        "application": {
-            "type": "string",
-            "required": True,
-            "description": "Name of the application"
-        }
-    }
+    parameters_schema = {"application": {"type": "string", "required": True, "description": "Name of the application"}}
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         if not app_name:
             return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
 
@@ -38,7 +32,7 @@ class GetApplicationInstanceCount(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             count = context.services.application.instances.get_count(app_name)
             return ActionResult(success=True, data={"count": count, "application": app_name})
@@ -53,12 +47,12 @@ class ActivateApplicationInstance(Action):
     risk_level = RiskLevel.LOW
     parameters_schema = {
         "application": {"type": "string", "required": False, "description": "Optional name for context"},
-        "pid": {"type": "integer", "required": True, "description": "The specific Process ID to activate"}
+        "pid": {"type": "integer", "required": True, "description": "The specific Process ID to activate"},
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        pid = params.get('pid')
+        pid = params.get("pid")
         if pid is None:
             return ActionResult(success=False, error="Parameter 'pid' is required", error_code="MISSING_PARAM")
 
@@ -78,12 +72,12 @@ class QuitApplicationInstance(Action):
     reversible = False
     parameters_schema = {
         "application": {"type": "string", "required": False},
-        "pid": {"type": "integer", "required": True}
+        "pid": {"type": "integer", "required": True},
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        pid = params.get('pid')
+        pid = params.get("pid")
         if pid is None:
             return ActionResult(success=False, error="Parameter 'pid' is required", error_code="MISSING_PARAM")
 

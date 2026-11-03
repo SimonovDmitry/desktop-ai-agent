@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class OpenFile(Action):
@@ -10,7 +10,7 @@ class OpenFile(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             context.services.file.system.open(path)
             return ActionResult(success=True, data={"opened": True, "path": path})
@@ -25,11 +25,11 @@ class OpenFileWithApplication(Action):
     risk_level = RiskLevel.LOW
     parameters_schema = {
         "path": {"type": "string", "required": True},
-        "application": {"type": "string", "required": True}
+        "application": {"type": "string", "required": True},
     }
 
     def execute(self, context, parameters):
-        path, app = parameters.get('path'), parameters.get('application')
+        path, app = parameters.get("path"), parameters.get("application")
         try:
             context.services.file.system.open_with(path, app)
             return ActionResult(success=True, data={"opened": True, "path": path, "application": app})
@@ -44,7 +44,7 @@ class RevealFile(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             context.services.file.system.reveal(path)
             return ActionResult(success=True, data={"revealed": True, "path": path})
@@ -64,7 +64,7 @@ class GetFileDefaultApplication(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             app_name = context.services.file.system.get_default_app(path)
             return ActionResult(success=True, data={"application": app_name})
@@ -80,11 +80,11 @@ class SetFileDefaultApplication(Action):
     requires_confirmation = True
     parameters_schema = {
         "path": {"type": "string", "required": True},
-        "application": {"type": "string", "required": True}
+        "application": {"type": "string", "required": True},
     }
 
     def execute(self, context, parameters):
-        path, app = parameters.get('path'), parameters.get('application')
+        path, app = parameters.get("path"), parameters.get("application")
         try:
             context.services.file.system.set_default_app(path, app)
             return ActionResult(success=True, data={"updated": True, "new_default": app})
@@ -100,7 +100,7 @@ class LockFile(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             context.services.file.system.lock(path)
             return ActionResult(success=True, data={"locked": True, "path": path})
@@ -116,7 +116,7 @@ class UnlockFile(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             context.services.file.system.unlock(path)
             return ActionResult(success=True, data={"unlocked": True, "path": path})
@@ -131,7 +131,7 @@ class GetFileLockState(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             is_locked = context.services.file.system.is_locked(path)
             return ActionResult(success=True, data={"locked": is_locked})

@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GetApplicationCPUUsage(Action):
@@ -9,17 +9,11 @@ class GetApplicationCPUUsage(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = False
-    parameters_schema = {
-        "application": {
-            "type": "string",
-            "required": True,
-            "description": "Name of the application"
-        }
-    }
+    parameters_schema = {"application": {"type": "string", "required": True, "description": "Name of the application"}}
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         if not app_name:
             return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
 
@@ -39,13 +33,12 @@ class GetApplicationMemoryUsage(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             mem_data = context.services.application.resources.get_memory_usage(app_name)
-            return ActionResult(success=True, data={
-                "memory_bytes": mem_data.get("bytes"),
-                "memory_mb": mem_data.get("mb")
-            })
+            return ActionResult(
+                success=True, data={"memory_bytes": mem_data.get("bytes"), "memory_mb": mem_data.get("mb")}
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -58,13 +51,13 @@ class GetApplicationDiskUsage(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             disk_data = context.services.application.resources.get_disk_usage(app_name)
-            return ActionResult(success=True, data={
-                "read_bytes": disk_data.get("read_bytes"),
-                "write_bytes": disk_data.get("write_bytes")
-            })
+            return ActionResult(
+                success=True,
+                data={"read_bytes": disk_data.get("read_bytes"), "write_bytes": disk_data.get("write_bytes")},
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -77,7 +70,7 @@ class GetApplicationResourceUsage(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             usage = context.services.application.resources.get_resource_usage(app_name)
             return ActionResult(success=True, data=usage)
@@ -95,29 +88,26 @@ class GetTopResourceApplications(Action):
             "type": "string",
             "required": True,
             "enum": ["cpu", "memory"],
-            "description": "Type of resource to monitor"
+            "description": "Type of resource to monitor",
         },
         "limit": {
             "type": "integer",
             "required": False,
             "default": 10,
-            "description": "Number of applications to return"
-        }
+            "description": "Number of applications to return",
+        },
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        resource_type = params.get('resource')
-        limit = params.get('limit', 10)
+        resource_type = params.get("resource")
+        limit = params.get("limit", 10)
 
         if not resource_type:
             return ActionResult(success=False, error="Parameter 'resource' is required", error_code="MISSING_PARAM")
 
         try:
             apps = context.services.application.resources.get_top_resource_apps(resource_type, limit)
-            return ActionResult(success=True, data={
-                "resource": resource_type,
-                "applications": apps
-            })
+            return ActionResult(success=True, data={"resource": resource_type, "applications": apps})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

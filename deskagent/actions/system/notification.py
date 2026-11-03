@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class SendNotification(Action):
@@ -10,34 +10,20 @@ class SendNotification(Action):
     requires_confirmation = False
     reversible = False
     parameters_schema = {
-        "title": {
-            "type": "string",
-            "required": True,
-            "description": "Bold title of the notification"
-        },
-        "message": {
-            "type": "string",
-            "required": True,
-            "description": "Main body text of the notification"
-        },
-        "subtitle": {
-            "type": "string",
-            "required": False,
-            "description": "Secondary title (optional)"
-        }
+        "title": {"type": "string", "required": True, "description": "Bold title of the notification"},
+        "message": {"type": "string", "required": True, "description": "Main body text of the notification"},
+        "subtitle": {"type": "string", "required": False, "description": "Secondary title (optional)"},
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        title = params.get('title')
-        message = params.get('message')
-        subtitle = params.get('subtitle')
+        title = params.get("title")
+        message = params.get("message")
+        subtitle = params.get("subtitle")
 
         if not title or not message:
             return ActionResult(
-                success=False,
-                error="Parameters 'title' and 'message' are required",
-                error_code="MISSING_PARAM"
+                success=False, error="Parameters 'title' and 'message' are required", error_code="MISSING_PARAM"
             )
 
         try:

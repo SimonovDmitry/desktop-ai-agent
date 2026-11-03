@@ -7,12 +7,7 @@ from deskagent.agent.llm.base import LLMProvider, LLMProviderError
 from deskagent.agent.llm.config import LLMConfig
 from deskagent.agent.llm.response import LLMResponse, ToolCall
 
-BUNDLED_CA = (
-    Path(__file__).resolve().parents[3]
-    / "models"
-    / "gigachat"
-    / "russian_trusted_root_ca_pem.crt"
-)
+BUNDLED_CA = Path(__file__).resolve().parents[3] / "models" / "gigachat" / "russian_trusted_root_ca_pem.crt"
 
 
 class GigaChatLLM(LLMProvider):
@@ -26,9 +21,7 @@ class GigaChatLLM(LLMProvider):
         try:
             from langchain_gigachat import GigaChat
         except ImportError as exc:
-            raise LLMProviderError(
-                "Package 'langchain-gigachat' is required for GigaChatLLM"
-            ) from exc
+            raise LLMProviderError("Package 'langchain-gigachat' is required for GigaChatLLM") from exc
 
         options = {
             "model": self.config.model,
@@ -49,9 +42,7 @@ class GigaChatLLM(LLMProvider):
             options["ca_bundle_file"] = str(BUNDLED_CA)
         return GigaChat(**options)
 
-    def generate(
-        self, messages: list[Any], tools: list[dict[str, Any]] | None = None
-    ) -> LLMResponse:
+    def generate(self, messages: list[Any], tools: list[dict[str, Any]] | None = None) -> LLMResponse:
         model = self._model.bind_tools(tools) if tools else self._model
         try:
             message = model.invoke(messages)
@@ -66,9 +57,7 @@ class GigaChatLLM(LLMProvider):
             raw=message,
         )
 
-    def stream_generate(
-        self, messages: list[Any], tools: list[dict[str, Any]] | None = None
-    ) -> Iterable[str]:
+    def stream_generate(self, messages: list[Any], tools: list[dict[str, Any]] | None = None) -> Iterable[str]:
         model = self._model.bind_tools(tools) if tools else self._model
         try:
             for chunk in model.stream(messages):
@@ -83,7 +72,5 @@ class GigaChatLLM(LLMProvider):
         if isinstance(content, str):
             return content
         if isinstance(content, list):
-            return "".join(
-                block.get("text", "") for block in content if isinstance(block, dict)
-            )
+            return "".join(block.get("text", "") for block in content if isinstance(block, dict))
         return str(content or "")

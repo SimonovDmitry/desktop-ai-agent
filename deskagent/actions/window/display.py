@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GetWindowDisplay(Action):
@@ -9,12 +9,10 @@ class GetWindowDisplay(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = False
-    parameters_schema = {
-        "window_id": {"type": "integer", "required": True, "description": "ID of the window"}
-    }
+    parameters_schema = {"window_id": {"type": "integer", "required": True, "description": "ID of the window"}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             display_id = context.services.window.display.get_window_display(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "display_id": display_id})
@@ -32,12 +30,12 @@ class MoveWindowToDisplay(Action):
     reversible = True
     parameters_schema = {
         "window_id": {"type": "integer", "required": True},
-        "display_id": {"type": "integer", "required": True, "description": "Target display ID"}
+        "display_id": {"type": "integer", "required": True, "description": "Target display ID"},
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        disp_id = parameters.get('display_id')
+        win_id = parameters.get("window_id")
+        disp_id = parameters.get("display_id")
         try:
             context.services.window.display.move_to_display(win_id, disp_id)
             return ActionResult(success=True, data={"window_id": win_id, "display_id": disp_id})
@@ -53,7 +51,7 @@ class MoveWindowToNextDisplay(Action):
     parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             new_display_id = context.services.window.display.move_to_next(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "display_id": new_display_id})
@@ -69,7 +67,7 @@ class MoveWindowToPreviousDisplay(Action):
     parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             new_display_id = context.services.window.display.move_to_previous(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "display_id": new_display_id})
@@ -85,12 +83,12 @@ class CenterWindowOnDisplay(Action):
     risk_level = RiskLevel.LOW
     parameters_schema = {
         "window_id": {"type": "integer", "required": True},
-        "display_id": {"type": "integer", "required": True}
+        "display_id": {"type": "integer", "required": True},
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        disp_id = parameters.get('display_id')
+        win_id = parameters.get("window_id")
+        disp_id = parameters.get("display_id")
         try:
             new_pos = context.services.window.display.center_on_display(win_id, disp_id)
             return ActionResult(success=True, data={"window_id": win_id, "display_id": disp_id, "position": new_pos})
@@ -105,12 +103,12 @@ class MaximizeWindowOnDisplay(Action):
     risk_level = RiskLevel.LOW
     parameters_schema = {
         "window_id": {"type": "integer", "required": True},
-        "display_id": {"type": "integer", "required": True}
+        "display_id": {"type": "integer", "required": True},
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        disp_id = parameters.get('display_id')
+        win_id = parameters.get("window_id")
+        disp_id = parameters.get("display_id")
         try:
             bounds = context.services.window.display.maximize_on_display(win_id, disp_id)
             return ActionResult(success=True, data={"window_id": win_id, "display_id": disp_id, "bounds": bounds})

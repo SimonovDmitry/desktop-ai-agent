@@ -35,9 +35,7 @@ class FakeGigaChat:
 
 def test_resolve_gigachat_from_dotenv(tmp_path, monkeypatch):
     (tmp_path / ".env").write_text(
-        "GIGACHAT_CREDENTIALS=test-credentials\n"
-        "GIGACHAT_SCOPE=GIGACHAT_API_PERS\n"
-        "GIGACHAT_MODEL=GigaChat-Test\n",
+        "GIGACHAT_CREDENTIALS=test-credentials\nGIGACHAT_SCOPE=GIGACHAT_API_PERS\nGIGACHAT_MODEL=GigaChat-Test\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(_common, "ENV_FILE", tmp_path / ".env")
@@ -56,9 +54,7 @@ def test_resolve_gigachat_from_dotenv(tmp_path, monkeypatch):
 
 
 def test_local_ollama_pipeline_remains_available():
-    args = create_parser().parse_args(
-        ["hello", "--provider", "ollama", "--model", "qwen3:4b", "--no-start"]
-    )
+    args = create_parser().parse_args(["hello", "--provider", "ollama", "--model", "qwen3:4b", "--no-start"])
 
     _, config = resolve_llm(args)
 
@@ -85,9 +81,7 @@ def test_gigachat_provider_supports_tools_and_streaming(monkeypatch):
 
     assert llm._model.options["credentials"] == "secret"
     assert llm._model.options["scope"] == "GIGACHAT_API_PERS"
-    assert llm._model.options["ca_bundle_file"].endswith(
-        "models/gigachat/russian_trusted_root_ca_pem.crt"
-    )
+    assert llm._model.options["ca_bundle_file"].endswith("models/gigachat/russian_trusted_root_ca_pem.crt")
     assert llm._model.tools == tools
     assert response.content == "done"
     assert response.finish_reason == "tool_calls"

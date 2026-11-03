@@ -23,12 +23,22 @@ class AgentSettings:
 
 @dataclass
 class SecuritySettings:
-    allowed_paths: list[str] = field(default_factory=lambda: [
-        "~/Downloads", "~/Documents/DeskAgent", ".",
-    ])
-    blocked_paths: list[str] = field(default_factory=lambda: [
-        "~/.ssh", "~/.gnupg", "~/Library/Keychains", "/System", "/Library",
-    ])
+    allowed_paths: list[str] = field(
+        default_factory=lambda: [
+            "~/Downloads",
+            "~/Documents/DeskAgent",
+            ".",
+        ]
+    )
+    blocked_paths: list[str] = field(
+        default_factory=lambda: [
+            "~/.ssh",
+            "~/.gnupg",
+            "~/Library/Keychains",
+            "/System",
+            "/Library",
+        ]
+    )
     allowed_applications: list[str] = field(default_factory=list)
     excluded_apps: list[str] = field(default_factory=list)
     dry_run: bool = False
@@ -81,23 +91,38 @@ class Settings(BaseConfig):
     audio: AudioSettings = field(default_factory=AudioSettings)
 
     SECTIONS: ClassVar = {
-        "llm": LLMSettings, "agent": AgentSettings, "security": SecuritySettings,
-        "storage": StorageSettings, "vision": VisionSettings, "audio": AudioSettings,
+        "llm": LLMSettings,
+        "agent": AgentSettings,
+        "security": SecuritySettings,
+        "storage": StorageSettings,
+        "vision": VisionSettings,
+        "audio": AudioSettings,
     }
     ENV_ALIASES: ClassVar = {
-        "MODEL": "llm.model", "PROVIDER": "llm.provider", "BASE_URL": "llm.base_url",
-        "API_KEY": "llm.api_key", "CHECKPOINTS": "storage.checkpoints",
-        "MEMORY": "storage.memory", "TELEMETRY": "storage.telemetry", "SKILLS": "storage.skills",
+        "MODEL": "llm.model",
+        "PROVIDER": "llm.provider",
+        "BASE_URL": "llm.base_url",
+        "API_KEY": "llm.api_key",
+        "CHECKPOINTS": "storage.checkpoints",
+        "MEMORY": "storage.memory",
+        "TELEMETRY": "storage.telemetry",
+        "SKILLS": "storage.skills",
         "AUDIT": "storage.audit",
-        "ALLOWED_PATHS": "security.allowed_paths", "ALLOWED_APPLICATIONS": "security.allowed_applications",
-        "EXCLUDED_APPS": "security.excluded_apps", "DRY_RUN": "security.dry_run",
-        "ALLOW_SHELL": "security.allow_shell", "MAX_ACTIONS": "security.max_actions",
+        "ALLOWED_PATHS": "security.allowed_paths",
+        "ALLOWED_APPLICATIONS": "security.allowed_applications",
+        "EXCLUDED_APPS": "security.excluded_apps",
+        "DRY_RUN": "security.dry_run",
+        "ALLOW_SHELL": "security.allow_shell",
+        "MAX_ACTIONS": "security.max_actions",
         "SHELL_ALLOWED_COMMANDS": "security.shell_allowed_commands",
-        "STRICT_MODE": "security.strict_mode", "CONFIRM_MEDIUM": "security.confirm_medium",
+        "STRICT_MODE": "security.strict_mode",
+        "CONFIRM_MEDIUM": "security.confirm_medium",
         "MAX_CLICKS_PER_MINUTE": "security.max_clicks_per_minute",
         "MAX_CONSECUTIVE_FAILURES": "security.max_consecutive_failures",
-        "MAX_ITERATIONS": "agent.max_iterations", "MAX_TOOLS": "agent.max_tools",
-        "VISION_ENABLED": "vision.enabled", "AUDIO_ENABLED": "audio.enabled",
+        "MAX_ITERATIONS": "agent.max_iterations",
+        "MAX_TOOLS": "agent.max_tools",
+        "VISION_ENABLED": "vision.enabled",
+        "AUDIO_ENABLED": "audio.enabled",
     }
 
     @classmethod

@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class CreateFile(Action):
@@ -9,19 +9,15 @@ class CreateFile(Action):
     risk_level = RiskLevel.MEDIUM
     parameters_schema = {
         "path": {"type": "string", "required": True},
-        "content": {"type": "string", "required": False, "default": ""}
+        "content": {"type": "string", "required": False, "default": ""},
     }
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
-        content = parameters.get('content', "")
+        path = parameters.get("path")
+        content = parameters.get("content", "")
         try:
-            result = context.services.file.lifecycle.create(path, content)
-            return ActionResult(success=True, data={
-                "created": True,
-                "path": path,
-                "size": len(content)
-            })
+            context.services.file.lifecycle.create(path, content)
+            return ActionResult(success=True, data={"created": True, "path": path, "size": len(content)})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -35,7 +31,7 @@ class DeleteFile(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             context.services.file.lifecycle.delete(path)
             return ActionResult(success=True, data={"deleted": True, "path": path})
@@ -52,7 +48,7 @@ class TrashFile(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             context.services.file.lifecycle.move_to_trash(path)
             return ActionResult(success=True, data={"trashed": True, "path": path})
@@ -67,7 +63,7 @@ class RestoreFile(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             context.services.file.lifecycle.restore(path)
             return ActionResult(success=True, data={"restored": True, "path": path})
@@ -95,21 +91,14 @@ class RenameFile(Action):
     name = "rename_file"
     description = "Change the name of a file or directory"
     category = ActionCategory.FILE
-    parameters_schema = {
-        "path": {"type": "string", "required": True},
-        "new_name": {"type": "string", "required": True}
-    }
+    parameters_schema = {"path": {"type": "string", "required": True}, "new_name": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
-        new_name = parameters.get('new_name')
+        path = parameters.get("path")
+        new_name = parameters.get("new_name")
         try:
             new_path = context.services.file.lifecycle.rename(path, new_name)
-            return ActionResult(success=True, data={
-                "renamed": True,
-                "old_path": path,
-                "new_path": new_path
-            })
+            return ActionResult(success=True, data={"renamed": True, "old_path": path, "new_path": new_path})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -120,11 +109,11 @@ class CopyFile(Action):
     category = ActionCategory.FILE
     parameters_schema = {
         "source": {"type": "string", "required": True},
-        "destination": {"type": "string", "required": True}
+        "destination": {"type": "string", "required": True},
     }
 
     def execute(self, context, parameters):
-        src, dst = parameters.get('source'), parameters.get('destination')
+        src, dst = parameters.get("source"), parameters.get("destination")
         try:
             context.services.file.lifecycle.copy(src, dst)
             return ActionResult(success=True, data={"copied": True, "source": src, "destination": dst})
@@ -138,11 +127,11 @@ class MoveFile(Action):
     category = ActionCategory.FILE
     parameters_schema = {
         "source": {"type": "string", "required": True},
-        "destination": {"type": "string", "required": True}
+        "destination": {"type": "string", "required": True},
     }
 
     def execute(self, context, parameters):
-        src, dst = parameters.get('source'), parameters.get('destination')
+        src, dst = parameters.get("source"), parameters.get("destination")
         try:
             context.services.file.lifecycle.move(src, dst)
             return ActionResult(success=True, data={"moved": True, "source": src, "destination": dst})
@@ -157,7 +146,7 @@ class DuplicateFile(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             new_path = context.services.file.lifecycle.duplicate(path)
             return ActionResult(success=True, data={"duplicated": True, "source": path, "destination": new_path})
@@ -173,11 +162,11 @@ class ReplaceFile(Action):
     requires_confirmation = True
     parameters_schema = {
         "target_path": {"type": "string", "required": True},
-        "source_path": {"type": "string", "required": True}
+        "source_path": {"type": "string", "required": True},
     }
 
     def execute(self, context, parameters):
-        target, source = parameters.get('target_path'), parameters.get('source_path')
+        target, source = parameters.get("target_path"), parameters.get("source_path")
         try:
             context.services.file.lifecycle.replace(target, source)
             return ActionResult(success=True, data={"replaced": True, "target": target})

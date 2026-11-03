@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class SetWindowAlwaysOnTop(Action):
@@ -11,12 +11,12 @@ class SetWindowAlwaysOnTop(Action):
     reversible = True
     parameters_schema = {
         "window_id": {"type": "integer", "required": True, "description": "ID of the window"},
-        "enabled": {"type": "boolean", "required": True, "description": "True to enable, False to disable"}
+        "enabled": {"type": "boolean", "required": True, "description": "True to enable, False to disable"},
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        enabled = parameters.get('enabled')
+        win_id = parameters.get("window_id")
+        enabled = parameters.get("enabled")
         try:
             context.services.window.appearance.set_always_on_top(win_id, enabled)
             return ActionResult(success=True, data={"window_id": win_id, "always_on_top": enabled})
@@ -32,7 +32,7 @@ class RemoveWindowAlwaysOnTop(Action):
     parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             context.services.window.appearance.set_always_on_top(win_id, False)
             return ActionResult(success=True, data={"window_id": win_id, "always_on_top": False})
@@ -48,7 +48,7 @@ class GetWindowAlwaysOnTop(Action):
     parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             is_on_top = context.services.window.appearance.get_always_on_top(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "always_on_top": is_on_top})
@@ -69,13 +69,13 @@ class SetWindowOpacity(Action):
             "required": True,
             "minimum": 0.0,
             "maximum": 1.0,
-            "description": "Opacity value from 0.0 (transparent) to 1.0 (opaque)"
-        }
+            "description": "Opacity value from 0.0 (transparent) to 1.0 (opaque)",
+        },
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        opacity = parameters.get('opacity')
+        win_id = parameters.get("window_id")
+        opacity = parameters.get("opacity")
         try:
             context.services.window.appearance.set_opacity(win_id, opacity)
             return ActionResult(success=True, data={"window_id": win_id, "opacity": opacity})
@@ -91,7 +91,7 @@ class GetWindowOpacity(Action):
     parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             opacity = context.services.window.appearance.get_opacity(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "opacity": opacity})
@@ -107,7 +107,7 @@ class SetWindowFullscreen(Action):
     parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             context.services.window.appearance.set_fullscreen(win_id, True)
             return ActionResult(success=True, data={"window_id": win_id, "fullscreen": True})
@@ -123,7 +123,7 @@ class ExitWindowFullscreen(Action):
     parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             context.services.window.appearance.set_fullscreen(win_id, False)
             return ActionResult(success=True, data={"window_id": win_id, "fullscreen": False})
@@ -139,7 +139,7 @@ class ToggleWindowFullscreen(Action):
     parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             new_state = context.services.window.appearance.toggle_fullscreen(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "fullscreen": new_state})

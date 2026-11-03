@@ -4,12 +4,12 @@ The suite is intentionally deterministic: no real Finder, Trash, LaunchServices,
 permission changes or external applications are invoked.  OS boundaries are
 mocked while ordinary temporary-directory filesystem behaviour is exercised.
 """
+
 import importlib
 import inspect
 import os
 from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -17,28 +17,94 @@ MODULE = "deskagent.platform.macos.file"
 
 
 EXPECTED_METHODS = [
-    "get_file_info", "get_file_metadata", "get_file_size", "get_file_type",
-    "get_file_extension", "get_file_mime_type", "get_file_path", "get_file_name",
-    "get_file_directory", "get_file_created_time", "get_file_modified_time",
-    "get_file_accessed_time", "is_file", "is_directory", "is_symlink",
-    "is_file_accessible", "create_file", "delete_file", "restore_file", "trash_file",
-    "empty_trash", "rename_file", "copy_file", "move_file", "duplicate_file",
-    "replace_file", "read_file", "write_file", "append_file", "prepend_file",
-    "read_lines", "write_lines", "insert_lines", "delete_lines", "replace_text",
-    "find_in_file", "create_directory", "delete_directory", "list_directory",
-    "walk_directory", "find_files", "find_directories", "find_by_pattern",
-    "find_by_extension", "find_by_size", "find_by_date", "create_symbolic_link",
-    "create_hard_link", "read_symbolic_link", "get_link_target", "remove_link",
-    "resolve_path", "create_archive", "extract_archive", "list_archive_contents",
-    "add_to_archive", "remove_from_archive", "test_archive", "get_archive_info",
-    "get_file_permissions", "set_file_permissions", "add_file_permission",
-    "remove_file_permission", "get_file_owner", "set_file_owner", "get_file_group",
-    "set_file_group", "is_file_readable", "is_file_writable", "is_file_executable",
-    "compare_files", "compare_directories", "get_file_hash", "get_disk_usage",
-    "get_free_space", "get_directory_size", "create_temp_file", "create_temp_directory",
-    "get_temp_directory", "cleanup_temp_file", "cleanup_temp_directory",
-    "open_file", "reveal_in_file_manager", "open_with_application", "set_file_hidden",
-    "is_file_hidden", "watch_file", "stop_watching",
+    "get_file_info",
+    "get_file_metadata",
+    "get_file_size",
+    "get_file_type",
+    "get_file_extension",
+    "get_file_mime_type",
+    "get_file_path",
+    "get_file_name",
+    "get_file_directory",
+    "get_file_created_time",
+    "get_file_modified_time",
+    "get_file_accessed_time",
+    "is_file",
+    "is_directory",
+    "is_symlink",
+    "is_file_accessible",
+    "create_file",
+    "delete_file",
+    "restore_file",
+    "trash_file",
+    "empty_trash",
+    "rename_file",
+    "copy_file",
+    "move_file",
+    "duplicate_file",
+    "replace_file",
+    "read_file",
+    "write_file",
+    "append_file",
+    "prepend_file",
+    "read_lines",
+    "write_lines",
+    "insert_lines",
+    "delete_lines",
+    "replace_text",
+    "find_in_file",
+    "create_directory",
+    "delete_directory",
+    "list_directory",
+    "walk_directory",
+    "find_files",
+    "find_directories",
+    "find_by_pattern",
+    "find_by_extension",
+    "find_by_size",
+    "find_by_date",
+    "create_symbolic_link",
+    "create_hard_link",
+    "read_symbolic_link",
+    "get_link_target",
+    "remove_link",
+    "resolve_path",
+    "create_archive",
+    "extract_archive",
+    "list_archive_contents",
+    "add_to_archive",
+    "remove_from_archive",
+    "test_archive",
+    "get_archive_info",
+    "get_file_permissions",
+    "set_file_permissions",
+    "add_file_permission",
+    "remove_file_permission",
+    "get_file_owner",
+    "set_file_owner",
+    "get_file_group",
+    "set_file_group",
+    "is_file_readable",
+    "is_file_writable",
+    "is_file_executable",
+    "compare_files",
+    "compare_directories",
+    "get_file_hash",
+    "get_disk_usage",
+    "get_free_space",
+    "get_directory_size",
+    "create_temp_file",
+    "create_temp_directory",
+    "get_temp_directory",
+    "cleanup_temp_file",
+    "cleanup_temp_directory",
+    "open_file",
+    "reveal_in_file_manager",
+    "open_with_application",
+    "set_file_hidden",
+    "is_file_hidden",
+    "watch_file",
+    "stop_watching",
 ]
 
 
@@ -48,7 +114,8 @@ def load_module():
 
 def service_class(module):
     classes = [
-        c for _, c in inspect.getmembers(module, inspect.isclass)
+        c
+        for _, c in inspect.getmembers(module, inspect.isclass)
         if c.__module__ == module.__name__ and "file" in c.__name__.lower()
     ]
     assert classes, "macOS file module must expose a file service class"
@@ -219,8 +286,10 @@ def test_reveal_in_file_manager_is_mocked(file_service, tmp_path):
 def test_trash_and_empty_trash_are_never_executed_against_real_system(file_service, tmp_path):
     path = tmp_path / "trash.txt"
     path.write_text("danger-safe", encoding="utf-8")
-    with patch.object(file_service, "trash_file", return_value={"trashed": True}) as trash, \
-         patch.object(file_service, "empty_trash", return_value={"emptied": True}) as empty:
+    with (
+        patch.object(file_service, "trash_file", return_value={"trashed": True}) as trash,
+        patch.object(file_service, "empty_trash", return_value={"emptied": True}) as empty,
+    ):
         assert file_service.trash_file(str(path))["trashed"] is True
         assert file_service.empty_trash()["emptied"] is True
         trash.assert_called_once_with(str(path))

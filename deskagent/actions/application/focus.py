@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class ActivateApplication(Action):
@@ -10,16 +10,12 @@ class ActivateApplication(Action):
     requires_confirmation = False
     reversible = False
     parameters_schema = {
-        "application": {
-            "type": "string",
-            "required": True,
-            "description": "Name of the application to activate"
-        }
+        "application": {"type": "string", "required": True, "description": "Name of the application to activate"}
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         if not app_name:
             return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
 
@@ -41,7 +37,7 @@ class HideApplication(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             context.services.application.focus.hide(app_name)
             return ActionResult(success=True, data={"application": app_name, "hidden": True})
@@ -60,7 +56,7 @@ class ShowApplication(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             context.services.application.focus.show(app_name)
             return ActionResult(success=True, data={"application": app_name, "visible": True})
@@ -79,7 +75,7 @@ class MinimizeApplication(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             context.services.application.focus.minimize(app_name)
             return ActionResult(success=True, data={"application": app_name, "minimized": True})
@@ -98,7 +94,7 @@ class RestoreApplication(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             context.services.application.focus.restore(app_name)
             return ActionResult(success=True, data={"application": app_name, "restored": True})
@@ -115,7 +111,7 @@ class BringApplicationToFront(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             context.services.application.focus.bring_to_front(app_name)
             return ActionResult(success=True, data={"application": app_name, "front": True})
@@ -131,13 +127,10 @@ class GetApplicationVisibility(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             is_visible = context.services.application.focus.get_visibility(app_name)
-            return ActionResult(success=True, data={
-                "visible": is_visible,
-                "hidden": not is_visible
-            })
+            return ActionResult(success=True, data={"visible": is_visible, "hidden": not is_visible})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -150,7 +143,7 @@ class GetApplicationFocusState(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             is_focused = context.services.application.focus.is_focused(app_name)
             return ActionResult(success=True, data={"focused": is_focused})

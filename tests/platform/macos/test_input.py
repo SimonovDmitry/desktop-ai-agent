@@ -16,7 +16,6 @@ from deskagent.platform.base.input import (
     InputState,
 )
 
-
 if platform.system() != "Darwin":
     pytest.skip("macOS-only tests", allow_module_level=True)
 
@@ -91,7 +90,8 @@ def test_macos_method_signatures_match_the_base_contract(interface):
 
 def test_macos_input_module_does_not_expose_unrelated_abstract_input_classes():
     concrete_classes = [
-        obj for obj in vars(macos_input).values()
+        obj
+        for obj in vars(macos_input).values()
         if inspect.isclass(obj)
         and any(issubclass(obj, interface) for interface in INTERFACES)
         and obj not in INTERFACES
@@ -114,7 +114,8 @@ def test_every_concrete_macos_input_class_has_its_own_implementation():
 
 def test_macos_input_module_has_no_duplicate_concrete_class_names():
     names = [
-        name for name, obj in vars(macos_input).items()
+        name
+        for name, obj in vars(macos_input).items()
         if inspect.isclass(obj)
         and any(issubclass(obj, interface) for interface in INTERFACES)
         and obj not in INTERFACES

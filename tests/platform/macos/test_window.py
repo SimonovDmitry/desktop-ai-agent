@@ -13,30 +13,43 @@ pytest.importorskip("Quartz")
 pytest.importorskip("AppKit")
 
 from deskagent.platform.base.window import (
-    WindowInformation, WindowFocus, WindowPosition, WindowSize,
-    WindowState, WindowAppearance, WindowHierarchy, WindowDisplay,
-    WindowArrangement, WindowGroups, WindowLifecycle,
+    WindowAppearance,
+    WindowArrangement,
+    WindowDisplay,
+    WindowFocus,
+    WindowGroups,
+    WindowHierarchy,
+    WindowInformation,
+    WindowLifecycle,
+    WindowPosition,
+    WindowSize,
+    WindowState,
 )
 from deskagent.platform.macos import window as macos_window
 
-
 INTERFACES = (
-    WindowInformation, WindowFocus, WindowPosition, WindowSize,
-    WindowState, WindowAppearance, WindowHierarchy, WindowDisplay,
-    WindowArrangement, WindowGroups, WindowLifecycle,
+    WindowInformation,
+    WindowFocus,
+    WindowPosition,
+    WindowSize,
+    WindowState,
+    WindowAppearance,
+    WindowHierarchy,
+    WindowDisplay,
+    WindowArrangement,
+    WindowGroups,
+    WindowLifecycle,
 )
 
 
 def implementation_for(interface):
     found = [
-        cls for _, cls in inspect.getmembers(macos_window, inspect.isclass)
-        if cls is not interface
-        and issubclass(cls, interface)
-        and cls.__module__ == macos_window.__name__
+        cls
+        for _, cls in inspect.getmembers(macos_window, inspect.isclass)
+        if cls is not interface and issubclass(cls, interface) and cls.__module__ == macos_window.__name__
     ]
     assert len(found) == 1, (
-        f"Expected exactly one implementation of {interface.__name__}, "
-        f"got {[c.__name__ for c in found]}"
+        f"Expected exactly one implementation of {interface.__name__}, got {[c.__name__ for c in found]}"
     )
     return found[0]
 
@@ -69,7 +82,11 @@ def test_focus_activate_raises_window_after_activating_process():
 
     metadata = {"pid": 1234, "title": "Test", "app_name": "TestApp"}
 
-    with patch.object(focus, "_get_window_metadata", return_value=metadata),          patch.object(focus, "_run_action") as run_action,          patch.object(macos_window.NSWorkspace, "sharedWorkspace", return_value=workspace):
+    with (
+        patch.object(focus, "_get_window_metadata", return_value=metadata),
+        patch.object(focus, "_run_action") as run_action,
+        patch.object(macos_window.NSWorkspace, "sharedWorkspace", return_value=workspace),
+    ):
         result = focus.activate(42)
 
     assert result == {"window_id": 42, "active": True}
@@ -89,12 +106,8 @@ def test_focus_unknown_window_is_safe():
 @pytest.mark.parametrize(
     ("method", "command", "state"),
     [
-        ("minimize",
-         'perform action "AXPress" of (first button whose subrole is "AXMinimizeButton")',
-         "minimized"),
-        ("maximize",
-         'perform action "AXPress" of (first button whose subrole is "AXZoomButton")',
-         "maximized"),
+        ("minimize", 'perform action "AXPress" of (first button whose subrole is "AXMinimizeButton")', "minimized"),
+        ("maximize", 'perform action "AXPress" of (first button whose subrole is "AXZoomButton")', "maximized"),
     ],
 )
 def test_focus_window_button_actions(method, command, state):
@@ -174,14 +187,16 @@ def test_window_listing_maps_core_window_fields():
     if not hasattr(macos_window.Quartz, "CGWindowListCopyWindowInfo"):
         pytest.skip("Quartz unavailable")
 
-    raw = [{
-        "kCGWindowNumber": 42,
-        "kCGWindowOwnerPID": 1234,
-        "kCGWindowOwnerName": "TestApp",
-        "kCGWindowName": "Main",
-        "kCGWindowLayer": 0,
-        "kCGWindowBounds": {"X": 10, "Y": 20, "Width": 800, "Height": 600},
-    }]
+    raw = [
+        {
+            "kCGWindowNumber": 42,
+            "kCGWindowOwnerPID": 1234,
+            "kCGWindowOwnerName": "TestApp",
+            "kCGWindowName": "Main",
+            "kCGWindowLayer": 0,
+            "kCGWindowBounds": {"X": 10, "Y": 20, "Width": 800, "Height": 600},
+        }
+    ]
 
     with patch.object(macos_window.Quartz, "CGWindowListCopyWindowInfo", return_value=raw):
         windows = info.get_windows()

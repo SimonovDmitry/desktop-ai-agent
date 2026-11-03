@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GetFileInfo(Action):
@@ -7,12 +7,10 @@ class GetFileInfo(Action):
     description = "Get comprehensive information about a file or directory"
     category = ActionCategory.FILE
     risk_level = RiskLevel.LOW
-    parameters_schema = {
-        "path": {"type": "string", "required": True, "description": "Path to the file or directory"}
-    }
+    parameters_schema = {"path": {"type": "string", "required": True, "description": "Path to the file or directory"}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             info = context.services.file.information.get_info(path)
             return ActionResult(success=True, data=info)
@@ -25,12 +23,10 @@ class GetFileMetadata(Action):
     description = "Get extended metadata (permissions, owner, group, flags)"
     category = ActionCategory.FILE
     risk_level = RiskLevel.LOW
-    parameters_schema = {
-        "path": {"type": "string", "required": True}
-    }
+    parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             meta = context.services.file.information.get_metadata(path)
             return ActionResult(success=True, data=meta)
@@ -45,7 +41,7 @@ class GetFileSize(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             size = context.services.file.information.get_size(path)
             return ActionResult(success=True, data={"size": size, "unit": "bytes"})
@@ -60,7 +56,7 @@ class GetFileType(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             f_type = context.services.file.information.get_type(path)
             return ActionResult(success=True, data={"type": f_type})
@@ -75,7 +71,7 @@ class GetFileExtension(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             ext = context.services.file.information.get_extension(path)
             return ActionResult(success=True, data={"extension": ext})
@@ -90,7 +86,7 @@ class GetFileMimeType(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             mime = context.services.file.information.get_mime_type(path)
             return ActionResult(success=True, data={"mime_type": mime})
@@ -105,7 +101,7 @@ class GetFilePath(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             abs_path = context.services.file.information.get_absolute_path(path)
             return ActionResult(success=True, data={"path": abs_path})
@@ -120,7 +116,7 @@ class GetFileName(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             name = context.services.file.information.get_name(path)
             return ActionResult(success=True, data={"name": name})
@@ -135,7 +131,7 @@ class GetFileDirectory(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             directory = context.services.file.information.get_directory(path)
             return ActionResult(success=True, data={"directory": directory})
@@ -150,7 +146,7 @@ class GetFileCreatedTime(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             ts = context.services.file.information.get_created_at(path)
             return ActionResult(success=True, data={"created_at": ts})
@@ -165,7 +161,7 @@ class GetFileModifiedTime(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             ts = context.services.file.information.get_modified_at(path)
             return ActionResult(success=True, data={"modified_at": ts})
@@ -180,7 +176,7 @@ class GetFileAccessedTime(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             ts = context.services.file.information.get_accessed_at(path)
             return ActionResult(success=True, data={"accessed_at": ts})
@@ -195,7 +191,7 @@ class IsFile(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             result = context.services.file.information.is_file(path)
             return ActionResult(success=True, data={"is_file": result})
@@ -210,7 +206,7 @@ class IsDirectory(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             result = context.services.file.information.is_directory(path)
             return ActionResult(success=True, data={"is_directory": result})
@@ -225,7 +221,7 @@ class IsSymlink(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             result = context.services.file.information.is_symlink(path)
             return ActionResult(success=True, data={"is_symlink": result})
@@ -240,7 +236,7 @@ class IsFileAccessible(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             perms = context.services.file.information.get_access_permissions(path)
             return ActionResult(success=True, data=perms)

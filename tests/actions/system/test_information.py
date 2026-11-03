@@ -22,7 +22,7 @@ from tests.conftest import assert_error, assert_success
     [
         (GetCPUProcesses, "get_cpu_processes", [{"pid": 1, "cpu": 10.0}]),
         (GetMemoryProcesses, "get_memory_processes", [{"pid": 1, "memory": 100}]),
-        (GetDiskProcesses, "get_disk_processes", {"disk": {"percent": "50%"} }),
+        (GetDiskProcesses, "get_disk_processes", {"disk": {"percent": "50%"}}),
         (GetBatteryStatus, "get_battery_status", {"percentage": 80, "charging": True}),
         (GetUptime, "get_uptime", {"seconds": 123, "boot_time": "2025-01-01T00:00:00"}),
         (GetCurrentTime, "get_current_time", {"time": "12:34:56"}),

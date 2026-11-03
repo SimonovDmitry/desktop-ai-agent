@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GetLoginItems(Action):
@@ -27,7 +27,7 @@ class IsApplicationStartupEnabled(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             is_enabled = context.services.application.startup.is_enabled(app_name)
             return ActionResult(success=True, data={"enabled": is_enabled, "application": app_name})
@@ -46,8 +46,9 @@ class AddApplicationToStartup(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
-        if not app_name: return ActionResult(success=False, error="Missing app name")
+        app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Missing app name")
 
         try:
             context.services.application.startup.add(app_name)
@@ -67,7 +68,7 @@ class RemoveApplicationFromStartup(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             context.services.application.startup.remove(app_name)
             return ActionResult(success=True, data={"application": app_name, "removed": True})
@@ -84,7 +85,7 @@ class EnableApplicationStartup(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             context.services.application.startup.enable(app_name)
             return ActionResult(success=True, data={"application": app_name, "enabled": True})
@@ -101,7 +102,7 @@ class DisableApplicationStartup(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             context.services.application.startup.disable(app_name)
             return ActionResult(success=True, data={"application": app_name, "enabled": False})

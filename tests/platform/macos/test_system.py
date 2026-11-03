@@ -42,8 +42,10 @@ def test_audio_unmute_calls_osascript():
 
 
 def test_audio_increase_volume_reads_current_value_and_sets_new_value():
-    with patch("deskagent.platform.macos.system.check_output", return_value=b"40\\n") as check_output, \
-         patch("deskagent.platform.macos.system.run") as run:
+    with (
+        patch("deskagent.platform.macos.system.check_output", return_value=b"40\\n") as check_output,
+        patch("deskagent.platform.macos.system.run") as run,
+    ):
         MacOSSystemAudio().increase_volume(10)
 
     check_output.assert_called_once()
@@ -51,8 +53,10 @@ def test_audio_increase_volume_reads_current_value_and_sets_new_value():
 
 
 def test_audio_decrease_volume_uses_default_step():
-    with patch("deskagent.platform.macos.system.check_output", return_value=b"40\\n"), \
-         patch("deskagent.platform.macos.system.run") as run:
+    with (
+        patch("deskagent.platform.macos.system.check_output", return_value=b"40\\n"),
+        patch("deskagent.platform.macos.system.run") as run,
+    ):
         MacOSSystemAudio().decrease_volume()
 
     run.assert_called_once_with(["osascript", "-e", "set volume output volume 30"])
@@ -109,8 +113,10 @@ def test_mouse_unimplemented_methods_are_explicitly_pending():
 
 
 def test_network_hostname_is_real_shape():
-    with patch("deskagent.platform.macos.system.socket.gethostname", return_value="host"), \
-         patch("deskagent.platform.macos.system.socket.getfqdn", return_value="host.local"):
+    with (
+        patch("deskagent.platform.macos.system.socket.gethostname", return_value="host"),
+        patch("deskagent.platform.macos.system.socket.getfqdn", return_value="host.local"),
+    ):
         assert MacOSSystemNetwork().get_hostname() == {
             "hostname": "host",
             "fqdn": "host.local",

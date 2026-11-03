@@ -1,4 +1,5 @@
 import pytest
+from tests.application.conftest import assert_error, assert_success
 
 from deskagent.actions.application.documents import (
     OpenDocument,
@@ -7,7 +8,6 @@ from deskagent.actions.application.documents import (
     RevealApplicationExecutable,
     RevealApplicationInFileManager,
 )
-from tests.application.conftest import assert_error, assert_success
 
 
 def test_open_document(application_context):
@@ -24,9 +24,7 @@ def test_open_multiple_documents(application_context):
     paths = ["/Users/me/a.pdf", "/Users/me/b.pdf"]
     application_context.services.application.open_documents.return_value = None
 
-    result = OpenMultipleDocuments().execute(
-        application_context, {"paths": paths}
-    )
+    result = OpenMultipleDocuments().execute(application_context, {"paths": paths})
 
     assert_success(
         result,
@@ -36,9 +34,7 @@ def test_open_multiple_documents(application_context):
 
 
 def test_open_multiple_documents_empty_list_is_rejected(application_context):
-    result = OpenMultipleDocuments().execute(
-        application_context, {"paths": []}
-    )
+    result = OpenMultipleDocuments().execute(application_context, {"paths": []})
 
     assert_error(result, "INVALID_INPUT")
     application_context.services.application.open_documents.assert_not_called()
@@ -58,9 +54,7 @@ def test_open_url_with_application(application_context):
         result,
         {"opened": True, "url": url, "application": application},
     )
-    application_context.services.application.open_url_with_application.assert_called_once_with(
-        url, application
-    )
+    application_context.services.application.open_url_with_application.assert_called_once_with(url, application)
 
 
 @pytest.mark.parametrize(
@@ -81,19 +75,13 @@ def test_open_url_with_application(application_context):
         ),
     ],
 )
-def test_reveal_application_actions(
-    application_context, action_cls, method, expected
-):
+def test_reveal_application_actions(application_context, action_cls, method, expected):
     getattr(application_context.services.application, method).return_value = expected["path"]
 
-    result = action_cls().execute(
-        application_context, {"application": "Safari"}
-    )
+    result = action_cls().execute(application_context, {"application": "Safari"})
 
     assert_success(result, expected)
-    getattr(application_context.services.application, method).assert_called_once_with(
-        "Safari"
-    )
+    getattr(application_context.services.application, method).assert_called_once_with("Safari")
 
 
 @pytest.mark.parametrize(
@@ -106,9 +94,7 @@ def test_reveal_application_actions(
         (RevealApplicationExecutable, "reveal_application_executable", {}),
     ],
 )
-def test_document_actions_require_parameters(
-    application_context, action_cls, method, params
-):
+def test_document_actions_require_parameters(application_context, action_cls, method, params):
     result = action_cls().execute(application_context, params)
 
     assert_error(result, "MISSING_PARAM")
@@ -133,9 +119,7 @@ def test_document_actions_require_parameters(
         ),
     ],
 )
-def test_document_service_errors_are_wrapped(
-    application_context, method, action_cls, params
-):
+def test_document_service_errors_are_wrapped(application_context, method, action_cls, params):
     getattr(application_context.services.application, method).side_effect = RuntimeError("document failed")
 
     result = action_cls().execute(application_context, params)

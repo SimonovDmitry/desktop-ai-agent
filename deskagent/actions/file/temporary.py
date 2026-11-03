@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class CreateTemporaryFile(Action):
@@ -10,16 +10,14 @@ class CreateTemporaryFile(Action):
     parameters_schema = {
         "prefix": {"type": "string", "required": False, "default": "agent_"},
         "suffix": {"type": "string", "required": False, "default": ".tmp"},
-        "content": {"type": "string", "required": False}
+        "content": {"type": "string", "required": False},
     }
 
     def execute(self, context, parameters):
         p = parameters
         try:
             path = context.services.file.temporary.create_file(
-                prefix=p.get('prefix', 'agent_'),
-                suffix=p.get('suffix', '.tmp'),
-                content=p.get('content')
+                prefix=p.get("prefix", "agent_"), suffix=p.get("suffix", ".tmp"), content=p.get("content")
             )
             return ActionResult(success=True, data={"path": path, "created": True})
         except Exception as exc:
@@ -31,12 +29,10 @@ class CreateTemporaryDirectory(Action):
     description = "Create a unique temporary directory for a batch of files"
     category = ActionCategory.FILE
     risk_level = RiskLevel.LOW
-    parameters_schema = {
-        "prefix": {"type": "string", "required": False, "default": "agent_dir_"}
-    }
+    parameters_schema = {"prefix": {"type": "string", "required": False, "default": "agent_dir_"}}
 
     def execute(self, context, parameters):
-        prefix = parameters.get('prefix', 'agent_dir_')
+        prefix = parameters.get("prefix", "agent_dir_")
         try:
             path = context.services.file.temporary.create_directory(prefix=prefix)
             return ActionResult(success=True, data={"path": path, "created": True})
@@ -66,7 +62,7 @@ class CleanupTemporaryFile(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             context.services.file.temporary.delete_file(path)
             return ActionResult(success=True, data={"deleted": True, "path": path})
@@ -82,7 +78,7 @@ class CleanupTemporaryDirectory(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
+        path = parameters.get("path")
         try:
             context.services.file.temporary.delete_directory(path)
             return ActionResult(success=True, data={"deleted": True, "path": path})
@@ -95,12 +91,10 @@ class CleanupTemporaryFiles(Action):
     description = "Bulk remove all temporary files created by the agent in this session"
     category = ActionCategory.FILE
     risk_level = RiskLevel.MEDIUM
-    parameters_schema = {
-        "prefix": {"type": "string", "required": False, "default": "agent_"}
-    }
+    parameters_schema = {"prefix": {"type": "string", "required": False, "default": "agent_"}}
 
     def execute(self, context, parameters):
-        prefix = parameters.get('prefix', 'agent_')
+        prefix = parameters.get("prefix", "agent_")
         try:
             count = context.services.file.temporary.cleanup_all(prefix=prefix)
             return ActionResult(success=True, data={"cleaned_count": count, "prefix_used": prefix})

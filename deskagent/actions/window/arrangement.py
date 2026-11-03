@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class ArrangeWindows(Action):
@@ -11,12 +11,12 @@ class ArrangeWindows(Action):
     reversible = True
     parameters_schema = {
         "window_ids": {"type": "list", "required": True, "description": "List of window IDs to arrange"},
-        "layout": {"type": "string", "required": True, "enum": ["horizontal", "vertical"]}
+        "layout": {"type": "string", "required": True, "enum": ["horizontal", "vertical"]},
     }
 
     def execute(self, context, parameters):
-        win_ids = parameters.get('window_ids')
-        layout = parameters.get('layout')
+        win_ids = parameters.get("window_ids")
+        layout = parameters.get("layout")
         if not win_ids or not layout:
             return ActionResult(success=False, error="Missing parameters", error_code="MISSING_PARAM")
         try:
@@ -31,12 +31,10 @@ class TileWindows(Action):
     description = "Automatically tile the specified windows to fill the screen"
     category = ActionCategory.APPLICATION
     risk_level = RiskLevel.LOW
-    parameters_schema = {
-        "window_ids": {"type": "list", "required": True, "description": "List of window IDs to tile"}
-    }
+    parameters_schema = {"window_ids": {"type": "list", "required": True, "description": "List of window IDs to tile"}}
 
     def execute(self, context, parameters):
-        win_ids = parameters.get('window_ids')
+        win_ids = parameters.get("window_ids")
         try:
             context.services.window.arrangement.tile(win_ids)
             return ActionResult(success=True, data={"arranged": True})
@@ -49,12 +47,10 @@ class CascadeWindows(Action):
     description = "Arrange windows in an overlapping cascade"
     category = ActionCategory.APPLICATION
     risk_level = RiskLevel.LOW
-    parameters_schema = {
-        "window_ids": {"type": "list", "required": True}
-    }
+    parameters_schema = {"window_ids": {"type": "list", "required": True}}
 
     def execute(self, context, parameters):
-        win_ids = parameters.get('window_ids')
+        win_ids = parameters.get("window_ids")
         try:
             context.services.window.arrangement.cascade(win_ids)
             return ActionResult(success=True, data={"arranged": True})
@@ -67,12 +63,10 @@ class StackWindows(Action):
     description = "Place windows one on top of another (centered)"
     category = ActionCategory.APPLICATION
     risk_level = RiskLevel.LOW
-    parameters_schema = {
-        "window_ids": {"type": "list", "required": True}
-    }
+    parameters_schema = {"window_ids": {"type": "list", "required": True}}
 
     def execute(self, context, parameters):
-        win_ids = parameters.get('window_ids')
+        win_ids = parameters.get("window_ids")
         try:
             context.services.window.arrangement.stack(win_ids)
             return ActionResult(success=True, data={"arranged": True})
@@ -87,12 +81,12 @@ class ArrangeApplicationWindows(Action):
     risk_level = RiskLevel.LOW
     parameters_schema = {
         "application": {"type": "string", "required": True},
-        "layout": {"type": "string", "required": True, "enum": ["horizontal", "vertical", "tile"]}
+        "layout": {"type": "string", "required": True, "enum": ["horizontal", "vertical", "tile"]},
     }
 
     def execute(self, context, parameters):
-        app_name = parameters.get('application')
-        layout = parameters.get('layout')
+        app_name = parameters.get("application")
+        layout = parameters.get("layout")
         try:
             context.services.window.arrangement.arrange_app(app_name, layout)
             return ActionResult(success=True, data={"application": app_name, "layout": layout})
@@ -108,15 +102,15 @@ class ArrangeWindowsGrid(Action):
     parameters_schema = {
         "window_ids": {"type": "list", "required": True},
         "rows": {"type": "integer", "required": True},
-        "columns": {"type": "integer", "required": True}
+        "columns": {"type": "integer", "required": True},
     }
 
     def execute(self, context, parameters):
-        win_ids = parameters.get('window_ids')
-        rows = parameters.get('rows')
-        cols = parameters.get('columns')
+        win_ids = parameters.get("window_ids")
+        rows = parameters.get("rows")
+        cols = parameters.get("columns")
         if not all([win_ids, rows, cols]):
-             return ActionResult(success=False, error="Missing grid parameters")
+            return ActionResult(success=False, error="Missing grid parameters")
         try:
             context.services.window.arrangement.grid(win_ids, rows, cols)
             return ActionResult(success=True, data={"arranged": True})
@@ -129,12 +123,10 @@ class EqualizeWindowSizes(Action):
     description = "Make all specified windows the same size based on the first window"
     category = ActionCategory.APPLICATION
     risk_level = RiskLevel.LOW
-    parameters_schema = {
-        "window_ids": {"type": "list", "required": True}
-    }
+    parameters_schema = {"window_ids": {"type": "list", "required": True}}
 
     def execute(self, context, parameters):
-        win_ids = parameters.get('window_ids')
+        win_ids = parameters.get("window_ids")
         try:
             context.services.window.arrangement.equalize(win_ids)
             return ActionResult(success=True, data={"equalized": True})

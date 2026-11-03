@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GetRunningApplications(Action):
@@ -45,13 +45,13 @@ class FindApplications(Action):
     reversible = False
     parameters_schema = {
         "query": {"type": "string", "required": True, "description": "Search term"},
-        "limit": {"type": "integer", "required": False, "default": 10}
+        "limit": {"type": "integer", "required": False, "default": 10},
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        query = params.get('query')
-        limit = params.get('limit', 10)
+        query = params.get("query")
+        limit = params.get("limit", 10)
 
         if not query:
             return ActionResult(success=False, error="Query parameter is required", error_code="MISSING_PARAM")
@@ -74,8 +74,9 @@ class GetApplicationInfo(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
-        if not app_name: return ActionResult(success=False, error="Missing app name")
+        app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Missing app name")
 
         try:
             info = context.services.application.information.get_info(app_name)
@@ -95,7 +96,7 @@ class GetApplicationStatus(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             status = context.services.application.information.get_status(app_name)
             return ActionResult(success=True, data=status)
@@ -114,7 +115,7 @@ class IsApplicationRunning(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             running = context.services.application.information.is_running(app_name)
             return ActionResult(success=True, data={"running": running})
@@ -147,7 +148,7 @@ class GetApplicationPID(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             pid = context.services.application.information.get_pid(app_name)
             return ActionResult(success=True, data={"pid": pid})
@@ -163,7 +164,7 @@ class GetApplicationPath(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             path = context.services.application.information.get_path(app_name)
             return ActionResult(success=True, data={"path": path})
@@ -179,7 +180,7 @@ class GetApplicationExecutablePath(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             executable = context.services.application.information.get_executable_path(app_name)
             return ActionResult(success=True, data={"executable": executable})
@@ -195,7 +196,7 @@ class GetApplicationBundleId(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             bundle_id = context.services.application.information.get_bundle_id(app_name)
             return ActionResult(success=True, data={"bundle_id": bundle_id})
@@ -211,7 +212,7 @@ class GetApplicationVersion(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             version = context.services.application.information.get_version(app_name)
             return ActionResult(success=True, data={"version": version})
@@ -227,7 +228,7 @@ class GetApplicationArchitecture(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             arch = context.services.application.information.get_architecture(app_name)
             return ActionResult(success=True, data={"architecture": arch})
@@ -241,25 +242,19 @@ class GetApplicationName(Action):
     category = ActionCategory.APPLICATION
     risk_level = RiskLevel.LOW
     parameters_schema = {
-        "identifier_type": {
-            "type": "string",
-            "required": True,
-            "enum": ["pid", "path", "bundle_id"]
-        },
-        "identifier": {
-            "type": "string_or_int",
-            "required": True
-        }
+        "identifier_type": {"type": "string", "required": True, "enum": ["pid", "path", "bundle_id"]},
+        "identifier": {"type": "string_or_int", "required": True},
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        id_type = params.get('identifier_type')
-        val = params.get('identifier')
+        id_type = params.get("identifier_type")
+        val = params.get("identifier")
 
         if not id_type or val is None:
-            return ActionResult(success=False, error="Both identifier_type and identifier are required",
-                                error_code="MISSING_PARAM")
+            return ActionResult(
+                success=False, error="Both identifier_type and identifier are required", error_code="MISSING_PARAM"
+            )
 
         try:
             name = context.services.application.information.get_name_from_id(id_type, val)

@@ -1,12 +1,14 @@
 import logging
+from unittest.mock import MagicMock
 
 import pytest
-from unittest.mock import MagicMock
 
 from deskagent.core.config import Settings
 from deskagent.core.context import ActionContext
+
 # TODO добавить в platform реализацию application и привести тесты в нормальный вид и
 #  все переходить к сл модулю
+
 
 @pytest.fixture
 def application_context():

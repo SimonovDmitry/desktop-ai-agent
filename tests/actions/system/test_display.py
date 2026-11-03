@@ -1,10 +1,11 @@
 import pytest
 
 from deskagent.actions.system.display import (
-    GetDisplays,
     GetDisplayBrightness,
+    GetDisplays,
     GetScreenSize,
-    SetDisplayBrightness
+    SetDisplayBrightness,
+    SetResolution,
 )
 from tests.conftest import assert_error, assert_success
 
@@ -86,16 +87,12 @@ def test_set_resolution_requires_all_parameters(context):
 
 
 def test_set_resolution_success(context):
-    result = SetResolution().execute(
-        context, {"display_id": 1, "width": 1920, "height": 1080}
-    )
+    result = SetResolution().execute(context, {"display_id": 1, "width": 1920, "height": 1080})
     assert_success(result, {"display_id": 1, "width": 1920, "height": 1080})
     context.services.system.display.set_resolution.assert_called_once_with(1, 1920, 1080)
 
 
 def test_set_resolution_returns_system_error(context):
     context.services.system.display.set_resolution.side_effect = RuntimeError("resolution failed")
-    result = SetResolution().execute(
-        context, {"display_id": 1, "width": 1920, "height": 1080}
-    )
+    result = SetResolution().execute(context, {"display_id": 1, "width": 1920, "height": 1080})
     assert_error(result, "SYSTEM_ERROR")

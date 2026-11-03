@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GetApplicationPermissions(Action):
@@ -10,16 +10,12 @@ class GetApplicationPermissions(Action):
     requires_confirmation = False
     reversible = False
     parameters_schema = {
-        "application": {
-            "type": "string",
-            "required": True,
-            "description": "Name of the application to check"
-        }
+        "application": {"type": "string", "required": True, "description": "Name of the application to check"}
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         if not app_name:
             return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
 
@@ -38,7 +34,7 @@ class GetAccessibilityPermission(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             granted = context.services.application.preferences.get_accessibility_status(app_name)
             return ActionResult(success=True, data={"granted": granted})
@@ -54,7 +50,7 @@ class GetAutomationPermission(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             granted = context.services.application.preferences.get_automation_status(app_name)
             return ActionResult(success=True, data={"granted": granted})
@@ -70,7 +66,7 @@ class GetNotificationPermission(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             granted = context.services.application.preferences.get_notification_status(app_name)
             return ActionResult(success=True, data={"granted": granted})
@@ -83,17 +79,14 @@ class GetDefaultApplication(Action):
     description = "Find which application is set as default for a specific file type"
     category = ActionCategory.APPLICATION
     parameters_schema = {
-        "file_type": {
-            "type": "string",
-            "required": True,
-            "description": "File extension (e.g. '.pdf') or UTI"
-        }
+        "file_type": {"type": "string", "required": True, "description": "File extension (e.g. '.pdf') or UTI"}
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        file_type = params.get('file_type')
-        if not file_type: return ActionResult(success=False, error="Missing file_type")
+        file_type = params.get("file_type")
+        if not file_type:
+            return ActionResult(success=False, error="Missing file_type")
 
         try:
             app_name = context.services.application.preferences.get_default_app(file_type)
@@ -108,14 +101,15 @@ class OpenWithApplication(Action):
     category = ActionCategory.APPLICATION
     parameters_schema = {
         "path": {"type": "string", "required": True},
-        "application": {"type": "string", "required": True}
+        "application": {"type": "string", "required": True},
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        path = params.get('path')
-        app_name = params.get('application')
-        if not path or not app_name: return ActionResult(success=False, error="Missing path or application")
+        path = params.get("path")
+        app_name = params.get("application")
+        if not path or not app_name:
+            return ActionResult(success=False, error="Missing path or application")
 
         try:
             context.services.application.preferences.open_with(path, app_name)
@@ -132,7 +126,7 @@ class OpenApplicationPreferences(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             context.services.application.preferences.open_app_prefs(app_name)
             return ActionResult(success=True, data={"opened": True, "application": app_name})
@@ -150,15 +144,16 @@ class OpenApplicationSystemSettings(Action):
             "type": "string",
             "required": True,
             "enum": ["accessibility", "automation", "notifications", "general"],
-            "description": "System settings section to open"
-        }
+            "description": "System settings section to open",
+        },
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
-        section = params.get('section')
-        if not app_name or not section: return ActionResult(success=False, error="Missing parameters")
+        app_name = params.get("application")
+        section = params.get("section")
+        if not app_name or not section:
+            return ActionResult(success=False, error="Missing parameters")
 
         try:
             context.services.application.preferences.open_system_settings(app_name, section)

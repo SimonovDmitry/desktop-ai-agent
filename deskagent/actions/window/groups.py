@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GroupWindows(Action):
@@ -11,12 +11,16 @@ class GroupWindows(Action):
     reversible = True
     parameters_schema = {
         "window_ids": {"type": "list", "required": True, "description": "List of window IDs to include in the group"},
-        "group_name": {"type": "string", "required": True, "description": "Name for the group (e.g., 'work', 'social')"}
+        "group_name": {
+            "type": "string",
+            "required": True,
+            "description": "Name for the group (e.g., 'work', 'social')",
+        },
     }
 
     def execute(self, context, parameters):
-        win_ids = parameters.get('window_ids')
-        group_name = parameters.get('group_name')
+        win_ids = parameters.get("window_ids")
+        group_name = parameters.get("group_name")
         try:
             context.services.window.groups.group(win_ids, group_name)
             return ActionResult(success=True, data={"group": group_name, "windows": win_ids})
@@ -34,7 +38,7 @@ class UngroupWindows(Action):
     }
 
     def execute(self, context, parameters):
-        win_ids = parameters.get('window_ids')
+        win_ids = parameters.get("window_ids")
         try:
             context.services.window.groups.ungroup(win_ids)
             return ActionResult(success=True, data={"ungrouped": win_ids})
@@ -47,12 +51,10 @@ class GetWindowGroup(Action):
     description = "Identify the group name a specific window belongs to"
     category = ActionCategory.APPLICATION
     risk_level = RiskLevel.LOW
-    parameters_schema = {
-        "window_id": {"type": "integer", "required": True}
-    }
+    parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             group_name = context.services.window.groups.get_group(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "group": group_name})
@@ -85,7 +87,7 @@ class ActivateWindowGroup(Action):
     }
 
     def execute(self, context, parameters):
-        group_name = parameters.get('group_name')
+        group_name = parameters.get("group_name")
         try:
             context.services.window.groups.activate(group_name)
             return ActionResult(success=True, data={"group": group_name, "activated": True})
@@ -100,12 +102,12 @@ class ArrangeWindowGroup(Action):
     risk_level = RiskLevel.LOW
     parameters_schema = {
         "group_name": {"type": "string", "required": True},
-        "layout": {"type": "string", "required": True, "enum": ["horizontal", "vertical", "tile", "cascade"]}
+        "layout": {"type": "string", "required": True, "enum": ["horizontal", "vertical", "tile", "cascade"]},
     }
 
     def execute(self, context, parameters):
-        group_name = parameters.get('group_name')
-        layout = parameters.get('layout')
+        group_name = parameters.get("group_name")
+        layout = parameters.get("layout")
         try:
             context.services.window.groups.arrange(group_name, layout)
             return ActionResult(success=True, data={"group": group_name, "layout": layout})

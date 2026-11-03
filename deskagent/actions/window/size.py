@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class ResizeWindow(Action):
@@ -12,16 +12,18 @@ class ResizeWindow(Action):
     parameters_schema = {
         "window_id": {"type": "integer", "required": True, "description": "ID of the window"},
         "delta_width": {"type": "integer", "required": True, "description": "Value to add to current width"},
-        "delta_height": {"type": "integer", "required": True, "description": "Value to add to current height"}
+        "delta_height": {"type": "integer", "required": True, "description": "Value to add to current height"},
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        dw = parameters.get('delta_width')
-        dh = parameters.get('delta_height')
+        win_id = parameters.get("window_id")
+        dw = parameters.get("delta_width")
+        dh = parameters.get("delta_height")
         try:
             new_size = context.services.window.size.resize(win_id, dw, dh)
-            return ActionResult(success=True, data={"window_id": win_id, "width": new_size['width'], "height": new_size['height']})
+            return ActionResult(
+                success=True, data={"window_id": win_id, "width": new_size["width"], "height": new_size["height"]}
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
@@ -36,13 +38,13 @@ class ResizeWindowTo(Action):
     parameters_schema = {
         "window_id": {"type": "integer", "required": True},
         "width": {"type": "integer", "required": True},
-        "height": {"type": "integer", "required": True}
+        "height": {"type": "integer", "required": True},
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        w = parameters.get('width')
-        h = parameters.get('height')
+        win_id = parameters.get("window_id")
+        w = parameters.get("width")
+        h = parameters.get("height")
         try:
             context.services.window.size.resize_to(win_id, w, h)
             return ActionResult(success=True, data={"window_id": win_id, "size": {"width": w, "height": h}})
@@ -57,12 +59,12 @@ class SetWindowWidth(Action):
     risk_level = RiskLevel.LOW
     parameters_schema = {
         "window_id": {"type": "integer", "required": True},
-        "width": {"type": "integer", "required": True}
+        "width": {"type": "integer", "required": True},
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        w = parameters.get('width')
+        win_id = parameters.get("window_id")
+        w = parameters.get("width")
         try:
             context.services.window.size.set_width(win_id, w)
             return ActionResult(success=True, data={"width": w})
@@ -77,12 +79,12 @@ class SetWindowHeight(Action):
     risk_level = RiskLevel.LOW
     parameters_schema = {
         "window_id": {"type": "integer", "required": True},
-        "height": {"type": "integer", "required": True}
+        "height": {"type": "integer", "required": True},
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        h = parameters.get('height')
+        win_id = parameters.get("window_id")
+        h = parameters.get("height")
         try:
             context.services.window.size.set_height(win_id, h)
             return ActionResult(success=True, data={"height": h})
@@ -98,13 +100,13 @@ class SetWindowSize(Action):
     parameters_schema = {
         "window_id": {"type": "integer", "required": True},
         "width": {"type": "integer", "required": True},
-        "height": {"type": "integer", "required": True}
+        "height": {"type": "integer", "required": True},
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        w = parameters.get('width')
-        h = parameters.get('height')
+        win_id = parameters.get("window_id")
+        w = parameters.get("width")
+        h = parameters.get("height")
         try:
             context.services.window.size.set_size(win_id, w, h)
             return ActionResult(success=True, data={"width": w, "height": h})
@@ -119,12 +121,12 @@ class FitWindowToDisplay(Action):
     risk_level = RiskLevel.LOW
     parameters_schema = {
         "window_id": {"type": "integer", "required": True},
-        "display_id": {"type": "integer", "required": True, "description": "ID of the target display"}
+        "display_id": {"type": "integer", "required": True, "description": "ID of the target display"},
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        disp_id = parameters.get('display_id')
+        win_id = parameters.get("window_id")
+        disp_id = parameters.get("display_id")
         try:
             bounds = context.services.window.size.fit_to_display(win_id, disp_id)
             return ActionResult(success=True, data={"window_id": win_id, "bounds": bounds})
@@ -139,12 +141,12 @@ class MaximizeWindowToDisplay(Action):
     risk_level = RiskLevel.LOW
     parameters_schema = {
         "window_id": {"type": "integer", "required": True},
-        "display_id": {"type": "integer", "required": True}
+        "display_id": {"type": "integer", "required": True},
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        disp_id = parameters.get('display_id')
+        win_id = parameters.get("window_id")
+        disp_id = parameters.get("display_id")
         try:
             bounds = context.services.window.size.maximize_to_display(win_id, disp_id)
             return ActionResult(success=True, data={"window_id": win_id, "bounds": bounds})
@@ -158,12 +160,10 @@ class RestoreWindowSize(Action):
     category = ActionCategory.APPLICATION
     risk_level = RiskLevel.LOW
     reversible = False
-    parameters_schema = {
-        "window_id": {"type": "integer", "required": True}
-    }
+    parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             old_size = context.services.window.size.restore_size(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "size": old_size})

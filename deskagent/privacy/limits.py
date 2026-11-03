@@ -4,8 +4,9 @@ import json
 import threading
 import time
 from collections import defaultdict, deque
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 
 class EmergencyStop:
@@ -35,8 +36,13 @@ class LimitDecision:
 class SafetyLimits:
     CLICK_TOKENS = ("click", "tap", "mouse_press")
 
-    def __init__(self, max_clicks_per_minute=60, max_consecutive_failures=3,
-                 emergency_stop: EmergencyStop | None = None, clock: Callable[[], float] = time.monotonic):
+    def __init__(
+        self,
+        max_clicks_per_minute=60,
+        max_consecutive_failures=3,
+        emergency_stop: EmergencyStop | None = None,
+        clock: Callable[[], float] = time.monotonic,
+    ):
         self.max_clicks_per_minute = max_clicks_per_minute
         self.max_consecutive_failures = max_consecutive_failures
         self.emergency_stop = emergency_stop or EmergencyStop()

@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class SelectAllText(Action):
@@ -26,12 +26,12 @@ class SelectText(Action):
     risk_level = RiskLevel.LOW
     parameters_schema = {
         "start": {"type": "integer", "required": True, "description": "Start character index"},
-        "end": {"type": "integer", "required": True, "description": "End character index"}
+        "end": {"type": "integer", "required": True, "description": "End character index"},
     }
 
     def execute(self, context, parameters):
-        start = parameters.get('start')
-        end = parameters.get('end')
+        start = parameters.get("start")
+        end = parameters.get("end")
         if start is None or end is None:
             return ActionResult(success=False, error="Start and end positions required", error_code="MISSING_PARAM")
 
@@ -75,16 +75,11 @@ class SelectToStart(Action):
     description = "Extend selection from the current position to the start of the line or document"
     category = ActionCategory.SYSTEM
     parameters_schema = {
-        "scope": {
-            "type": "string",
-            "required": False,
-            "default": "line",
-            "enum": ["line", "document"]
-        }
+        "scope": {"type": "string", "required": False, "default": "line", "enum": ["line", "document"]}
     }
 
     def execute(self, context, parameters):
-        scope = parameters.get('scope', 'line')
+        scope = parameters.get("scope", "line")
         try:
             context.services.input.selection.select_to_start(scope)
             return ActionResult(success=True, data={"scope": scope, "extended": True})
@@ -97,16 +92,11 @@ class SelectToEnd(Action):
     description = "Extend selection from the current position to the end of the line or document"
     category = ActionCategory.SYSTEM
     parameters_schema = {
-        "scope": {
-            "type": "string",
-            "required": False,
-            "default": "line",
-            "enum": ["line", "document"]
-        }
+        "scope": {"type": "string", "required": False, "default": "line", "enum": ["line", "document"]}
     }
 
     def execute(self, context, parameters):
-        scope = parameters.get('scope', 'line')
+        scope = parameters.get("scope", "line")
         try:
             context.services.input.selection.select_to_end(scope)
             return ActionResult(success=True, data={"scope": scope, "extended": True})
@@ -121,7 +111,7 @@ class ExtendSelection(Action):
     parameters_schema = {
         "direction": {"type": "string", "required": True, "enum": ["up", "down", "left", "right"]},
         "amount": {"type": "integer", "required": True, "description": "Number of units to extend"},
-        "unit": {"type": "string", "required": True, "enum": ["character", "word", "line"]}
+        "unit": {"type": "string", "required": True, "enum": ["character", "word", "line"]},
     }
 
     def execute(self, context, parameters):
@@ -130,9 +120,10 @@ class ExtendSelection(Action):
             return ActionResult(success=False, error="Missing required parameters", error_code="MISSING_PARAM")
 
         try:
-            context.services.input.selection.extend_selection(p['direction'], p['amount'], p['unit'])
-            return ActionResult(success=True,
-                                data={"direction": p['direction'], "amount": p['amount'], "unit": p['unit']})
+            context.services.input.selection.extend_selection(p["direction"], p["amount"], p["unit"])
+            return ActionResult(
+                success=True, data={"direction": p["direction"], "amount": p["amount"], "unit": p["unit"]}
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 

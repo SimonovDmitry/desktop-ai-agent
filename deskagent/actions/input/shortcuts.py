@@ -1,6 +1,7 @@
-from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
 import time
+
+from deskagent.actions.base import Action
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class PressShortcut(Action):
@@ -8,12 +9,10 @@ class PressShortcut(Action):
     description = "Perform a key combination (e.g., 'cmd+c', 'ctrl+alt+delete')"
     category = ActionCategory.SYSTEM
     risk_level = RiskLevel.LOW
-    parameters_schema = {
-        "shortcut": {"type": "string", "required": True, "description": "Combination string"}
-    }
+    parameters_schema = {"shortcut": {"type": "string", "required": True, "description": "Combination string"}}
 
     def execute(self, context, parameters):
-        shortcut = parameters.get('shortcut')
+        shortcut = parameters.get("shortcut")
         if not shortcut:
             return ActionResult(success=False, error="Missing shortcut parameter", error_code="MISSING_PARAM")
         try:
@@ -29,12 +28,12 @@ class ExecuteShortcutSequence(Action):
     category = ActionCategory.SYSTEM
     parameters_schema = {
         "shortcuts": {"type": "list", "required": True, "description": "List of strings like ['cmd+a', 'cmd+c']"},
-        "delay": {"type": "float", "required": False, "default": 0.1}
+        "delay": {"type": "float", "required": False, "default": 0.1},
     }
 
     def execute(self, context, parameters):
-        shortcuts = parameters.get('shortcuts')
-        delay = parameters.get('delay', 0.1)
+        shortcuts = parameters.get("shortcuts")
+        delay = parameters.get("delay", 0.1)
         if not isinstance(shortcuts, list):
             return ActionResult(success=False, error="Shortcuts must be a list", error_code="INVALID_INPUT")
 
@@ -151,12 +150,10 @@ class Find(Action):
     name = "find"
     description = "Open find dialog and search for text"
     category = ActionCategory.SYSTEM
-    parameters_schema = {
-        "text": {"type": "string", "required": True, "description": "Text to search for"}
-    }
+    parameters_schema = {"text": {"type": "string", "required": True, "description": "Text to search for"}}
 
     def execute(self, context, parameters):
-        text = parameters.get('text')
+        text = parameters.get("text")
         try:
             context.services.input.shortcuts.find(text)
             return ActionResult(success=True, data={"search": text, "executed": True})
@@ -198,12 +195,10 @@ class SwitchApplication(Action):
     name = "switch_application"
     description = "Switch focus to another application"
     category = ActionCategory.SYSTEM
-    parameters_schema = {
-        "application": {"type": "string", "required": True}
-    }
+    parameters_schema = {"application": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        app_name = parameters.get('application')
+        app_name = parameters.get("application")
         try:
             context.services.input.shortcuts.switch_application(app_name)
             return ActionResult(success=True, data={"application": app_name, "switched": True})

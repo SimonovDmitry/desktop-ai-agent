@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class CompareFiles(Action):
@@ -7,13 +7,10 @@ class CompareFiles(Action):
     description = "Perform a basic comparison of two files (size, hash, metadata)"
     category = ActionCategory.FILE
     risk_level = RiskLevel.LOW
-    parameters_schema = {
-        "file1": {"type": "string", "required": True},
-        "file2": {"type": "string", "required": True}
-    }
+    parameters_schema = {"file1": {"type": "string", "required": True}, "file2": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        f1, f2 = parameters.get('file1'), parameters.get('file2')
+        f1, f2 = parameters.get("file1"), parameters.get("file2")
         try:
             result = context.services.file.comparison.compare_files(f1, f2)
             return ActionResult(success=True, data=result)
@@ -25,13 +22,10 @@ class CompareFileContents(Action):
     name = "compare_file_contents"
     description = "Compare the content of two text files and return if they are identical"
     category = ActionCategory.FILE
-    parameters_schema = {
-        "file1": {"type": "string", "required": True},
-        "file2": {"type": "string", "required": True}
-    }
+    parameters_schema = {"file1": {"type": "string", "required": True}, "file2": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        f1, f2 = parameters.get('file1'), parameters.get('file2')
+        f1, f2 = parameters.get("file1"), parameters.get("file2")
         try:
             comparison = context.services.file.comparison.compare_contents(f1, f2)
             return ActionResult(success=True, data=comparison)
@@ -45,12 +39,12 @@ class GetFileHash(Action):
     category = ActionCategory.FILE
     parameters_schema = {
         "path": {"type": "string", "required": True},
-        "algorithm": {"type": "string", "required": False, "default": "sha256", "enum": ["md5", "sha1", "sha256"]}
+        "algorithm": {"type": "string", "required": False, "default": "sha256", "enum": ["md5", "sha1", "sha256"]},
     }
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
-        alg = parameters.get('algorithm', 'sha256')
+        path = parameters.get("path")
+        alg = parameters.get("algorithm", "sha256")
         try:
             file_hash = context.services.file.comparison.get_hash(path, alg)
             return ActionResult(success=True, data={"algorithm": alg, "hash": file_hash})
@@ -65,13 +59,13 @@ class VerifyFileHash(Action):
     parameters_schema = {
         "path": {"type": "string", "required": True},
         "expected_hash": {"type": "string", "required": True},
-        "algorithm": {"type": "string", "required": False, "default": "sha256"}
+        "algorithm": {"type": "string", "required": False, "default": "sha256"},
     }
 
     def execute(self, context, parameters):
-        path = parameters.get('path')
-        expected = parameters.get('expected_hash')
-        alg = parameters.get('algorithm', 'sha256')
+        path = parameters.get("path")
+        expected = parameters.get("expected_hash")
+        alg = parameters.get("algorithm", "sha256")
         try:
             is_valid = context.services.file.comparison.verify_hash(path, expected, alg)
             return ActionResult(success=True, data={"valid": is_valid, "path": path})
@@ -83,13 +77,10 @@ class FindDifferences(Action):
     name = "find_differences"
     description = "Find specific line-by-line differences between two text files"
     category = ActionCategory.FILE
-    parameters_schema = {
-        "file1": {"type": "string", "required": True},
-        "file2": {"type": "string", "required": True}
-    }
+    parameters_schema = {"file1": {"type": "string", "required": True}, "file2": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        f1, f2 = parameters.get('file1'), parameters.get('file2')
+        f1, f2 = parameters.get("file1"), parameters.get("file2")
         try:
             diffs = context.services.file.comparison.get_diff(f1, f2)
             return ActionResult(success=True, data={"differences": diffs, "identical": len(diffs) == 0})
@@ -101,13 +92,10 @@ class AreFilesIdentical(Action):
     name = "are_files_identical"
     description = "Quick check to see if two files are exactly the same"
     category = ActionCategory.FILE
-    parameters_schema = {
-        "file1": {"type": "string", "required": True},
-        "file2": {"type": "string", "required": True}
-    }
+    parameters_schema = {"file1": {"type": "string", "required": True}, "file2": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        f1, f2 = parameters.get('file1'), parameters.get('file2')
+        f1, f2 = parameters.get("file1"), parameters.get("file2")
         try:
             identical = context.services.file.comparison.is_identical(f1, f2)
             return ActionResult(success=True, data={"identical": identical})

@@ -21,7 +21,9 @@ def build_system_prompt(screen=None, system=None, plan=None) -> str:
     system = system or {}
     context = {
         "time": datetime.now().astimezone().isoformat(timespec="minutes"),
-        "screen": screen or {}, "system": system, "plan": plan or [],
+        "screen": screen or {},
+        "system": system,
+        "plan": plan or [],
     }
     focus = ""
     if system.get("focus_mode") and system.get("procrastination"):
@@ -31,4 +33,5 @@ def build_system_prompt(screen=None, system=None, plan=None) -> str:
 
 def _compact(value: Any) -> str:
     import json
+
     return json.dumps(value, ensure_ascii=False, default=str, separators=(",", ":"))

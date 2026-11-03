@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GetKeyboardState(Action):
@@ -39,12 +39,10 @@ class IsKeyPressed(Action):
     name = "is_key_pressed"
     description = "Check if a specific key is currently pressed"
     category = ActionCategory.SYSTEM
-    parameters_schema = {
-        "key": {"type": "string", "required": True}
-    }
+    parameters_schema = {"key": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        key = parameters.get('key')
+        key = parameters.get("key")
         try:
             is_pressed = context.services.input.state.is_key_pressed(key)
             return ActionResult(success=True, data={"key": key, "pressed": is_pressed})
@@ -72,12 +70,10 @@ class IsMouseButtonPressed(Action):
     name = "is_mouse_button_pressed"
     description = "Check if a specific mouse button is currently held down"
     category = ActionCategory.SYSTEM
-    parameters_schema = {
-        "button": {"type": "string", "required": True, "enum": ["left", "right", "middle"]}
-    }
+    parameters_schema = {"button": {"type": "string", "required": True, "enum": ["left", "right", "middle"]}}
 
     def execute(self, context, parameters):
-        btn = parameters.get('button')
+        btn = parameters.get("button")
         try:
             is_pressed = context.services.input.state.is_mouse_button_pressed(btn)
             return ActionResult(success=True, data={"button": btn, "pressed": is_pressed})
@@ -112,9 +108,10 @@ class ReleaseAllInput(Action):
         try:
             context.services.input.state.release_all_input()
 
-            return ActionResult(success=True, data={
-                "keys_released": True,
-                "mouse_buttons_released": True
-            }, message="System input has been reset.")
+            return ActionResult(
+                success=True,
+                data={"keys_released": True, "mouse_buttons_released": True},
+                message="System input has been reset.",
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="PANIC_RESET_FAILED")

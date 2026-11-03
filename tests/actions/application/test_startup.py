@@ -1,4 +1,5 @@
 import pytest
+from tests.application.conftest import assert_error, assert_success
 
 from deskagent.actions.application.startup import (
     AddApplicationToStartup,
@@ -9,7 +10,6 @@ from deskagent.actions.application.startup import (
     RemoveApplicationFromStartup,
 )
 from deskagent.actions.types import RiskLevel
-from tests.application.conftest import assert_error, assert_success
 
 
 def test_get_login_items(application_context):
@@ -25,14 +25,10 @@ def test_get_login_items(application_context):
 def test_is_application_startup_enabled(application_context):
     application_context.services.application.is_startup_enabled.return_value = True
 
-    result = IsApplicationStartupEnabled().execute(
-        application_context, {"application": "Slack"}
-    )
+    result = IsApplicationStartupEnabled().execute(application_context, {"application": "Slack"})
 
     assert_success(result, {"enabled": True})
-    application_context.services.application.is_startup_enabled.assert_called_once_with(
-        "Slack"
-    )
+    application_context.services.application.is_startup_enabled.assert_called_once_with("Slack")
 
 
 @pytest.mark.parametrize(
@@ -44,19 +40,13 @@ def test_is_application_startup_enabled(application_context):
         (DisableApplicationStartup, "disable_startup", "enabled", False),
     ],
 )
-def test_startup_mutation_actions(
-    application_context, action_cls, method, key, value
-):
+def test_startup_mutation_actions(application_context, action_cls, method, key, value):
     getattr(application_context.services.application, method).return_value = None
 
-    result = action_cls().execute(
-        application_context, {"application": "Slack"}
-    )
+    result = action_cls().execute(application_context, {"application": "Slack"})
 
     assert_success(result, {"application": "Slack", key: value})
-    getattr(application_context.services.application, method).assert_called_once_with(
-        "Slack"
-    )
+    getattr(application_context.services.application, method).assert_called_once_with("Slack")
 
 
 @pytest.mark.parametrize(
@@ -69,9 +59,7 @@ def test_startup_mutation_actions(
         IsApplicationStartupEnabled,
     ],
 )
-def test_startup_application_actions_require_application(
-    application_context, action_cls
-):
+def test_startup_application_actions_require_application(application_context, action_cls):
     method_map = {
         AddApplicationToStartup: "add_to_startup",
         RemoveApplicationFromStartup: "remove_from_startup",
@@ -112,9 +100,7 @@ def test_other_startup_mutations_are_safe_by_confirmation_default(action_cls):
         ("disable_startup", DisableApplicationStartup, {"application": "Slack"}),
     ],
 )
-def test_startup_service_errors_are_wrapped(
-    application_context, method, action_cls, params
-):
+def test_startup_service_errors_are_wrapped(application_context, method, action_cls, params):
     getattr(application_context.services.application, method).side_effect = RuntimeError("startup failed")
 
     result = action_cls().execute(application_context, params)

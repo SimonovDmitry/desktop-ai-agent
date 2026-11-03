@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class GetApplicationProcesses(Action):
@@ -9,17 +9,11 @@ class GetApplicationProcesses(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = False
-    parameters_schema = {
-        "application": {
-            "type": "string",
-            "required": True,
-            "description": "Name of the application"
-        }
-    }
+    parameters_schema = {"application": {"type": "string", "required": True, "description": "Name of the application"}}
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         if not app_name:
             return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
 
@@ -38,7 +32,7 @@ class GetApplicationProcessTree(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             tree = context.services.application.processes.get_tree(app_name)
             return ActionResult(success=True, data=tree)
@@ -54,7 +48,7 @@ class GetApplicationMainProcess(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             main_proc = context.services.application.processes.get_main(app_name)
             return ActionResult(success=True, data=main_proc)
@@ -70,7 +64,7 @@ class GetApplicationChildProcesses(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             children = context.services.application.processes.get_children(app_name)
             return ActionResult(success=True, data={"processes": children})
@@ -89,8 +83,9 @@ class SuspendApplication(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
-        if not app_name: return ActionResult(success=False, error="Missing app name")
+        app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Missing app name")
 
         try:
             context.services.application.processes.suspend(app_name)
@@ -110,7 +105,7 @@ class ResumeApplication(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
+        app_name = params.get("application")
         try:
             context.services.application.processes.resume(app_name)
             return ActionResult(success=True, data={"application": app_name, "resumed": True})

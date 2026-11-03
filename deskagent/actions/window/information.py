@@ -13,26 +13,23 @@ class GetWindows(Action):
         "application": {
             "type": "string",
             "required": False,
-            "description": "Filter windows by application name (e.g., 'Safari')"
+            "description": "Filter windows by application name (e.g., 'Safari')",
         },
         "visible_only": {
             "type": "boolean",
             "required": False,
             "default": True,
-            "description": "If true, returns only windows that are currently visible"
-        }
+            "description": "If true, returns only windows that are currently visible",
+        },
     }
 
     def execute(self, context, parameters):
         params = parameters or {}
-        app_name = params.get('application')
-        visible_only = params.get('visible_only', True)
+        app_name = params.get("application")
+        visible_only = params.get("visible_only", True)
 
         try:
-            windows = context.services.window.information.get_windows(
-                application=app_name,
-                visible_only=visible_only
-            )
+            windows = context.services.window.information.get_windows(application=app_name, visible_only=visible_only)
             return ActionResult(success=True, data={"windows": windows, "count": len(windows)})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -46,15 +43,11 @@ class GetWindow(Action):
     requires_confirmation = False
     reversible = False
     parameters_schema = {
-        "window_id": {
-            "type": "integer",
-            "required": True,
-            "description": "The unique identifier of the window"
-        }
+        "window_id": {"type": "integer", "required": True, "description": "The unique identifier of the window"}
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             info = context.services.window.information.get_window(win_id)
             if not info:
@@ -74,12 +67,12 @@ class FindWindows(Action):
     parameters_schema = {
         "title": {"type": "string", "required": False},
         "title_contains": {"type": "string", "required": False},
-        "application": {"type": "string", "required": False}
+        "application": {"type": "string", "required": False},
     }
 
     def execute(self, context, parameters):
         try:
-            query = parameters.get('title') or parameters.get('title_contains') or parameters.get('application') or ""
+            query = parameters.get("title") or parameters.get("title_contains") or parameters.get("application") or ""
             windows = context.services.window.information.find_windows(query)
             return ActionResult(success=True, data={"windows": windows, "count": len(windows)})
         except Exception as exc:
@@ -110,12 +103,10 @@ class GetWindowBounds(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = False
-    parameters_schema = {
-        "window_id": {"type": "integer", "required": True}
-    }
+    parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             bounds = context.services.window.information.get_window_bounds(win_id)
             return ActionResult(success=True, data=bounds)
@@ -130,12 +121,10 @@ class GetWindowState(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = False
-    parameters_schema = {
-        "window_id": {"type": "integer", "required": True}
-    }
+    parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             state = context.services.window.information.get_window_state(win_id)
             return ActionResult(success=True, data={"state": state})
@@ -150,12 +139,10 @@ class GetWindowApplication(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = False
-    parameters_schema = {
-        "window_id": {"type": "integer", "required": True}
-    }
+    parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             app_info = context.services.window.information.get_window_application(win_id)
             return ActionResult(success=True, data=app_info)
@@ -170,12 +157,10 @@ class IsWindowVisible(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = False
-    parameters_schema = {
-        "window_id": {"type": "integer", "required": True}
-    }
+    parameters_schema = {"window_id": {"type": "integer", "required": True}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             visible = context.services.window.information.is_window_visible(win_id)
             return ActionResult(success=True, data={"visible": visible})

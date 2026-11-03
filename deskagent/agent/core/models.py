@@ -17,16 +17,29 @@ class ActionExecution:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "tool_call_id": self.tool_call_id, "name": self.name, "parameters": self.parameters,
-            "success": self.success, "data": self.data, "error": self.error,
-            "error_code": self.error_code, "verified": self.verified,
+            "tool_call_id": self.tool_call_id,
+            "name": self.name,
+            "parameters": self.parameters,
+            "success": self.success,
+            "data": self.data,
+            "error": self.error,
+            "error_code": self.error_code,
+            "verified": self.verified,
             "verification_error": self.verification_error,
         }
 
     def tool_result(self) -> dict[str, Any]:
-        return {key: self.to_dict()[key] for key in (
-            "success", "data", "error", "error_code", "verified", "verification_error",
-        )}
+        return {
+            key: self.to_dict()[key]
+            for key in (
+                "success",
+                "data",
+                "error",
+                "error_code",
+                "verified",
+                "verification_error",
+            )
+        }
 
     @classmethod
     def from_dict(cls, value: dict[str, Any]) -> "ActionExecution":
@@ -61,9 +74,12 @@ class AgentResponse:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "content": self.content, "actions": [action.to_dict() for action in self.actions],
-            "thread_id": self.thread_id, "error": self.error,
-            "pending_confirmation": self.pending_confirmation, "plan": self.plan,
+            "content": self.content,
+            "actions": [action.to_dict() for action in self.actions],
+            "thread_id": self.thread_id,
+            "error": self.error,
+            "pending_confirmation": self.pending_confirmation,
+            "plan": self.plan,
         }
 
 

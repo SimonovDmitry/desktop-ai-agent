@@ -1,7 +1,5 @@
 import inspect
 
-import pytest
-
 from deskagent.actions.base import Action
 from deskagent.actions.types import ActionCategory, RiskLevel
 

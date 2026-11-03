@@ -1,4 +1,3 @@
-import pytest
 
 from deskagent.actions.window.appearance import (
     ExitWindowFullscreen,
@@ -10,17 +9,60 @@ from deskagent.actions.window.appearance import (
     SetWindowOpacity,
     ToggleWindowFullscreen,
 )
-from ._helpers import run_success_cases, run_exception_cases, target_for
+
+from ._helpers import run_exception_cases, run_success_cases, target_for
 
 CASES = [
-    (SetWindowAlwaysOnTop, "appearance.set_always_on_top", {"window_id": 101, "enabled": True}, {"window_id": 101, "always_on_top": True}, None),
-    (RemoveWindowAlwaysOnTop, "appearance.set_always_on_top", {"window_id": 102}, {"window_id": 102, "always_on_top": False}, None),
-    (GetWindowAlwaysOnTop, "appearance.is_always_on_top", {"window_id": 103}, {"window_id": 103, "always_on_top": True}, True),
-    (SetWindowOpacity, "appearance.set_opacity", {"window_id": 104, "opacity": 0.75}, {"window_id": 104, "opacity": 0.75}, None),
+    (
+        SetWindowAlwaysOnTop,
+        "appearance.set_always_on_top",
+        {"window_id": 101, "enabled": True},
+        {"window_id": 101, "always_on_top": True},
+        None,
+    ),
+    (
+        RemoveWindowAlwaysOnTop,
+        "appearance.set_always_on_top",
+        {"window_id": 102},
+        {"window_id": 102, "always_on_top": False},
+        None,
+    ),
+    (
+        GetWindowAlwaysOnTop,
+        "appearance.is_always_on_top",
+        {"window_id": 103},
+        {"window_id": 103, "always_on_top": True},
+        True,
+    ),
+    (
+        SetWindowOpacity,
+        "appearance.set_opacity",
+        {"window_id": 104, "opacity": 0.75},
+        {"window_id": 104, "opacity": 0.75},
+        None,
+    ),
     (GetWindowOpacity, "appearance.get_opacity", {"window_id": 105}, {"window_id": 105, "opacity": 0.55}, 0.55),
-    (SetWindowFullscreen, "appearance.set_fullscreen", {"window_id": 106}, {"window_id": 106, "fullscreen": True}, None),
-    (ExitWindowFullscreen, "appearance.set_fullscreen", {"window_id": 107}, {"window_id": 107, "fullscreen": False}, None),
-    (ToggleWindowFullscreen, "appearance.toggle_fullscreen", {"window_id": 108}, {"window_id": 108, "fullscreen": True}, True),
+    (
+        SetWindowFullscreen,
+        "appearance.set_fullscreen",
+        {"window_id": 106},
+        {"window_id": 106, "fullscreen": True},
+        None,
+    ),
+    (
+        ExitWindowFullscreen,
+        "appearance.set_fullscreen",
+        {"window_id": 107},
+        {"window_id": 107, "fullscreen": False},
+        None,
+    ),
+    (
+        ToggleWindowFullscreen,
+        "appearance.toggle_fullscreen",
+        {"window_id": 108},
+        {"window_id": 108, "fullscreen": True},
+        True,
+    ),
 ]
 
 

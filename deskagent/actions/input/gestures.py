@@ -1,6 +1,6 @@
+
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
-import time
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class MoveAndClick(Action):
@@ -11,12 +11,12 @@ class MoveAndClick(Action):
     parameters_schema = {
         "x": {"type": "integer", "required": True},
         "y": {"type": "integer", "required": True},
-        "button": {"type": "string", "required": False, "default": "left", "enum": ["left", "right", "middle"]}
+        "button": {"type": "string", "required": False, "default": "left", "enum": ["left", "right", "middle"]},
     }
 
     def execute(self, context, parameters):
-        x, y = parameters.get('x'), parameters.get('y')
-        btn = parameters.get('button', 'left')
+        x, y = parameters.get("x"), parameters.get("y")
+        btn = parameters.get("button", "left")
         if x is None or y is None:
             return ActionResult(success=False, error="X and Y coordinates are required", error_code="MISSING_PARAM")
 
@@ -35,16 +35,17 @@ class MoveAndDoubleClick(Action):
     parameters_schema = {
         "x": {"type": "integer", "required": True},
         "y": {"type": "integer", "required": True},
-        "button": {"type": "string", "required": False, "default": "left"}
+        "button": {"type": "string", "required": False, "default": "left"},
     }
 
     def execute(self, context, parameters):
-        x, y = parameters.get('x'), parameters.get('y')
-        btn = parameters.get('button', 'left')
+        x, y = parameters.get("x"), parameters.get("y")
+        btn = parameters.get("button", "left")
         try:
             context.services.input.gestures.move_and_double_click(x, y, btn)
-            return ActionResult(success=True,
-                                data={"position": {"x": x, "y": y}, "button": btn, "clicked": True, "click_count": 2})
+            return ActionResult(
+                success=True, data={"position": {"x": x, "y": y}, "button": btn, "clicked": True, "click_count": 2}
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -60,15 +61,15 @@ class DragGesture(Action):
         "end_x": {"type": "integer", "required": True},
         "end_y": {"type": "integer", "required": True},
         "button": {"type": "string", "required": False, "default": "left"},
-        "duration": {"type": "float", "required": False, "default": 0.5}
+        "duration": {"type": "float", "required": False, "default": 0.5},
     }
 
     def execute(self, context, parameters):
         p = parameters
         try:
             context.services.input.gestures.drag_gesture(
-                p['start_x'], p['start_y'], p['end_x'], p['end_y'],
-                p.get('button', 'left'), p.get('duration', 0.5))
+                p["start_x"], p["start_y"], p["end_x"], p["end_y"], p.get("button", "left"), p.get("duration", 0.5)
+            )
             return ActionResult(success=True, data={"gesture": "drag", "completed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -83,14 +84,15 @@ class SwipeGesture(Action):
         "start_y": {"type": "integer", "required": True},
         "end_x": {"type": "integer", "required": True},
         "end_y": {"type": "integer", "required": True},
-        "duration": {"type": "float", "required": False, "default": 0.3}
+        "duration": {"type": "float", "required": False, "default": 0.3},
     }
 
     def execute(self, context, parameters):
         p = parameters
         try:
             context.services.input.gestures.swipe_gesture(
-                p['start_x'], p['start_y'], p['end_x'], p['end_y'], p.get('duration', 0.3))
+                p["start_x"], p["start_y"], p["end_x"], p["end_y"], p.get("duration", 0.3)
+            )
             return ActionResult(success=True, data={"gesture": "swipe", "completed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -102,12 +104,12 @@ class ClickAndHold(Action):
     category = ActionCategory.SYSTEM
     parameters_schema = {
         "button": {"type": "string", "required": False, "default": "left"},
-        "duration": {"type": "float", "required": True, "description": "Seconds to hold"}
+        "duration": {"type": "float", "required": True, "description": "Seconds to hold"},
     }
 
     def execute(self, context, parameters):
-        btn = parameters.get('button', 'left')
-        dur = parameters.get('duration')
+        btn = parameters.get("button", "left")
+        dur = parameters.get("duration")
         try:
             context.services.input.gestures.click_and_hold(btn, dur)
             return ActionResult(success=True, data={"button": btn, "duration": dur, "completed": True})
@@ -121,12 +123,12 @@ class ScrollGesture(Action):
     category = ActionCategory.SYSTEM
     parameters_schema = {
         "direction": {"type": "string", "required": True, "enum": ["up", "down", "left", "right"]},
-        "amount": {"type": "integer", "required": True, "description": "Magnitude of scroll"}
+        "amount": {"type": "integer", "required": True, "description": "Magnitude of scroll"},
     }
 
     def execute(self, context, parameters):
-        direction = parameters.get('direction')
-        amount = parameters.get('amount')
+        direction = parameters.get("direction")
+        amount = parameters.get("amount")
         try:
             context.services.input.gestures.scroll_gesture(direction, amount)
 
@@ -142,13 +144,13 @@ class MultiClickGesture(Action):
     parameters_schema = {
         "count": {"type": "integer", "required": True},
         "button": {"type": "string", "required": False, "default": "left"},
-        "interval": {"type": "float", "required": False, "default": 0.1}
+        "interval": {"type": "float", "required": False, "default": 0.1},
     }
 
     def execute(self, context, parameters):
-        count = parameters.get('count')
-        btn = parameters.get('button', 'left')
-        interval = parameters.get('interval', 0.1)
+        count = parameters.get("count")
+        btn = parameters.get("button", "left")
+        interval = parameters.get("interval", 0.1)
         try:
             context.services.input.gestures.multi_click_gesture(count, btn, interval)
             return ActionResult(success=True, data={"count": count, "completed": True})

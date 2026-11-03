@@ -11,8 +11,10 @@ class OpenAICompatibleLLM(LLMProvider):
 
     def generate(self, messages, tools=None):
         params = {
-            "model": self.config.model, "messages": messages,
-            "temperature": self.config.temperature, "max_tokens": self.config.max_tokens,
+            "model": self.config.model,
+            "messages": messages,
+            "temperature": self.config.temperature,
+            "max_tokens": self.config.max_tokens,
             "top_p": self.config.top_p,
         }
         if tools:
@@ -27,13 +29,17 @@ class OpenAICompatibleLLM(LLMProvider):
         return LLMResponse(
             content=message.content or "",
             tool_calls=[ToolCall.from_value(tc) for tc in getattr(message, "tool_calls", [])],
-            finish_reason=completion.choices[0].finish_reason, raw=message,
+            finish_reason=completion.choices[0].finish_reason,
+            raw=message,
         )
 
     def stream_generate(self, messages, tools=None):
         params = {
-            "model": self.config.model, "messages": messages, "stream": True,
-            "temperature": self.config.temperature, "max_tokens": self.config.max_tokens,
+            "model": self.config.model,
+            "messages": messages,
+            "stream": True,
+            "temperature": self.config.temperature,
+            "max_tokens": self.config.max_tokens,
             "top_p": self.config.top_p,
         }
         if tools:

@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class PressKey(Action):
@@ -14,7 +14,7 @@ class PressKey(Action):
     }
 
     def execute(self, context, parameters):
-        key = parameters.get('key')
+        key = parameters.get("key")
         if not key:
             return ActionResult(success=False, error="Parameter 'key' is required", error_code="MISSING_PARAM")
         try:
@@ -31,12 +31,10 @@ class ReleaseKey(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = False
-    parameters_schema = {
-        "key": {"type": "string", "required": True}
-    }
+    parameters_schema = {"key": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        key = parameters.get('key')
+        key = parameters.get("key")
         if not key:
             return ActionResult(success=False, error="Parameter 'key' is required", error_code="MISSING_PARAM")
         try:
@@ -55,12 +53,12 @@ class TapKey(Action):
     reversible = False
     parameters_schema = {
         "key": {"type": "string", "required": True},
-        "duration": {"type": "float", "required": False, "default": 0.05}
+        "duration": {"type": "float", "required": False, "default": 0.05},
     }
 
     def execute(self, context, parameters):
-        key = parameters.get('key')
-        duration = parameters.get('duration', 0.05)
+        key = parameters.get("key")
+        duration = parameters.get("duration", 0.05)
         if not key:
             return ActionResult(success=False, error="Parameter 'key' is required", error_code="MISSING_PARAM")
         try:
@@ -79,12 +77,12 @@ class HoldKey(Action):
     reversible = False
     parameters_schema = {
         "key": {"type": "string", "required": True},
-        "duration": {"type": "float", "required": True, "description": "Seconds to hold"}
+        "duration": {"type": "float", "required": True, "description": "Seconds to hold"},
     }
 
     def execute(self, context, parameters):
-        key = parameters.get('key')
-        duration = parameters.get('duration')
+        key = parameters.get("key")
+        duration = parameters.get("duration")
         if not key or duration is None:
             return ActionResult(success=False, error="Key and duration are required", error_code="MISSING_PARAM")
         try:
@@ -116,12 +114,10 @@ class PressKeys(Action):
     description = "Press multiple keys in sequence"
     category = ActionCategory.SYSTEM
     risk_level = RiskLevel.LOW
-    parameters_schema = {
-        "keys": {"type": "list", "required": True, "description": "List of key strings"}
-    }
+    parameters_schema = {"keys": {"type": "list", "required": True, "description": "List of key strings"}}
 
     def execute(self, context, parameters):
-        keys = parameters.get('keys')
+        keys = parameters.get("keys")
         if not isinstance(keys, list):
             return ActionResult(success=False, error="Keys must be a list", error_code="INVALID_INPUT")
         try:
@@ -136,12 +132,10 @@ class TypeText(Action):
     description = "Type a string of text into the active application"
     category = ActionCategory.SYSTEM
     risk_level = RiskLevel.LOW
-    parameters_schema = {
-        "text": {"type": "string", "required": True}
-    }
+    parameters_schema = {"text": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        text = parameters.get('text')
+        text = parameters.get("text")
         if text is None:
             return ActionResult(success=False, error="Parameter 'text' is required", error_code="MISSING_PARAM")
         try:
@@ -158,13 +152,14 @@ class TypeTextSlowly(Action):
     risk_level = RiskLevel.LOW
     parameters_schema = {
         "text": {"type": "string", "required": True},
-        "interval": {"type": "float", "required": False, "default": 0.05}
+        "interval": {"type": "float", "required": False, "default": 0.05},
     }
 
     def execute(self, context, parameters):
-        text = parameters.get('text')
-        interval = parameters.get('interval', 0.05)
-        if text is None: return ActionResult(success=False, error="Missing text")
+        text = parameters.get("text")
+        interval = parameters.get("interval", 0.05)
+        if text is None:
+            return ActionResult(success=False, error="Missing text")
         try:
             context.services.input.keyboard.type_text_slowly(text, interval)
             return ActionResult(success=True, data={"text_length": len(text), "interval": interval, "typed": True})
@@ -177,13 +172,12 @@ class PasteText(Action):
     description = "Paste text using clipboard (better for long or special character strings)"
     category = ActionCategory.SYSTEM
     risk_level = RiskLevel.LOW
-    parameters_schema = {
-        "text": {"type": "string", "required": True}
-    }
+    parameters_schema = {"text": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        text = parameters.get('text')
-        if text is None: return ActionResult(success=False, error="Missing text")
+        text = parameters.get("text")
+        if text is None:
+            return ActionResult(success=False, error="Missing text")
         try:
             context.services.input.keyboard.paste_text(text)
             return ActionResult(success=True, data={"text_length": len(text), "pasted": True})

@@ -14,8 +14,12 @@ class ActionContractError(ValueError):
 class ActionContractValidator:
     PARAMETER_TYPES = {"string", "integer", "float", "boolean", "list", "dict", "string_or_int"}
     CONFIRM_ACTIONS = {
-        "delete_selection", "lock_screen", "remove_from_archive", "remove_link",
-        "sleep_computer", "trash_file",
+        "delete_selection",
+        "lock_screen",
+        "remove_from_archive",
+        "remove_link",
+        "sleep_computer",
+        "trash_file",
     }
     DANGEROUS = re.compile(
         r"^(delete_|empty_trash$|replace_file$|clear_file$|force_quit_|restart_computer$|"
@@ -44,11 +48,16 @@ class ActionContractValidator:
         if not callable(getattr(action, "execute", None)):
             errors.append(f"{label}: execute() is required")
         errors.extend(self._schema_errors(action, label))
-        dangerous = (action.risk_level in (RiskLevel.HIGH, RiskLevel.CRITICAL)
-                     or action.name in self.CONFIRM_ACTIONS or self.DANGEROUS.search(action.name))
+        dangerous = (
+            action.risk_level in (RiskLevel.HIGH, RiskLevel.CRITICAL)
+            or action.name in self.CONFIRM_ACTIONS
+            or self.DANGEROUS.search(action.name)
+        )
         if dangerous and not action.requires_confirmation:
             errors.append(f"{label}: dangerous action must require confirmation")
-        if not isinstance(action.required_permissions, tuple) or not all(isinstance(x, str) for x in action.required_permissions):
+        if not isinstance(action.required_permissions, tuple) or not all(
+            isinstance(x, str) for x in action.required_permissions
+        ):
             errors.append(f"{label}: required_permissions must be tuple[str, ...]")
         if self.context:
             for path in self.service_references(action):

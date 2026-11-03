@@ -76,7 +76,9 @@ def test_ping_host_system_error(context):
 def test_check_internet_connection_success(context):
     result = CheckInternetConnection().execute(context, {})
     context.services.system.network.check_internet_connection.assert_called_once_with()
-    assert_success(result, {"internet_accessible": context.services.system.network.check_internet_connection.return_value})
+    assert_success(
+        result, {"internet_accessible": context.services.system.network.check_internet_connection.return_value}
+    )
 
 
 @pytest.mark.parametrize(

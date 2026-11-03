@@ -1,5 +1,5 @@
 from deskagent.actions.base import Action
-from deskagent.actions.types import RiskLevel, ActionCategory, ActionResult
+from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
 class MoveWindow(Action):
@@ -12,13 +12,13 @@ class MoveWindow(Action):
     parameters_schema = {
         "window_id": {"type": "integer", "required": True, "description": "ID of the window to move"},
         "dx": {"type": "integer", "required": True, "description": "Delta X (horizontal shift)"},
-        "dy": {"type": "integer", "required": True, "description": "Delta Y (vertical shift)"}
+        "dy": {"type": "integer", "required": True, "description": "Delta Y (vertical shift)"},
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        dx = parameters.get('dx')
-        dy = parameters.get('dy')
+        win_id = parameters.get("window_id")
+        dx = parameters.get("dx")
+        dy = parameters.get("dy")
         try:
             new_pos = context.services.window.position.move(win_id, dx, dy)
             return ActionResult(success=True, data={"window_id": win_id, "position": new_pos})
@@ -36,13 +36,13 @@ class MoveWindowTo(Action):
     parameters_schema = {
         "window_id": {"type": "integer", "required": True, "description": "ID of the window to move"},
         "x": {"type": "integer", "required": True, "description": "Target X coordinate"},
-        "y": {"type": "integer", "required": True, "description": "Target Y coordinate"}
+        "y": {"type": "integer", "required": True, "description": "Target Y coordinate"},
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        x = parameters.get('x')
-        y = parameters.get('y')
+        win_id = parameters.get("window_id")
+        x = parameters.get("x")
+        y = parameters.get("y")
         try:
             context.services.window.position.move_to(win_id, x, y)
             return ActionResult(success=True, data={"window_id": win_id, "position": {"x": x, "y": y}})
@@ -62,7 +62,7 @@ class CenterWindow(Action):
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             new_pos = context.services.window.position.center(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "position": new_pos})
@@ -79,12 +79,12 @@ class CenterWindowOnDisplay(Action):
     reversible = True
     parameters_schema = {
         "window_id": {"type": "integer", "required": True, "description": "ID of the window"},
-        "display_id": {"type": "integer", "required": True, "description": "Target display ID"}
+        "display_id": {"type": "integer", "required": True, "description": "Target display ID"},
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        disp_id = parameters.get('display_id')
+        win_id = parameters.get("window_id")
+        disp_id = parameters.get("display_id")
         try:
             new_pos = context.services.window.position.center_on_display(win_id, disp_id)
             return ActionResult(success=True, data={"window_id": win_id, "display_id": disp_id, "position": new_pos})
@@ -101,12 +101,12 @@ class MoveWindowToDisplay(Action):
     reversible = True
     parameters_schema = {
         "window_id": {"type": "integer", "required": True, "description": "ID of the window"},
-        "display_id": {"type": "integer", "required": True, "description": "Target display ID"}
+        "display_id": {"type": "integer", "required": True, "description": "Target display ID"},
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
-        disp_id = parameters.get('display_id')
+        win_id = parameters.get("window_id")
+        disp_id = parameters.get("display_id")
         try:
             context.services.window.position.move_to_display(win_id, disp_id)
             return ActionResult(success=True, data={"window_id": win_id, "display_id": disp_id})
@@ -121,15 +121,15 @@ class SnapWindowLeft(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = True
-    parameters_schema = {
-        "window_id": {"type": "integer", "required": True, "description": "ID of the window"}
-    }
+    parameters_schema = {"window_id": {"type": "integer", "required": True, "description": "ID of the window"}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             result = context.services.window.position.snap_left(win_id)
-            return ActionResult(success=True, data={"window_id": win_id, "position": result['pos'], "size": result['size']})
+            return ActionResult(
+                success=True, data={"window_id": win_id, "position": result["pos"], "size": result["size"]}
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
@@ -141,15 +141,15 @@ class SnapWindowRight(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = True
-    parameters_schema = {
-        "window_id": {"type": "integer", "required": True, "description": "ID of the window"}
-    }
+    parameters_schema = {"window_id": {"type": "integer", "required": True, "description": "ID of the window"}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             result = context.services.window.position.snap_right(win_id)
-            return ActionResult(success=True, data={"window_id": win_id, "position": result['pos'], "size": result['size']})
+            return ActionResult(
+                success=True, data={"window_id": win_id, "position": result["pos"], "size": result["size"]}
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
@@ -161,15 +161,15 @@ class SnapWindowTop(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = True
-    parameters_schema = {
-        "window_id": {"type": "integer", "required": True, "description": "ID of the window"}
-    }
+    parameters_schema = {"window_id": {"type": "integer", "required": True, "description": "ID of the window"}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             result = context.services.window.position.snap_top(win_id)
-            return ActionResult(success=True, data={"window_id": win_id, "position": result['pos'], "size": result['size']})
+            return ActionResult(
+                success=True, data={"window_id": win_id, "position": result["pos"], "size": result["size"]}
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
@@ -181,15 +181,15 @@ class SnapWindowBottom(Action):
     risk_level = RiskLevel.LOW
     requires_confirmation = False
     reversible = True
-    parameters_schema = {
-        "window_id": {"type": "integer", "required": True, "description": "ID of the window"}
-    }
+    parameters_schema = {"window_id": {"type": "integer", "required": True, "description": "ID of the window"}}
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             result = context.services.window.position.snap_bottom(win_id)
-            return ActionResult(success=True, data={"window_id": win_id, "position": result['pos'], "size": result['size']})
+            return ActionResult(
+                success=True, data={"window_id": win_id, "position": result["pos"], "size": result["size"]}
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
@@ -206,7 +206,7 @@ class RestoreWindowPosition(Action):
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get('window_id')
+        win_id = parameters.get("window_id")
         try:
             old_pos = context.services.window.position.restore_position(win_id)
             return ActionResult(success=True, data={"window_id": win_id, "position": old_pos})

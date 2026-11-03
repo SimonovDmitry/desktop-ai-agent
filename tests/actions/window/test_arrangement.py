@@ -1,26 +1,73 @@
 # arrangement.py currently contains the same action implementations as appearance.py.
 # These tests intentionally exercise the arrangement module itself.
-from .test_appearance import CASES as APPEARANCE_CASES
-from .test_appearance import test_service_exception_is_converted_to_system_error as _unused
 
 from deskagent.actions.window import arrangement
+
 from .conftest import assert_success, assert_system_error
 
 CASES = [
-    (arrangement.SetWindowAlwaysOnTop, "appearance.set_always_on_top", {"window_id": 201, "enabled": True}, {"window_id": 201, "always_on_top": True}, None),
-    (arrangement.RemoveWindowAlwaysOnTop, "appearance.set_always_on_top", {"window_id": 202}, {"window_id": 202, "always_on_top": False}, None),
-    (arrangement.GetWindowAlwaysOnTop, "appearance.is_always_on_top", {"window_id": 203}, {"window_id": 203, "always_on_top": False}, False),
-    (arrangement.SetWindowOpacity, "appearance.set_opacity", {"window_id": 204, "opacity": 0.25}, {"window_id": 204, "opacity": 0.25}, None),
-    (arrangement.GetWindowOpacity, "appearance.get_opacity", {"window_id": 205}, {"window_id": 205, "opacity": 0.9}, 0.9),
-    (arrangement.SetWindowFullscreen, "appearance.set_fullscreen", {"window_id": 206}, {"window_id": 206, "fullscreen": True}, None),
-    (arrangement.ExitWindowFullscreen, "appearance.set_fullscreen", {"window_id": 207}, {"window_id": 207, "fullscreen": False}, None),
-    (arrangement.ToggleWindowFullscreen, "appearance.toggle_fullscreen", {"window_id": 208}, {"window_id": 208, "fullscreen": False}, False),
+    (
+        arrangement.SetWindowAlwaysOnTop,
+        "appearance.set_always_on_top",
+        {"window_id": 201, "enabled": True},
+        {"window_id": 201, "always_on_top": True},
+        None,
+    ),
+    (
+        arrangement.RemoveWindowAlwaysOnTop,
+        "appearance.set_always_on_top",
+        {"window_id": 202},
+        {"window_id": 202, "always_on_top": False},
+        None,
+    ),
+    (
+        arrangement.GetWindowAlwaysOnTop,
+        "appearance.is_always_on_top",
+        {"window_id": 203},
+        {"window_id": 203, "always_on_top": False},
+        False,
+    ),
+    (
+        arrangement.SetWindowOpacity,
+        "appearance.set_opacity",
+        {"window_id": 204, "opacity": 0.25},
+        {"window_id": 204, "opacity": 0.25},
+        None,
+    ),
+    (
+        arrangement.GetWindowOpacity,
+        "appearance.get_opacity",
+        {"window_id": 205},
+        {"window_id": 205, "opacity": 0.9},
+        0.9,
+    ),
+    (
+        arrangement.SetWindowFullscreen,
+        "appearance.set_fullscreen",
+        {"window_id": 206},
+        {"window_id": 206, "fullscreen": True},
+        None,
+    ),
+    (
+        arrangement.ExitWindowFullscreen,
+        "appearance.set_fullscreen",
+        {"window_id": 207},
+        {"window_id": 207, "fullscreen": False},
+        None,
+    ),
+    (
+        arrangement.ToggleWindowFullscreen,
+        "appearance.toggle_fullscreen",
+        {"window_id": 208},
+        {"window_id": 208, "fullscreen": False},
+        False,
+    ),
 ]
 
 
 def _target(context, path):
     obj = context.services.window
-    for part in path.split('.'):
+    for part in path.split("."):
         obj = getattr(obj, part)
     return obj
 

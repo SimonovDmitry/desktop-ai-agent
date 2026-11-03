@@ -7,7 +7,15 @@ from deskagent.privacy.limits import EmergencyStop, SafetyLimits
 from deskagent.privacy.policy import ActionPolicy, PolicyConfig, PolicyDecision
 
 __all__ = [
-    "ActionPolicy", "AuditLog", "AuditRecord", "ConfirmationRequest",
-    "EmergencyStop", "FilesystemGuard", "PolicyConfig", "PolicyDecision",
-    "PreviewBuilder", "SafetyLimits", "ShellGuard",
+    "ActionPolicy",
+    "AuditLog",
+    "AuditRecord",
+    "ConfirmationRequest",
+    "EmergencyStop",
+    "FilesystemGuard",
+    "PolicyConfig",
+    "PolicyDecision",
+    "PreviewBuilder",
+    "SafetyLimits",
+    "ShellGuard",
 ]
