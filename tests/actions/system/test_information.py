@@ -37,7 +37,8 @@ from tests.conftest import assert_error, assert_success
 def test_information_action_success(context, action_class, method, return_value):
     getattr(context.services.system.information, method).return_value = return_value
     result = action_class().execute(context, {})
-    assert_success(result, return_value)
+    expected = {"processes": return_value} if action_class in (GetCPUProcesses, GetMemoryProcesses) else return_value
+    assert_success(result, expected)
     getattr(context.services.system.information, method).assert_called_once_with()
 
 

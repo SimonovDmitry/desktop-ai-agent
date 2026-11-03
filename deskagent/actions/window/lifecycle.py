@@ -17,7 +17,8 @@ class CloseWindow(Action):
             context.services.window.lifecycle.close(win_id)
             return ActionResult(success=True, data={"closed": True, "window_id": win_id})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
+            code = "TIMEOUT" if "time" in str(exc).lower() or isinstance(exc, TimeoutError) else "SYSTEM_ERROR"
+            return ActionResult(success=False, error=str(exc), error_code=code)
 
 
 class CloseWindows(Action):
@@ -35,7 +36,8 @@ class CloseWindows(Action):
             results = context.services.window.lifecycle.close_multiple(win_ids)
             return ActionResult(success=True, data=results)
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
+            code = "TIMEOUT" if "time" in str(exc).lower() or isinstance(exc, TimeoutError) else "SYSTEM_ERROR"
+            return ActionResult(success=False, error=str(exc), error_code=code)
 
 
 class CloseApplicationWindows(Action):
@@ -53,7 +55,8 @@ class CloseApplicationWindows(Action):
             count = context.services.window.lifecycle.close_app_windows(app_name)
             return ActionResult(success=True, data={"application": app_name, "closed_count": count})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
+            code = "TIMEOUT" if "time" in str(exc).lower() or isinstance(exc, TimeoutError) else "SYSTEM_ERROR"
+            return ActionResult(success=False, error=str(exc), error_code=code)
 
 
 class WaitForWindow(Action):

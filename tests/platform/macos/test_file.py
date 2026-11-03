@@ -8,10 +8,13 @@ mocked while ordinary temporary-directory filesystem behaviour is exercised.
 import importlib
 import inspect
 import os
+import platform
 from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+
+pytestmark = pytest.mark.skipif(platform.system() != "Darwin", reason="macOS-only tests")
 
 MODULE = "deskagent.platform.macos.file"
 

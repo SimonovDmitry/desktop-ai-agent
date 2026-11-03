@@ -97,10 +97,16 @@ class RemoveFromArchive(Action):
     }
 
     def execute(self, context, parameters):
-        archive, names = parameters.get("archive"), parameters.get("file_names")
+        p = parameters or {}
+        archive = p.get("archive")
+        names = p.get("file_names") or p.get("files")
+        if not names and "file" in p:
+            names = [p.get("file")]
+        if isinstance(names, str):
+            names = [names]
         try:
             context.services.file.archive.remove_files(archive, names)
-            return ActionResult(success=True, data={"removed": True, "count": len(names)})
+            return ActionResult(success=True, data={"removed": True, "count": len(names or [])})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 

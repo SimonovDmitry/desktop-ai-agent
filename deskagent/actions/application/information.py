@@ -51,7 +51,7 @@ class FindApplications(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         query = params.get("query")
-        limit = params.get("limit", 10)
+        limit = params.get("limit")
 
         if not query:
             return ActionResult(success=False, error="Query parameter is required", error_code="MISSING_PARAM")
@@ -76,13 +76,13 @@ class GetApplicationInfo(Action):
         params = parameters or {}
         app_name = params.get("application")
         if not app_name:
-            return ActionResult(success=False, error="Missing app name")
+            return ActionResult(success=False, error="Missing app name", error_code="MISSING_PARAM")
 
         try:
             info = context.services.application.information.get_info(app_name)
             return ActionResult(success=True, data=info)
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc), error_code="NOT_FOUND")
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetApplicationStatus(Action):
@@ -97,11 +97,13 @@ class GetApplicationStatus(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Missing app name", error_code="MISSING_PARAM")
         try:
             status = context.services.application.information.get_status(app_name)
             return ActionResult(success=True, data=status)
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class IsApplicationRunning(Action):
@@ -116,11 +118,13 @@ class IsApplicationRunning(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Missing app name", error_code="MISSING_PARAM")
         try:
             running = context.services.application.information.is_running(app_name)
             return ActionResult(success=True, data={"running": running})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetActiveApplication(Action):
@@ -137,7 +141,7 @@ class GetActiveApplication(Action):
             active = context.services.application.information.get_active()
             return ActionResult(success=True, data=active)
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetApplicationPID(Action):
@@ -149,11 +153,13 @@ class GetApplicationPID(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Missing app name", error_code="MISSING_PARAM")
         try:
             pid = context.services.application.information.get_pid(app_name)
             return ActionResult(success=True, data={"pid": pid})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetApplicationPath(Action):
@@ -165,11 +171,13 @@ class GetApplicationPath(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Missing app name", error_code="MISSING_PARAM")
         try:
             path = context.services.application.information.get_path(app_name)
             return ActionResult(success=True, data={"path": path})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetApplicationExecutablePath(Action):
@@ -181,11 +189,13 @@ class GetApplicationExecutablePath(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Missing app name", error_code="MISSING_PARAM")
         try:
             executable = context.services.application.information.get_executable_path(app_name)
             return ActionResult(success=True, data={"executable": executable})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetApplicationBundleId(Action):
@@ -197,11 +207,13 @@ class GetApplicationBundleId(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Missing app name", error_code="MISSING_PARAM")
         try:
             bundle_id = context.services.application.information.get_bundle_id(app_name)
             return ActionResult(success=True, data={"bundle_id": bundle_id})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetApplicationVersion(Action):
@@ -213,11 +225,13 @@ class GetApplicationVersion(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Missing app name", error_code="MISSING_PARAM")
         try:
             version = context.services.application.information.get_version(app_name)
             return ActionResult(success=True, data={"version": version})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetApplicationArchitecture(Action):
@@ -229,11 +243,13 @@ class GetApplicationArchitecture(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Missing app name", error_code="MISSING_PARAM")
         try:
             arch = context.services.application.information.get_architecture(app_name)
             return ActionResult(success=True, data={"architecture": arch})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetApplicationName(Action):

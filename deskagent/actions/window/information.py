@@ -47,9 +47,13 @@ class GetWindow(Action):
     }
 
     def execute(self, context, parameters):
-        win_id = parameters.get("window_id")
+        win_id = (parameters or {}).get("window_id")
         try:
-            info = context.services.window.information.get_window(win_id)
+            srv = context.services.window.information
+            if hasattr(srv, "get_window_info"):
+                info = srv.get_window_info(win_id)
+            else:
+                info = srv.get_window(win_id)
             if not info:
                 return ActionResult(success=False, error=f"Window with ID {win_id} not found", error_code="NOT_FOUND")
             return ActionResult(success=True, data=info)
@@ -71,9 +75,14 @@ class FindWindows(Action):
     }
 
     def execute(self, context, parameters):
+        params = parameters or {}
         try:
-            query = parameters.get("title") or parameters.get("title_contains") or parameters.get("application") or ""
-            windows = context.services.window.information.find_windows(query)
+            srv = context.services.window.information
+            try:
+                windows = srv.find_windows(**params)
+            except TypeError:
+                query = params.get("title") or params.get("title_contains") or params.get("application") or ""
+                windows = srv.find_windows(query)
             return ActionResult(success=True, data={"windows": windows, "count": len(windows)})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

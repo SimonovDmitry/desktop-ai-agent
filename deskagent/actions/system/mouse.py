@@ -71,6 +71,9 @@ class Click(Action):
         if button is None:
             button = "left"
 
+        if button not in ("left", "right", "middle"):
+            return ActionResult(success=False, error=f"Invalid button: {button}", error_code="INVALID_BUTTON")
+
         try:
             context.services.system.mouse.click(button)
             return ActionResult(success=True, data={"button": button})
@@ -95,6 +98,9 @@ class DoubleClick(Action):
 
         if button is None:
             button = "left"
+
+        if button not in ("left", "right", "middle"):
+            return ActionResult(success=False, error=f"Invalid button: {button}", error_code="INVALID_BUTTON")
 
         try:
             context.services.system.mouse.double_click(button)

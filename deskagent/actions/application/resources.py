@@ -34,13 +34,21 @@ class GetApplicationMemoryUsage(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
+
         try:
             mem_data = context.services.application.resources.get_memory_usage(app_name)
-            return ActionResult(
-                success=True, data={"memory_bytes": mem_data.get("bytes"), "memory_mb": mem_data.get("mb")}
-            )
+            res = {}
+            if isinstance(mem_data, dict):
+                res["memory_bytes"] = mem_data.get("memory_bytes", mem_data.get("bytes"))
+                res["memory_mb"] = mem_data.get("memory_mb", mem_data.get("mb"))
+            else:
+                res["memory_bytes"] = mem_data
+                res["memory_mb"] = round(mem_data / (1024 * 1024), 2)
+            return ActionResult(success=True, data=res)
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetApplicationDiskUsage(Action):
@@ -52,14 +60,14 @@ class GetApplicationDiskUsage(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
+
         try:
             disk_data = context.services.application.resources.get_disk_usage(app_name)
-            return ActionResult(
-                success=True,
-                data={"read_bytes": disk_data.get("read_bytes"), "write_bytes": disk_data.get("write_bytes")},
-            )
+            return ActionResult(success=True, data=disk_data)
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetApplicationResourceUsage(Action):
@@ -71,11 +79,14 @@ class GetApplicationResourceUsage(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
+
         try:
             usage = context.services.application.resources.get_resource_usage(app_name)
             return ActionResult(success=True, data=usage)
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetTopResourceApplications(Action):
@@ -100,14 +111,31 @@ class GetTopResourceApplications(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
-        resource_type = params.get("resource")
-        limit = params.get("limit", 10)
-
-        if not resource_type:
+        if "resource" not in params:
             return ActionResult(success=False, error="Parameter 'resource' is required", error_code="MISSING_PARAM")
 
+        resource_type = params.get("resource")
+        if resource_type not in ("cpu", "memory"):
+            return ActionResult(
+                success=False,
+                error="Invalid resource. Must be 'cpu' or 'memory'",
+                error_code="INVALID_INPUT",
+            )
+
+        limit = params.get("limit", 10)
+        if not isinstance(limit, int) or limit <= 0:
+            return ActionResult(
+                success=False,
+                error="Limit must be a positive integer",
+                error_code="INVALID_INPUT",
+            )
+
         try:
-            apps = context.services.application.resources.get_top_resource_apps(resource_type, limit)
+            srv = context.services.application.resources
+            if hasattr(srv, "get_top_resource_applications"):
+                apps = srv.get_top_resource_applications(resource_type, limit)
+            else:
+                apps = srv.get_top_resource_apps(resource_type, limit)
             return ActionResult(success=True, data={"resource": resource_type, "applications": apps})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

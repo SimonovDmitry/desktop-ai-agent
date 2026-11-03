@@ -38,11 +38,13 @@ class HideApplication(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
         try:
             context.services.application.focus.hide(app_name)
             return ActionResult(success=True, data={"application": app_name, "hidden": True})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class ShowApplication(Action):
@@ -57,11 +59,13 @@ class ShowApplication(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
         try:
             context.services.application.focus.show(app_name)
             return ActionResult(success=True, data={"application": app_name, "visible": True})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class MinimizeApplication(Action):
@@ -76,11 +80,13 @@ class MinimizeApplication(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
         try:
             context.services.application.focus.minimize(app_name)
             return ActionResult(success=True, data={"application": app_name, "minimized": True})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class RestoreApplication(Action):
@@ -95,11 +101,13 @@ class RestoreApplication(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
         try:
             context.services.application.focus.restore(app_name)
             return ActionResult(success=True, data={"application": app_name, "restored": True})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class BringApplicationToFront(Action):
@@ -112,11 +120,13 @@ class BringApplicationToFront(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
         try:
             context.services.application.focus.bring_to_front(app_name)
             return ActionResult(success=True, data={"application": app_name, "front": True})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetApplicationVisibility(Action):
@@ -128,11 +138,15 @@ class GetApplicationVisibility(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
         try:
             is_visible = context.services.application.focus.get_visibility(app_name)
+            if isinstance(is_visible, dict):
+                return ActionResult(success=True, data=is_visible)
             return ActionResult(success=True, data={"visible": is_visible, "hidden": not is_visible})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetApplicationFocusState(Action):
@@ -144,8 +158,10 @@ class GetApplicationFocusState(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
         try:
             is_focused = context.services.application.focus.is_focused(app_name)
             return ActionResult(success=True, data={"focused": is_focused})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

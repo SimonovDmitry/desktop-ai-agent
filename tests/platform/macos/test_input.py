@@ -4,6 +4,8 @@ import platform
 
 import pytest
 
+pytestmark = pytest.mark.skipif(platform.system() != "Darwin", reason="macOS-only tests")
+
 from deskagent.platform.base.input import (
     InputAutomation,
     InputClipboard,

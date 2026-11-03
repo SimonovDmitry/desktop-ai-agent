@@ -13,11 +13,12 @@ class CreateFile(Action):
     }
 
     def execute(self, context, parameters):
-        path = parameters.get("path")
-        content = parameters.get("content", "")
+        path = (parameters or {}).get("path")
+        content = (parameters or {}).get("content", "")
         try:
             context.services.file.lifecycle.create(path, content)
-            return ActionResult(success=True, data={"created": True, "path": path, "size": len(content)})
+            size = len(content.encode("utf-8")) if isinstance(content, str) else len(content or b"")
+            return ActionResult(success=True, data={"created": True, "path": path, "size": size})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -166,7 +167,9 @@ class ReplaceFile(Action):
     }
 
     def execute(self, context, parameters):
-        target, source = parameters.get("target_path"), parameters.get("source_path")
+        p = parameters or {}
+        target = p.get("target_path") or p.get("destination") or p.get("target")
+        source = p.get("source_path") or p.get("source")
         try:
             context.services.file.lifecycle.replace(target, source)
             return ActionResult(success=True, data={"replaced": True, "target": target})

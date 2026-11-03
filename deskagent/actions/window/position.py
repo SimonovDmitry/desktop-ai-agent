@@ -126,7 +126,8 @@ class SnapWindowLeft(Action):
     def execute(self, context, parameters):
         win_id = parameters.get("window_id")
         try:
-            result = context.services.window.position.snap_left(win_id)
+            srv = context.services.window.position
+            result = srv.snap(win_id, "left") if hasattr(srv, "snap") else srv.snap_left(win_id)
             return ActionResult(
                 success=True, data={"window_id": win_id, "position": result["pos"], "size": result["size"]}
             )
@@ -146,7 +147,8 @@ class SnapWindowRight(Action):
     def execute(self, context, parameters):
         win_id = parameters.get("window_id")
         try:
-            result = context.services.window.position.snap_right(win_id)
+            srv = context.services.window.position
+            result = srv.snap(win_id, "right") if hasattr(srv, "snap") else srv.snap_right(win_id)
             return ActionResult(
                 success=True, data={"window_id": win_id, "position": result["pos"], "size": result["size"]}
             )
@@ -166,7 +168,8 @@ class SnapWindowTop(Action):
     def execute(self, context, parameters):
         win_id = parameters.get("window_id")
         try:
-            result = context.services.window.position.snap_top(win_id)
+            srv = context.services.window.position
+            result = srv.snap(win_id, "top") if hasattr(srv, "snap") else srv.snap_top(win_id)
             return ActionResult(
                 success=True, data={"window_id": win_id, "position": result["pos"], "size": result["size"]}
             )
@@ -186,7 +189,8 @@ class SnapWindowBottom(Action):
     def execute(self, context, parameters):
         win_id = parameters.get("window_id")
         try:
-            result = context.services.window.position.snap_bottom(win_id)
+            srv = context.services.window.position
+            result = srv.snap(win_id, "bottom") if hasattr(srv, "snap") else srv.snap_bottom(win_id)
             return ActionResult(
                 success=True, data={"window_id": win_id, "position": result["pos"], "size": result["size"]}
             )

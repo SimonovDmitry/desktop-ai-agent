@@ -21,8 +21,9 @@ class LaunchApplication(Action):
 
         try:
             result = context.services.application.lifecycle.launch(app_name)
+            pid = result.get("pid") if isinstance(result, dict) else result
             return ActionResult(
-                success=True, data={"application": app_name, "pid": result.get("pid"), "launched": True}
+                success=True, data={"application": app_name, "pid": pid, "launched": True}
             )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -51,8 +52,9 @@ class LaunchApplicationWithArguments(Action):
 
         try:
             result = context.services.application.lifecycle.launch(app_name, arguments=args)
+            pid = result.get("pid") if isinstance(result, dict) else result
             return ActionResult(
-                success=True, data={"application": app_name, "pid": result.get("pid"), "launched": True}
+                success=True, data={"application": app_name, "pid": pid, "launched": True}
             )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -71,12 +73,14 @@ class LaunchApplicationHidden(Action):
         params = parameters or {}
         app_name = params.get("application")
         if not app_name:
-            return ActionResult(success=False, error="Missing app name")
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
 
         try:
             result = context.services.application.lifecycle.launch_hidden(app_name)
+            pid = result.get("pid") if isinstance(result, dict) else result
             return ActionResult(
-                success=True, data={"application": app_name, "pid": result.get("pid"), "launched": True, "hidden": True}
+                success=True,
+                data={"application": app_name, "pid": pid, "launched": True, "hidden": True},
             )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -95,7 +99,7 @@ class QuitApplication(Action):
         params = parameters or {}
         app_name = params.get("application")
         if not app_name:
-            return ActionResult(success=False, error="Missing app name")
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
 
         try:
             context.services.application.lifecycle.quit(app_name)
@@ -117,7 +121,9 @@ class ForceQuitApplication(Action):
         params = parameters or {}
         app_id = params.get("application")
         if app_id is None:
-            return ActionResult(success=False, error="Missing application identifier")
+            return ActionResult(
+                success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM"
+            )
 
         try:
             context.services.application.lifecycle.force_quit(app_id)
@@ -139,7 +145,7 @@ class RestartApplication(Action):
         params = parameters or {}
         app_name = params.get("application")
         if not app_name:
-            return ActionResult(success=False, error="Missing app name")
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
 
         try:
             context.services.application.lifecycle.restart(app_name)
@@ -163,24 +169,31 @@ class WaitForApplication(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
-        timeout = params.get("timeout", 30)
-
         if not app_name:
-            return ActionResult(success=False, error="Missing app name")
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
+
+        timeout = params.get("timeout")
+        if timeout is None:
+            return ActionResult(success=False, error="Parameter 'timeout' is required", error_code="MISSING_PARAM")
+        if not isinstance(timeout, int) or timeout <= 0:
+            return ActionResult(success=False, error="Timeout must be a positive integer", error_code="INVALID_INPUT")
 
         try:
             result = context.services.application.lifecycle.wait_for_start(app_name, timeout)
+            res_dict = result if isinstance(result, dict) else {}
             return ActionResult(
                 success=True,
                 data={
                     "application": app_name,
-                    "started": result.get("started", True),
-                    "pid": result.get("pid"),
-                    "waited": result.get("waited"),
+                    "started": res_dict.get("started", True),
+                    "pid": res_dict.get("pid"),
+                    "waited": res_dict.get("waited"),
                 },
             )
-        except Exception as exc:
+        except TimeoutError as exc:
             return ActionResult(success=False, error=str(exc), error_code="TIMEOUT")
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class WaitForApplicationExit(Action):
@@ -198,15 +211,26 @@ class WaitForApplicationExit(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
-        timeout = params.get("timeout", 30)
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
+
+        timeout = params.get("timeout")
+        if timeout is None:
+            return ActionResult(success=False, error="Parameter 'timeout' is required", error_code="MISSING_PARAM")
+        if not isinstance(timeout, int) or timeout <= 0:
+            return ActionResult(success=False, error="Timeout must be a positive integer", error_code="INVALID_INPUT")
 
         try:
             result = context.services.application.lifecycle.wait_for_exit(app_name, timeout)
+            res_dict = result if isinstance(result, dict) else {}
             return ActionResult(
-                success=True, data={"application": app_name, "exited": True, "waited": result.get("waited")}
+                success=True,
+                data={"application": app_name, "exited": True, "waited": res_dict.get("waited")},
             )
-        except Exception as exc:
+        except TimeoutError as exc:
             return ActionResult(success=False, error=str(exc), error_code="TIMEOUT")
+        except Exception as exc:
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class LaunchOrActivateApplication(Action):
@@ -222,12 +246,18 @@ class LaunchOrActivateApplication(Action):
         params = parameters or {}
         app_name = params.get("application")
         if not app_name:
-            return ActionResult(success=False, error="Missing app name")
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
 
         try:
             result = context.services.application.lifecycle.launch_or_activate(app_name)
+            res_dict = result if isinstance(result, dict) else {}
             return ActionResult(
-                success=True, data={"application": app_name, "action": result.get("action"), "pid": result.get("pid")}
+                success=True,
+                data={
+                    "application": app_name,
+                    "action": res_dict.get("action"),
+                    "pid": res_dict.get("pid") if isinstance(result, dict) else result,
+                },
             )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

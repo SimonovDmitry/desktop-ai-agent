@@ -149,7 +149,10 @@ class FindFilesByContent(Action):
             results = context.services.file.search.find_by_content(
                 p["directory"], p["query"], p.get("extensions"), p.get("recursive", True)
             )
-            return ActionResult(success=True, data={"matches": results, "count": len(results)})
+            return ActionResult(
+                success=True,
+                data={"files": results, "results": results, "matches": results, "count": len(results)},
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 

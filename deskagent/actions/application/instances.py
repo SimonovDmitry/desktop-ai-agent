@@ -33,11 +33,13 @@ class GetApplicationInstanceCount(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
         try:
             count = context.services.application.instances.get_count(app_name)
-            return ActionResult(success=True, data={"count": count, "application": app_name})
+            return ActionResult(success=True, data={"count": count})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class ActivateApplicationInstance(Action):
@@ -52,15 +54,18 @@ class ActivateApplicationInstance(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
+        app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
         pid = params.get("pid")
         if pid is None:
             return ActionResult(success=False, error="Parameter 'pid' is required", error_code="MISSING_PARAM")
 
         try:
-            context.services.application.instances.activate(pid)
+            context.services.application.instances.activate(app_name, pid)
             return ActionResult(success=True, data={"pid": pid, "active": True})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc), error_code="NOT_FOUND")
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class QuitApplicationInstance(Action):
@@ -77,12 +82,15 @@ class QuitApplicationInstance(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
+        app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
         pid = params.get("pid")
         if pid is None:
             return ActionResult(success=False, error="Parameter 'pid' is required", error_code="MISSING_PARAM")
 
         try:
-            context.services.application.instances.quit(pid)
+            context.services.application.instances.quit(app_name, pid)
             return ActionResult(success=True, data={"pid": pid, "quit": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

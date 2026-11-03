@@ -33,10 +33,16 @@ from deskagent.platform.base.file import (
 
 class MacOSFileInformation(FileInformation):
     def _resolve_path(self, path):
-        return os.path.abspath(os.path.expanduser(path))
+        return os.path.abspath(os.path.expanduser(str(path)))
+
+    def _ensure_exists(self, path):
+        full_path = self._resolve_path(path)
+        if not os.path.lexists(full_path):
+            raise FileNotFoundError(f"File not found: {path}")
+        return full_path
 
     def get_info(self, path):
-        full_path = self._resolve_path(path)
+        full_path = self._ensure_exists(path)
         s = os.stat(full_path)
         return {
             "path": full_path,
@@ -51,24 +57,39 @@ class MacOSFileInformation(FileInformation):
         }
 
     def get_metadata(self, path):
-        full_path = self._resolve_path(path)
+        full_path = self._ensure_exists(path)
         s = os.stat(full_path)
+        owner_name = str(s.st_uid)
+        group_name = str(s.st_gid)
+        try:
+            import pwd
+            owner_name = pwd.getpwuid(s.st_uid).pw_name
+        except Exception:
+            pass
+        try:
+            import grp
+            group_name = grp.getgrgid(s.st_gid).gr_name
+        except Exception:
+            pass
+
         return {
             "size": s.st_size,
             "created_at": self.get_created_at(full_path),
             "modified_at": self.get_modified_at(full_path),
             "permissions": oct(s.st_mode & 0o777),
+            "owner": owner_name,
             "owner_id": s.st_uid,
+            "group": group_name,
             "group_id": s.st_gid,
             "is_hidden": os.path.basename(full_path).startswith("."),
             "is_symlink": os.path.islink(full_path),
         }
 
     def get_size(self, path):
-        return os.path.getsize(self._resolve_path(path))
+        return os.path.getsize(self._ensure_exists(path))
 
     def get_type(self, path):
-        full_path = self._resolve_path(path)
+        full_path = self._ensure_exists(path)
         if os.path.islink(full_path):
             return "symlink"
         elif os.path.isdir(full_path):
@@ -78,44 +99,50 @@ class MacOSFileInformation(FileInformation):
         return "unknown"
 
     def get_extension(self, path):
-        return pathlib.Path(path).suffix
+        full_path = self._ensure_exists(path)
+        return pathlib.Path(full_path).suffix
 
     def get_mime_type(self, path):
-        mime, _ = mimetypes.guess_type(path)
+        full_path = self._ensure_exists(path)
+        mime, _ = mimetypes.guess_type(full_path)
         return mime or "application/octet-stream"
 
     def get_absolute_path(self, path):
-        return self._resolve_path(path)
+        return self._ensure_exists(path)
 
     def get_name(self, path):
-        return os.path.basename(self._resolve_path(path))
+        return os.path.basename(self._ensure_exists(path))
 
     def get_directory(self, path):
-        return os.path.dirname(self._resolve_path(path))
+        return os.path.dirname(self._ensure_exists(path))
 
     def get_created_at(self, path):
-        s = os.stat(self._resolve_path(path))
-        return datetime.datetime.fromtimestamp(s.st_birthtime).isoformat()
+        s = os.stat(self._ensure_exists(path))
+        ts = getattr(s, "st_birthtime", s.st_ctime)
+        return datetime.datetime.fromtimestamp(ts).isoformat()
 
     def get_modified_at(self, path):
-        s = os.stat(self._resolve_path(path))
+        s = os.stat(self._ensure_exists(path))
         return datetime.datetime.fromtimestamp(s.st_mtime).isoformat()
 
     def get_accessed_at(self, path):
-        s = os.stat(self._resolve_path(path))
+        s = os.stat(self._ensure_exists(path))
         return datetime.datetime.fromtimestamp(s.st_atime).isoformat()
 
     def is_file(self, path):
-        return os.path.isfile(self._resolve_path(path))
+        full_path = self._ensure_exists(path)
+        return os.path.isfile(full_path)
 
     def is_directory(self, path):
-        return os.path.isdir(self._resolve_path(path))
+        full_path = self._ensure_exists(path)
+        return os.path.isdir(full_path)
 
     def is_symlink(self, path):
-        return os.path.islink(self._resolve_path(path))
+        full_path = self._ensure_exists(path)
+        return os.path.islink(full_path)
 
     def get_access_permissions(self, path):
-        full_path = self._resolve_path(path)
+        full_path = self._ensure_exists(path)
         return {
             "readable": os.access(full_path, os.R_OK),
             "writable": os.access(full_path, os.W_OK),
@@ -625,7 +652,7 @@ class MacOSFilePermissions(FilePermissions):
         mode = s.st_mode
 
         return {
-            "mode": oct(mode & 0o777),
+            "mode": f"{mode & 0o7777:04o}",
             "owner": {
                 "read": bool(mode & stat.S_IRUSR),
                 "write": bool(mode & stat.S_IWUSR),
@@ -701,7 +728,7 @@ class MacOSFilePermissions(FilePermissions):
 
 class MacOSFileLinks(FileLinks):
     def _resolve_path(self, path):
-        return str(pathlib.Path(path).expanduser().resolve())
+        return os.path.abspath(os.path.expanduser(str(path)))
 
     def create_symlink(self, target, link):
         src = self._resolve_path(target)
@@ -865,7 +892,7 @@ class MacOSFileComparison(FileComparison):
         identical = self.is_identical(f1, f2)
         diff = [] if identical else self.get_diff(f1, f2)
 
-        return {"identical": identical, "differences_count": len(diff)}
+        return {"identical": identical, "differences": diff, "differences_count": len(diff)}
 
     def verify_hash(self, path, expected, alg="sha256"):
 

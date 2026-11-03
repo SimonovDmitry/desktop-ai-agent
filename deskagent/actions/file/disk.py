@@ -10,10 +10,13 @@ class GetFileDiskUsage(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get("path")
+        path = (parameters or {}).get("path") or (parameters or {}).get("file")
         try:
             usage = context.services.file.disk.get_file_usage(path)
-            return ActionResult(success=True, data={"path": path, "disk_usage_bytes": usage})
+            return ActionResult(
+                success=True,
+                data={"path": path, "size": usage, "disk_usage": usage, "disk_usage_bytes": usage},
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -25,16 +28,19 @@ class GetDirectoryDiskUsage(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get("path")
+        path = (parameters or {}).get("path") or (parameters or {}).get("directory")
         try:
             usage_data = context.services.file.disk.get_directory_usage(path)
+            size = usage_data.get("size", 0)
             return ActionResult(
                 success=True,
                 data={
                     "path": path,
-                    "total_size": usage_data["size"],
-                    "file_count": usage_data["files"],
-                    "directory_count": usage_data["directories"],
+                    "size": size,
+                    "disk_usage": size,
+                    "total_size": size,
+                    "file_count": usage_data.get("files", 0),
+                    "directory_count": usage_data.get("directories", 0),
                 },
             )
         except Exception as exc:
@@ -50,7 +56,7 @@ class GetDiskUsage(Action):
     }
 
     def execute(self, context, parameters):
-        path = parameters.get("path", "/")
+        path = (parameters or {}).get("path") or (parameters or {}).get("directory") or "/"
         try:
             usage = context.services.file.disk.get_system_usage(path)
             return ActionResult(success=True, data=usage)
@@ -69,12 +75,16 @@ class FindLargestFiles(Action):
     }
 
     def execute(self, context, parameters):
-        p = parameters
+        p = parameters or {}
+        path = p.get("path") or p.get("directory")
+        limit = p.get("limit", 10)
+        recursive = p.get("recursive", True)
         try:
-            files = context.services.file.disk.find_largest_files(
-                p["path"], p.get("limit", 10), p.get("recursive", True)
+            files = context.services.file.disk.find_largest_files(path, limit, recursive)
+            return ActionResult(
+                success=True,
+                data={"files": files, "results": files, "largest_files": files},
             )
-            return ActionResult(success=True, data={"largest_files": files})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -89,10 +99,15 @@ class FindLargestDirectories(Action):
     }
 
     def execute(self, context, parameters):
-        path, limit = parameters.get("path"), parameters.get("limit", 5)
+        p = parameters or {}
+        path = p.get("path") or p.get("directory")
+        limit = p.get("limit", 5)
         try:
             dirs = context.services.file.disk.find_largest_directories(path, limit)
-            return ActionResult(success=True, data={"largest_directories": dirs})
+            return ActionResult(
+                success=True,
+                data={"directories": dirs, "results": dirs, "largest_directories": dirs},
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -104,9 +119,17 @@ class GetStorageStatistics(Action):
     parameters_schema = {"path": {"type": "string", "required": False, "default": "/"}}
 
     def execute(self, context, parameters):
-        path = parameters.get("path", "/")
+        p = parameters or {}
+        path = p.get("path") or p.get("directory") or "/"
         try:
             stats = context.services.file.disk.get_statistics(path)
-            return ActionResult(success=True, data=stats)
+            data = {}
+            if isinstance(stats, dict):
+                if "disk" in stats and isinstance(stats["disk"], dict):
+                    data.update(stats["disk"])
+                data.update(stats)
+            if "percent" in data and "usage_percent" not in data:
+                data["usage_percent"] = data["percent"]
+            return ActionResult(success=True, data=data)
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))

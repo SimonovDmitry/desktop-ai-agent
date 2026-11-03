@@ -28,11 +28,13 @@ class IsApplicationStartupEnabled(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
         try:
             is_enabled = context.services.application.startup.is_enabled(app_name)
-            return ActionResult(success=True, data={"enabled": is_enabled, "application": app_name})
+            return ActionResult(success=True, data={"enabled": is_enabled})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class AddApplicationToStartup(Action):
@@ -48,63 +50,71 @@ class AddApplicationToStartup(Action):
         params = parameters or {}
         app_name = params.get("application")
         if not app_name:
-            return ActionResult(success=False, error="Missing app name")
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
 
         try:
             context.services.application.startup.add(app_name)
             return ActionResult(success=True, data={"application": app_name, "added": True})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class RemoveApplicationFromStartup(Action):
     name = "remove_application_from_startup"
     description = "Remove an application from the system login items list"
     category = ActionCategory.APPLICATION
-    risk_level = RiskLevel.MEDIUM
-    requires_confirmation = True
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
     reversible = True
     parameters_schema = {"application": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
         try:
             context.services.application.startup.remove(app_name)
             return ActionResult(success=True, data={"application": app_name, "removed": True})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class EnableApplicationStartup(Action):
     name = "enable_application_startup"
     description = "Enable an existing startup item"
     category = ActionCategory.APPLICATION
-    risk_level = RiskLevel.MEDIUM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
     parameters_schema = {"application": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
         try:
             context.services.application.startup.enable(app_name)
             return ActionResult(success=True, data={"application": app_name, "enabled": True})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class DisableApplicationStartup(Action):
     name = "disable_application_startup"
     description = "Disable an existing startup item without removing it"
     category = ActionCategory.APPLICATION
-    risk_level = RiskLevel.MEDIUM
+    risk_level = RiskLevel.LOW
+    requires_confirmation = False
     parameters_schema = {"application": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
         try:
             context.services.application.startup.disable(app_name)
             return ActionResult(success=True, data={"application": app_name, "enabled": False})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

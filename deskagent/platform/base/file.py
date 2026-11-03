@@ -447,3 +447,371 @@ class FileSystem(ABC):
     @abstractmethod
     def is_locked(self, path):
         pass
+
+
+class SystemFile(
+    FileInformation,
+    FileLifecycle,
+    FileContent,
+    FileSearch,
+    FileOrganization,
+    FilePermissions,
+    FileLinks,
+    FileArchive,
+    FileComparison,
+    FileDisk,
+    FileTemporary,
+    FileSystem,
+    ABC,
+):
+    @abstractmethod
+    def get_file_info(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_file_metadata(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_file_size(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_file_type(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_file_extension(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_file_mime_type(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_file_path(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_file_name(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_file_directory(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_file_created_time(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_file_modified_time(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_file_accessed_time(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def is_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def is_directory(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def is_symlink(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def is_file_accessible(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def create_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def delete_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def restore_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def trash_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def empty_trash(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def rename_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def copy_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def move_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def duplicate_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def replace_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def read_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def write_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def append_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def prepend_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def read_lines(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def write_lines(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def insert_lines(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def delete_lines(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def replace_text(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def find_in_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def create_directory(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def delete_directory(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def list_directory(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def walk_directory(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def find_files(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def find_directories(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def find_by_pattern(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def find_by_extension(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def find_by_size(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def find_by_date(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def create_symbolic_link(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def create_hard_link(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def read_symbolic_link(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_link_target(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def remove_link(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def resolve_path(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def create_archive(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def extract_archive(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def list_archive_contents(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def add_to_archive(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def remove_from_archive(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def test_archive(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_archive_info(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_file_permissions(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def set_file_permissions(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def add_file_permission(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def remove_file_permission(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_file_owner(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def set_file_owner(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_file_group(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def set_file_group(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def is_file_readable(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def is_file_writable(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def is_file_executable(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def compare_files(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def compare_directories(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_file_hash(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_disk_usage(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_free_space(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_directory_size(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def create_temp_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def create_temp_directory(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_temp_directory(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def cleanup_temp_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def cleanup_temp_directory(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def open_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def reveal_in_file_manager(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def open_with_application(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def set_file_hidden(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def is_file_hidden(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def watch_file(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def stop_watching(self, *args, **kwargs):
+        pass

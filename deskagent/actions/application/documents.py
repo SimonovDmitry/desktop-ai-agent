@@ -33,9 +33,13 @@ class OpenMultipleDocuments(Action):
 
     def execute(self, context, parameters):
         params = parameters or {}
+        if "paths" not in params or params["paths"] is None:
+            return ActionResult(success=False, error="Parameter 'paths' is required", error_code="MISSING_PARAM")
         paths = params.get("paths")
-        if not isinstance(paths, list):
-            return ActionResult(success=False, error="Parameter 'paths' must be a list", error_code="INVALID_INPUT")
+        if not isinstance(paths, list) or not paths:
+            return ActionResult(
+                success=False, error="Parameter 'paths' must be a non-empty list", error_code="INVALID_INPUT"
+            )
 
         try:
             context.services.application.documents.open_multiple(paths)
@@ -78,11 +82,13 @@ class RevealApplicationInFileManager(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
         try:
             path = context.services.application.documents.reveal_app(app_name)
             return ActionResult(success=True, data={"revealed": True, "path": path})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class RevealApplicationExecutable(Action):
@@ -95,8 +101,10 @@ class RevealApplicationExecutable(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
         try:
             path = context.services.application.documents.reveal_executable(app_name)
             return ActionResult(success=True, data={"revealed": True, "path": path})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

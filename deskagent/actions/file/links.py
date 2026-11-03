@@ -59,10 +59,14 @@ class GetLinkTarget(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get("path")
+        p = parameters or {}
+        path = p.get("path") or p.get("link")
         try:
             real_target = context.services.file.links.get_final_target(path)
-            return ActionResult(success=True, data={"path": path, "real_target": real_target})
+            return ActionResult(
+                success=True,
+                data={"path": path, "target": real_target, "real_target": real_target},
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -74,10 +78,14 @@ class ResolvePath(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get("path")
+        p = parameters or {}
+        path = p.get("path") or p.get("link")
         try:
             resolved = context.services.file.links.resolve_full_path(path)
-            return ActionResult(success=True, data={"input": path, "resolved": resolved})
+            return ActionResult(
+                success=True,
+                data={"path": resolved, "resolved": resolved, "input": path},
+            )
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -91,7 +99,8 @@ class RemoveLink(Action):
     parameters_schema = {"path": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):
-        path = parameters.get("path")
+        p = parameters or {}
+        path = p.get("path") or p.get("link")
         try:
             context.services.file.links.remove_link(path)
             return ActionResult(success=True, data={"link_removed": True, "path": path})

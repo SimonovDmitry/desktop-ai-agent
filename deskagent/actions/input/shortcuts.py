@@ -4,6 +4,20 @@ from deskagent.actions.base import Action
 from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
 
 
+def _get_keyboard(context):
+    if hasattr(context.services, "system") and hasattr(context.services.system, "keyboard"):
+        return context.services.system.keyboard
+    if hasattr(context.services, "input") and hasattr(context.services.input, "shortcuts"):
+        return context.services.input.shortcuts
+    return getattr(context.services, "keyboard", None)
+
+
+def _get_focus(context):
+    if hasattr(context.services, "application") and hasattr(context.services.application, "focus"):
+        return context.services.application.focus
+    return None
+
+
 class PressShortcut(Action):
     name = "press_shortcut"
     description = "Perform a key combination (e.g., 'cmd+c', 'ctrl+alt+delete')"
@@ -16,7 +30,7 @@ class PressShortcut(Action):
         if not shortcut:
             return ActionResult(success=False, error="Missing shortcut parameter", error_code="MISSING_PARAM")
         try:
-            context.services.input.shortcuts.press_shortcut(shortcut)
+            _get_keyboard(context).press_shortcut(shortcut)
             return ActionResult(success=True, data={"shortcut": shortcut, "executed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
@@ -38,8 +52,9 @@ class ExecuteShortcutSequence(Action):
             return ActionResult(success=False, error="Shortcuts must be a list", error_code="INVALID_INPUT")
 
         try:
+            kb = _get_keyboard(context)
             for s in shortcuts:
-                context.services.input.shortcuts.press_shortcut(s)
+                kb.press_shortcut(s)
                 time.sleep(delay)
             return ActionResult(success=True, data={"executed": len(shortcuts), "completed": True})
         except Exception as exc:
@@ -54,7 +69,7 @@ class Copy(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.input.shortcuts.copy()
+            _get_keyboard(context).copy()
             return ActionResult(success=True, data={"copied": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -68,7 +83,7 @@ class Paste(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.input.shortcuts.paste()
+            _get_keyboard(context).paste()
             return ActionResult(success=True, data={"pasted": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -82,7 +97,7 @@ class Cut(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.input.shortcuts.cut()
+            _get_keyboard(context).cut()
             return ActionResult(success=True, data={"cut": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -96,7 +111,7 @@ class Undo(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.input.shortcuts.undo()
+            _get_keyboard(context).undo()
             return ActionResult(success=True, data={"undone": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -110,7 +125,7 @@ class Redo(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.input.shortcuts.redo()
+            _get_keyboard(context).redo()
             return ActionResult(success=True, data={"redone": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -125,7 +140,7 @@ class Save(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.input.shortcuts.save()
+            _get_keyboard(context).save()
             return ActionResult(success=True, data={"saved": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -140,7 +155,7 @@ class SaveAs(Action):
     def execute(self, context, parameters):
         path = parameters.get("path")
         try:
-            context.services.input.shortcuts.save_as(path)
+            _get_keyboard(context).save_as(path)
             return ActionResult(success=True, data={"saved": True, "path": path})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -155,7 +170,10 @@ class Find(Action):
     def execute(self, context, parameters):
         text = parameters.get("text")
         try:
-            context.services.input.shortcuts.find(text)
+            kb = _get_keyboard(context)
+            kb.press_shortcut("cmd+f")
+            time.sleep(0.2)
+            kb.type(text)
             return ActionResult(success=True, data={"search": text, "executed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -170,7 +188,7 @@ class Close(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.input.shortcuts.close()
+            _get_keyboard(context).close()
             return ActionResult(success=True, data={"closed": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -185,7 +203,7 @@ class Quit(Action):
 
     def execute(self, context, parameters):
         try:
-            context.services.input.shortcuts.quit()
+            _get_keyboard(context).quit()
             return ActionResult(success=True, data={"quit": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
@@ -200,7 +218,13 @@ class SwitchApplication(Action):
     def execute(self, context, parameters):
         app_name = parameters.get("application")
         try:
-            context.services.input.shortcuts.switch_application(app_name)
+            focus = _get_focus(context)
+            if focus and hasattr(focus, "activate"):
+                focus.activate(app_name)
+            else:
+                kb = _get_keyboard(context)
+                if hasattr(kb, "switch_application"):
+                    kb.switch_application(app_name)
             return ActionResult(success=True, data={"application": app_name, "switched": True})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))

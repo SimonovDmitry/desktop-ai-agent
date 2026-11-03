@@ -144,9 +144,12 @@ class SortFiles(Action):
     }
 
     def execute(self, context, parameters):
-        p = parameters
+        p = parameters or {}
+        directory = p.get("directory") or p.get("path")
+        by = p.get("by") or p.get("sort_by") or "name"
+        order = p.get("order", "asc")
         try:
-            sorted_list = context.services.file.organization.get_sorted_list(p["directory"], p["by"], p["order"])
+            sorted_list = context.services.file.organization.get_sorted_list(directory, by, order)
             return ActionResult(success=True, data={"files": sorted_list})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))

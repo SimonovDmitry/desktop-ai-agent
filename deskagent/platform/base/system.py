@@ -59,6 +59,10 @@ class SystemDisplay(ABC):
     def get_screen_size(self, display_id=1):
         pass
 
+    @abstractmethod
+    def set_resolution(self, width, height):
+        pass
+
 
 class SystemInformation(ABC):
     @abstractmethod

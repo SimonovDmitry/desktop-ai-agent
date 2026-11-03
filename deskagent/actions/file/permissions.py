@@ -80,10 +80,15 @@ class AddFilePermission(Action):
     }
 
     def execute(self, context, parameters):
-        p = parameters
+        p = parameters or {}
+        path = p.get("path")
+        target = p.get("target")
+        permission = p.get("permission")
+        if not target and permission and "_" in permission:
+            target, permission = permission.split("_", 1)
         try:
-            context.services.file.permissions.add_permission(p["path"], p["target"], p["permission"])
-            return ActionResult(success=True, data={"status": "added", "permission": p["permission"]})
+            context.services.file.permissions.add_permission(path, target, permission)
+            return ActionResult(success=True, data={"status": "added", "permission": p.get("permission")})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -100,10 +105,15 @@ class RemoveFilePermission(Action):
     }
 
     def execute(self, context, parameters):
-        p = parameters
+        p = parameters or {}
+        path = p.get("path")
+        target = p.get("target")
+        permission = p.get("permission")
+        if not target and permission and "_" in permission:
+            target, permission = permission.split("_", 1)
         try:
-            context.services.file.permissions.remove_permission(p["path"], p["target"], p["permission"])
-            return ActionResult(success=True, data={"status": "removed", "permission": p["permission"]})
+            context.services.file.permissions.remove_permission(path, target, permission)
+            return ActionResult(success=True, data={"status": "removed", "permission": p.get("permission")})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 
@@ -130,6 +140,7 @@ class SetFileGroup(Action):
     description = "Change the group of a file"
     category = ActionCategory.FILE
     risk_level = RiskLevel.MEDIUM
+    requires_confirmation = True
     parameters_schema = {"path": {"type": "string", "required": True}, "group": {"type": "string", "required": True}}
 
     def execute(self, context, parameters):

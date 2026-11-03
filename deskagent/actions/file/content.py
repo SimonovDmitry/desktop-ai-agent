@@ -55,7 +55,7 @@ class ReadBinaryFile(Action):
         max_b = parameters.get("max_bytes", 1048576)
         try:
             data, size = context.services.file.content.read_binary(path, max_bytes=max_b)
-            return ActionResult(success=True, data={"content_base64": data, "size": size})
+            return ActionResult(success=True, data={"content": data, "content_base64": data, "size": size})
         except Exception as exc:
             return ActionResult(success=False, error=str(exc))
 

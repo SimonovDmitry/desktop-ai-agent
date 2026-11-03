@@ -76,7 +76,7 @@ class ActionExecutor:
 
     def _check_permissions(self, context, action) -> ActionResult | None:
         perms = getattr(action, "required_permissions", ())
-        if hasattr(self.permission_checker, "check_action"):
+        if hasattr(self.permission_checker, "check_action") and not callable(self.permission_checker):
             report = self.permission_checker.check_action(action)
             if report.granted:
                 return None

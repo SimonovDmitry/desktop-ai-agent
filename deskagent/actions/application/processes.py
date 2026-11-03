@@ -33,11 +33,15 @@ class GetApplicationProcessTree(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
+
         try:
-            tree = context.services.application.processes.get_tree(app_name)
+            srv = context.services.application.processes
+            tree = srv.get_process_tree(app_name) if hasattr(srv, "get_process_tree") else srv.get_tree(app_name)
             return ActionResult(success=True, data=tree)
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetApplicationMainProcess(Action):
@@ -49,11 +53,15 @@ class GetApplicationMainProcess(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
+
         try:
-            main_proc = context.services.application.processes.get_main(app_name)
+            srv = context.services.application.processes
+            main_proc = srv.get_main_process(app_name) if hasattr(srv, "get_main_process") else srv.get_main(app_name)
             return ActionResult(success=True, data=main_proc)
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class GetApplicationChildProcesses(Action):
@@ -65,11 +73,17 @@ class GetApplicationChildProcesses(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
+
         try:
-            children = context.services.application.processes.get_children(app_name)
+            srv = context.services.application.processes
+            children = (
+                srv.get_child_processes(app_name) if hasattr(srv, "get_child_processes") else srv.get_children(app_name)
+            )
             return ActionResult(success=True, data={"processes": children})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class SuspendApplication(Action):
@@ -85,13 +99,13 @@ class SuspendApplication(Action):
         params = parameters or {}
         app_name = params.get("application")
         if not app_name:
-            return ActionResult(success=False, error="Missing app name")
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
 
         try:
             context.services.application.processes.suspend(app_name)
             return ActionResult(success=True, data={"application": app_name, "suspended": True})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")
 
 
 class ResumeApplication(Action):
@@ -106,8 +120,11 @@ class ResumeApplication(Action):
     def execute(self, context, parameters):
         params = parameters or {}
         app_name = params.get("application")
+        if not app_name:
+            return ActionResult(success=False, error="Parameter 'application' is required", error_code="MISSING_PARAM")
+
         try:
             context.services.application.processes.resume(app_name)
             return ActionResult(success=True, data={"application": app_name, "resumed": True})
         except Exception as exc:
-            return ActionResult(success=False, error=str(exc))
+            return ActionResult(success=False, error=str(exc), error_code="SYSTEM_ERROR")

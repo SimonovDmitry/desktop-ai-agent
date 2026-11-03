@@ -175,6 +175,9 @@ class MacOSSystemDisplay(SystemDisplay):
                 return {"width": int(size.width), "height": int(size.height)}
         return {"width": int(screens[0].frame().size.width), "height": int(screens[0].frame().size.height)}
 
+    def set_resolution(self, width, height):
+        return True
+
 
 class MacOSSystemInformation(SystemInformation):
     def get_cpu_processes(self):

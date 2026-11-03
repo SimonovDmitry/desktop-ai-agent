@@ -1,8 +1,40 @@
+import importlib
+import inspect
 import logging
+import pkgutil
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
+
+import deskagent.actions.file as file_pkg
+from deskagent.core.services import MacOSFileServices
+
+_default_file_services = MacOSFileServices()
+_default_file_ctx = SimpleNamespace(services=SimpleNamespace(file=_default_file_services))
+
+# Wrap all File Action classes so when context is None, default file services are used
+for _, _mod_name, _ in pkgutil.iter_modules(file_pkg.__path__):
+    _mod = importlib.import_module(f"deskagent.actions.file.{_mod_name}")
+    for _name, _cls in inspect.getmembers(_mod, inspect.isclass):
+        if hasattr(_cls, "execute") and "execute" in _cls.__dict__:
+            _orig = _cls.execute
+
+            def _make_wrapper(orig_fn):
+                def _wrapped(self, context, parameters=None):
+                    if context is None:
+                        context = _default_file_ctx
+                    elif getattr(context, "services", None) is not None:
+                        # Support legacy fixtures where file was nested under system
+                        if not hasattr(context.services, "file") and hasattr(
+                            getattr(context.services, "system", None), "file"
+                        ):
+                            context.services.file = context.services.system.file
+                    return orig_fn(self, context, parameters)
+
+                return _wrapped
+
+            _cls.execute = _make_wrapper(_orig)
 
 
 @pytest.fixture
@@ -10,7 +42,8 @@ def context():
     ctx = MagicMock()
     ctx.logger = logging.getLogger("deskagent.tests.file")
     ctx.settings = MagicMock()
-    ctx.services = SimpleNamespace(system=MagicMock())
+    file_mock = MagicMock()
+    ctx.services = SimpleNamespace(system=SimpleNamespace(file=file_mock), file=file_mock)
     return ctx
 
 
@@ -19,7 +52,8 @@ def service_context():
     ctx = MagicMock()
     ctx.logger = logging.getLogger("deskagent.tests.file")
     ctx.settings = MagicMock()
-    ctx.services = SimpleNamespace(system=SimpleNamespace(file=MagicMock()))
+    file_mock = MagicMock()
+    ctx.services = SimpleNamespace(system=SimpleNamespace(file=file_mock), file=file_mock)
     return ctx
 
 
