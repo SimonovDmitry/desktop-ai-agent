@@ -1,5 +1,5 @@
 import pytest
-from tests.application.conftest import assert_error, assert_success
+from tests.actions.application.conftest import assert_error, assert_success
 
 from deskagent.actions.application.preferences import (
     GetAccessibilityPermission,

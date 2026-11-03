@@ -1,10 +1,10 @@
 import logging
 from types import SimpleNamespace
 
-from deskagent.safety.audit import AuditLog, AuditRecord
-from deskagent.safety.confirmation import PreviewBuilder
-from deskagent.safety.limits import SafetyLimits
-from deskagent.safety.policy import ActionPolicy, PolicyConfig
+from deskagent.privacy.audit import AuditLog, AuditRecord
+from deskagent.privacy.confirmation import PreviewBuilder
+from deskagent.privacy.limits import SafetyLimits
+from deskagent.privacy.policy import ActionPolicy, PolicyConfig
 
 from deskagent.actions.base import Action, ActionRegistry
 from deskagent.actions.executor import ActionExecutor

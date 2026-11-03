@@ -1,66 +1,56 @@
-# arrangement.py currently contains the same action implementations as appearance.py.
-# These tests intentionally exercise the arrangement module itself.
-
 from deskagent.actions.window import arrangement
 
 from .conftest import assert_success, assert_system_error
 
 CASES = [
     (
-        arrangement.SetWindowAlwaysOnTop,
-        "appearance.set_always_on_top",
-        {"window_id": 201, "enabled": True},
-        {"window_id": 201, "always_on_top": True},
+        arrangement.ArrangeWindows,
+        "arrangement.arrange",
+        {"window_ids": [201, 202], "layout": "horizontal"},
+        {"arranged": True, "windows": [201, 202]},
+        [201, 202],
+    ),
+    (
+        arrangement.TileWindows,
+        "arrangement.tile",
+        {"window_ids": [201, 202]},
+        {"arranged": True},
         None,
     ),
     (
-        arrangement.RemoveWindowAlwaysOnTop,
-        "appearance.set_always_on_top",
-        {"window_id": 202},
-        {"window_id": 202, "always_on_top": False},
+        arrangement.CascadeWindows,
+        "arrangement.cascade",
+        {"window_ids": [201, 202]},
+        {"arranged": True},
         None,
     ),
     (
-        arrangement.GetWindowAlwaysOnTop,
-        "appearance.is_always_on_top",
-        {"window_id": 203},
-        {"window_id": 203, "always_on_top": False},
-        False,
-    ),
-    (
-        arrangement.SetWindowOpacity,
-        "appearance.set_opacity",
-        {"window_id": 204, "opacity": 0.25},
-        {"window_id": 204, "opacity": 0.25},
+        arrangement.StackWindows,
+        "arrangement.stack",
+        {"window_ids": [201, 202]},
+        {"arranged": True},
         None,
     ),
     (
-        arrangement.GetWindowOpacity,
-        "appearance.get_opacity",
-        {"window_id": 205},
-        {"window_id": 205, "opacity": 0.9},
-        0.9,
-    ),
-    (
-        arrangement.SetWindowFullscreen,
-        "appearance.set_fullscreen",
-        {"window_id": 206},
-        {"window_id": 206, "fullscreen": True},
+        arrangement.ArrangeApplicationWindows,
+        "arrangement.arrange_app",
+        {"application": "Safari", "layout": "horizontal"},
+        {"application": "Safari", "layout": "horizontal"},
         None,
     ),
     (
-        arrangement.ExitWindowFullscreen,
-        "appearance.set_fullscreen",
-        {"window_id": 207},
-        {"window_id": 207, "fullscreen": False},
+        arrangement.ArrangeWindowsGrid,
+        "arrangement.grid",
+        {"window_ids": [201, 202], "rows": 1, "columns": 2},
+        {"arranged": True},
         None,
     ),
     (
-        arrangement.ToggleWindowFullscreen,
-        "appearance.toggle_fullscreen",
-        {"window_id": 208},
-        {"window_id": 208, "fullscreen": False},
-        False,
+        arrangement.EqualizeWindowSizes,
+        "arrangement.equalize",
+        {"window_ids": [201, 202]},
+        {"equalized": True},
+        None,
     ),
 ]
 

@@ -1,5 +1,22 @@
 import logging
+import platform
+import sys
 from unittest.mock import MagicMock
+
+# Stub macOS-specific frameworks when running on non-macOS platforms (e.g. Linux CI runners)
+if platform.system() != "Darwin":
+    for _mod in (
+        "AppKit",
+        "ApplicationServices",
+        "Foundation",
+        "Quartz",
+        "UniformTypeIdentifiers",
+        "AVFoundation",
+        "UserNotifications",
+        "objc",
+    ):
+        if _mod not in sys.modules:
+            sys.modules[_mod] = MagicMock()
 
 import pytest
 

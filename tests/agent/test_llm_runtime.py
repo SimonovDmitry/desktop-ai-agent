@@ -1,16 +1,19 @@
 from pathlib import Path
 
 import pytest
-from deskagent.agent.cli import create_parser
+from scripts._common import resolve_llm
+from scripts.run_llm import create_parser
 
 from deskagent.agent.llm.base import LLMProviderError
 from deskagent.agent.llm.config import LLMConfig
 from deskagent.agent.llm.ollama_runtime import OllamaRuntime
 
 
-def test_cli_requires_model():
-    with pytest.raises(SystemExit):
-        create_parser().parse_args(["hello"])
+def test_cli_requires_model(monkeypatch):
+    monkeypatch.setattr("scripts._common.Path.is_dir", lambda self: False)
+    args = create_parser().parse_args(["hello"])
+    with pytest.raises(ValueError, match="--model is required"):
+        resolve_llm(args)
 
 
 def test_cli_accepts_model_and_weights():
