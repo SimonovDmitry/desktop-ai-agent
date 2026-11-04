@@ -72,13 +72,41 @@ class Slow(Action):
         return ActionResult(True)
 
 
+class Cancellable(Action):
+    name = "cancellable"
+    description = "Cancellable action"
+    category = ActionCategory.SYSTEM
+    parameters_schema = {}
+
+    def execute(self, context, parameters):
+        self.context = context
+        context.started.set()
+        context.cancelled.wait(1)
+        return ActionResult(False, error="cancelled", error_code="ACTION_CANCELLED")
+
+    def cancel(self):
+        self.context.cancelled.set()
+
+
+class PauseSelf(Action):
+    name = "pause_self"
+    description = "Pause its own session"
+    category = ActionCategory.SYSTEM
+    parameters_schema = {}
+
+    def execute(self, context, parameters):
+        context.engine.pause(context.session_id)
+        return ActionResult(True)
+
+
 def make_engine(tmp_path, policy=None):
     registry = ActionRegistry()
-    for action in (Count, Camera, Parallel, Undo, Slow):
+    for action in (Count, Camera, Parallel, Undo, Slow, Cancellable, PauseSelf):
         registry.register(action)
     context = SimpleNamespace(
         logger=logging.getLogger("durability"), count=0,
         lock=threading.Lock(), active=0, max_active=0,
+        started=threading.Event(), cancelled=threading.Event(),
     )
     catalog = ActionToolCatalog(
         registry, ActionExecutor(registry, confirmation_handler=lambda *_: True),
@@ -223,4 +251,39 @@ def test_compensation_requires_confirmation_and_runs_in_reverse(tmp_path):
     result = engine.approve(session.id, True)
     assert result.status is SessionStatus.CANCELLED
     assert context.count == 0
+    store.close()
+
+
+def test_cancel_propagates_to_active_cancellable_action(tmp_path):
+    engine, store, context = make_engine(tmp_path)
+    session = engine.create_session(
+        "cancel running", Plan([Step("active", "Active", "cancellable")])
+    )
+    thread = threading.Thread(target=engine.start, args=(session.id,))
+    thread.start()
+    assert context.started.wait(1)
+    cancelled = engine.cancel(session.id)
+    thread.join(1)
+    assert cancelled.status is SessionStatus.CANCELLED
+    assert context.cancelled.is_set()
+    assert store.get(session.id).status is SessionStatus.CANCELLED
+    store.close()
+
+
+def test_pause_is_observed_during_active_execution(tmp_path):
+    engine, store, context = make_engine(tmp_path)
+    session = engine.create_session(
+        "pause running",
+        Plan([
+            Step("pause", "Pause", "pause_self"),
+            Step("after", "After", "count", depends_on=("pause",)),
+        ]),
+    )
+    context.engine, context.session_id = engine, session.id
+    paused = engine.start(session.id)
+    assert paused.status is SessionStatus.PAUSED
+    assert paused.plan.step("pause").status is StepStatus.SUCCEEDED
+    assert paused.plan.step("after").status is StepStatus.BLOCKED
+    completed = engine.resume(session.id)
+    assert completed.status is SessionStatus.COMPLETED
     store.close()

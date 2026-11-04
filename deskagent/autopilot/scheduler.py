@@ -8,9 +8,10 @@ from deskagent.autopilot.models import SessionStatus
 class AutopilotWorker:
     """Fair background worker. One tick per runnable session per polling round."""
 
-    def __init__(self, engine, poll_interval: float = 0.25):
+    def __init__(self, engine, poll_interval: float = 0.25, workflows=None):
         self.engine = engine
         self.poll_interval = poll_interval
+        self.workflows = workflows
         self._stop = threading.Event()
         self._wake = threading.Event()
         self._thread: threading.Thread | None = None
@@ -39,6 +40,7 @@ class AutopilotWorker:
 
     def _run(self):
         while not self._stop.is_set():
+            self._run_due_workflows()
             sessions = self.engine.store.list((SessionStatus.RUNNING.value,))
             progressed = False
             for session in sessions:
@@ -53,3 +55,15 @@ class AutopilotWorker:
             if not progressed:
                 self._wake.wait(self.poll_interval)
                 self._wake.clear()
+
+    def _run_due_workflows(self):
+        if not self.workflows:
+            return
+        for definition in self.workflows.due():
+            schedule = definition.get("schedule") or {}
+            self.workflows.run(
+                self.engine,
+                definition["name"],
+                schedule.get("inputs", {}),
+            )
+            self.workflows.advance_schedule(definition["name"])

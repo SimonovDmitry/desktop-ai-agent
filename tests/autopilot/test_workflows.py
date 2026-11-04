@@ -1,4 +1,5 @@
 import logging
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
 import pytest
@@ -159,3 +160,22 @@ def test_structured_and_secret_inputs_are_supported(workflow_runtime, monkeypatc
     assert session.status is SessionStatus.COMPLETED
     assert context.secret == "raw-secret"
     assert session.plan.metadata["inputs"]["token_ref"] == "***SECRET_REF***"
+
+
+def test_workflow_schedule_can_be_advanced(workflow_runtime):
+    workflows, _, _ = workflow_runtime
+    now = datetime.now(UTC)
+    workflows.save({
+        "name": "scheduled",
+        "schedule": {
+            "next_run_at": (now - timedelta(seconds=1)).isoformat(),
+            "interval_seconds": 60,
+        },
+        "steps": [{
+            "id": "record", "title": "Record", "action": "record",
+            "arguments": {"value": 1},
+        }],
+    })
+    assert [item["name"] for item in workflows.due(now)] == ["scheduled"]
+    updated = workflows.advance_schedule("scheduled", now)
+    assert datetime.fromisoformat(updated["schedule"]["next_run_at"]) == now + timedelta(seconds=60)

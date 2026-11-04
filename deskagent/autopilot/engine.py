@@ -110,6 +110,12 @@ class AutopilotEngine:
         session = self.store.get(session_id)
         if session.status is not SessionStatus.RUNNING:
             return False
+        if (
+            session.mode is AutopilotMode.AUTOPILOT
+            and session.approved_plan_hash != self._plan_hash(session.plan)
+        ):
+            self._request_plan_confirmation(session)
+            return True
         ready = self._ready_steps(session)
         if not ready:
             if any(step.status is StepStatus.RETRY_SCHEDULED for step in session.plan.steps):
@@ -569,12 +575,37 @@ class AutopilotEngine:
         return self.store.save(session, "confirmation_requested", step.id, pending)
 
     def _needs_confirmation(self, session, step, decision):
+        if session.dry_run:
+            return False
         if session.mode is AutopilotMode.MANUAL:
             return True
         if session.mode is AutopilotMode.GUIDED:
             return step.requires_confirmation or decision.confirmation_required
-        plan_changed = session.approved_plan_hash != self._plan_hash(session.plan)
-        return plan_changed or decision.confirmation_required
+        return decision.confirmation_required
+
+    def _request_plan_confirmation(self, session):
+        calls = []
+        for step in session.plan.steps:
+            if step.status in SUCCESS_STEPS:
+                continue
+            arguments = self._resolve(step.arguments, session)
+            call = ToolCall(step.action, arguments, f"{session.id}:{step.id}")
+            decision = self.catalog.policy_for(call, session.action_count)
+            calls.append({
+                "id": call.id, "name": call.name, "args": call.arguments,
+                "policy": decision.to_dict(),
+            })
+        request = PreviewBuilder.build(calls)
+        scope_hash = self._plan_hash(session.plan)
+        pending = {
+            **request.to_dict(), "kind": "plan", "step_id": None,
+            "plan_version": session.plan.version, "scope_hash": scope_hash,
+        }
+        session.status = SessionStatus.WAITING_FOR_USER
+        session.pending_confirmation = pending
+        self.store.put_approval(request.confirmation_id, session.id, None,
+                                session.plan.version, scope_hash, pending)
+        return self.store.save(session, "plan_confirmation_requested", payload=pending)
 
     def _condition_matches(self, step, session):
         if not step.condition:
