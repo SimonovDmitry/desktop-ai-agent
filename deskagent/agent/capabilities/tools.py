@@ -119,7 +119,9 @@ class ActionToolCatalog:
             )
             self.audit_execution(execution, thread_id, risk=risk)
             return execution
-        result = self.executor.execute(tool_call.name, self.context, tool_call.arguments)
+        result = self.executor.execute(
+            tool_call.name, self.context, tool_call.arguments, execution_id=tool_call.id
+        )
         execution = ActionExecution(
             tool_call_id=tool_call.id,
             name=tool_call.name,
@@ -132,6 +134,9 @@ class ActionToolCatalog:
         self.limits.record(tool_call.name, tool_call.arguments, result.success)
         self.audit_execution(execution, thread_id, risk=risk)
         return execution
+
+    def cancel(self, tool_call_id: str) -> bool:
+        return bool(self.executor.cancel(tool_call_id))
 
     def audit_decision(self, tool_call: ToolCall, decision, thread_id=None, confirmation_id=None):
         if not self.audit_log:

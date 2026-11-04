@@ -50,6 +50,7 @@ class AgentRuntime:
         skills=None,
         audit_log=None,
         limits=None,
+        autopilot_path=None,
     ):
         tools = ActionToolCatalog(
             self.registry,
@@ -69,6 +70,20 @@ class AgentRuntime:
             router=router,
             telemetry=telemetry,
         )
+        autopilot = workflows = None
+        if autopilot_path:
+            from deskagent.autopilot import (
+                AutopilotEngine,
+                LLMPlanService,
+                PlanValidator,
+                SessionStore,
+                WorkflowRegistry,
+            )
+
+            store = SessionStore(autopilot_path)
+            autopilot = AutopilotEngine(tools, store, planner=LLMPlanService(self.llm))
+            workflows = WorkflowRegistry(store, PlanValidator(self.registry))
+            autopilot.recover_incomplete()
         return DesktopAgent(
             graph,
             context_collector=ContextCollector(self.context, screen_provider),
@@ -76,6 +91,8 @@ class AgentRuntime:
             event_bus=event_bus,
             proactive_rules=proactive_rules,
             skills=skills,
+            autopilot=autopilot,
+            workflows=workflows,
         )
 
 
@@ -128,4 +145,5 @@ def create_desktop_agent(
         SkillStore(registry, skills_path or settings.storage.skills),
         AuditLog(settings.storage.audit),
         SafetyLimits(security.max_clicks_per_minute, security.max_consecutive_failures),
+        settings.storage.autopilot,
     )
