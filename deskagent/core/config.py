@@ -58,6 +58,7 @@ class StorageSettings:
     telemetry: str = "~/.deskagent/telemetry.jsonl"
     audit: str = "~/.deskagent/audit.sqlite"
     skills: str = "~/.deskagent/skills"
+    autopilot: str = "~/.deskagent/autopilot.sqlite"
 
 
 @dataclass
@@ -108,6 +109,7 @@ class Settings(BaseConfig):
         "TELEMETRY": "storage.telemetry",
         "SKILLS": "storage.skills",
         "AUDIT": "storage.audit",
+        "AUTOPILOT": "storage.autopilot",
         "ALLOWED_PATHS": "security.allowed_paths",
         "ALLOWED_APPLICATIONS": "security.allowed_applications",
         "EXCLUDED_APPS": "security.excluded_apps",

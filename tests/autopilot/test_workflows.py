@@ -22,11 +22,40 @@ class Record(Action):
         return ActionResult(True, parameters)
 
 
+class Collect(Action):
+    name = "collect"
+    description = "Collect structured input"
+    category = ActionCategory.PRODUCTIVITY
+    parameters_schema = {
+        "items": {"type": "list", "required": True},
+        "options": {"type": "dict", "required": True},
+    }
+
+    def execute(self, context, parameters):
+        context.structured = parameters
+        return ActionResult(True, parameters)
+
+
+class UseSecret(Action):
+    name = "use_secret"
+    description = "Use a secret reference"
+    category = ActionCategory.PRODUCTIVITY
+    parameters_schema = {"token": {"type": "string", "required": True}}
+
+    def execute(self, context, parameters):
+        context.secret = parameters["token"]
+        return ActionResult(True)
+
+
 @pytest.fixture
 def workflow_runtime(tmp_path):
     registry = ActionRegistry()
     registry.register(Record)
-    context = SimpleNamespace(logger=logging.getLogger("workflow-test"), values=[])
+    registry.register(Collect)
+    registry.register(UseSecret)
+    context = SimpleNamespace(
+        logger=logging.getLogger("workflow-test"), values=[], structured=None, secret=None,
+    )
     catalog = ActionToolCatalog(registry, ActionExecutor(registry), context)
     store = SessionStore(tmp_path / "workflow.sqlite")
     engine = AutopilotEngine(catalog, store, sleep=lambda _: None)
@@ -76,3 +105,57 @@ def test_workflow_validates_required_and_unknown_inputs(workflow_runtime):
         workflows.instantiate(definition, {})
     with pytest.raises(WorkflowValidationError, match="Unknown inputs"):
         workflows.instantiate(definition, {"count": 1, "extra": True})
+
+
+def test_workflow_lifecycle_and_schema_migration(workflow_runtime):
+    workflows, _, _ = workflow_runtime
+    saved = workflows.save({
+        "schema_version": 1,
+        "name": "lifecycle",
+        "steps": [{"id": "record", "title": "Record", "tool": "record", "arguments": {"value": 1}}],
+    })
+    assert saved["schema_version"] == 2
+    updated = workflows.update("lifecycle", saved)
+    assert updated["version"] == 2
+    exported = workflows.export_yaml("lifecycle")
+    assert "name: lifecycle" in exported
+    workflows.disable("lifecycle")
+    with pytest.raises(KeyError):
+        workflows.get("lifecycle")
+    workflows.enable("lifecycle")
+    workflows.archive("lifecycle")
+    assert workflows.list() == []
+    assert workflows.list(detailed=True) == []
+    workflows.delete("lifecycle")
+
+
+def test_structured_and_secret_inputs_are_supported(workflow_runtime, monkeypatch):
+    workflows, engine, context = workflow_runtime
+    workflows.save({
+        "name": "structured",
+        "inputs": {
+            "items": {"type": "list", "required": True},
+            "options": {"type": "dict", "required": True},
+        },
+        "steps": [{
+            "id": "collect", "title": "Collect", "action": "collect",
+            "arguments": {"items": "${inputs.items}", "options": "${inputs.options}"},
+        }],
+    })
+    result = workflows.run(engine, "structured", {"items": [1, 2], "options": {"safe": True}})
+    assert result.status is SessionStatus.COMPLETED
+    assert context.structured == {"items": [1, 2], "options": {"safe": True}}
+
+    monkeypatch.setenv("DESKAGENT_SECRET_API_TOKEN", "raw-secret")
+    workflows.save({
+        "name": "secret",
+        "inputs": {"token_ref": {"type": "string", "required": True, "secret": True}},
+        "steps": [{
+            "id": "secret", "title": "Secret", "action": "use_secret",
+            "arguments": {"token": "${inputs.token_ref}"},
+        }],
+    })
+    session = workflows.run(engine, "secret", {"token_ref": "api_token"})
+    assert session.status is SessionStatus.COMPLETED
+    assert context.secret == "raw-secret"
+    assert session.plan.metadata["inputs"]["token_ref"] == "***SECRET_REF***"

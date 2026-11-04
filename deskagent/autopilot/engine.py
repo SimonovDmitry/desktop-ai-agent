@@ -25,6 +25,7 @@ from deskagent.autopilot.models import (
     utc_now,
 )
 from deskagent.autopilot.store import SessionStore
+from deskagent.autopilot.secrets import EnvironmentSecretProvider
 from deskagent.autopilot.validation import PlanValidator
 from deskagent.privacy.confirmation import ConfirmationRequest, PreviewBuilder
 
@@ -50,12 +51,13 @@ class AutopilotEngine:
         self.max_parallelism = max(1, max_parallelism)
         self.owner_id = owner_id or f"worker_{uuid.uuid4().hex}"
         self.planner = planner
+        self.secret_provider = EnvironmentSecretProvider()
         self.validator = PlanValidator(catalog.registry, max_steps=max_steps)
 
     def create_session(self, goal: str, plan: Plan | dict[str, Any],
                        mode: AutopilotMode = AutopilotMode.GUIDED,
                        max_duration_seconds: float = 3600,
-                       max_replans: int = 3) -> Session:
+                       max_replans: int = 3, dry_run: bool = False) -> Session:
         if not goal.strip():
             raise ValueError("Session goal cannot be empty")
         plan = Plan.from_dict(plan) if isinstance(plan, dict) else plan
@@ -63,6 +65,7 @@ class AutopilotEngine:
         session = Session(
             goal.strip(), deepcopy(plan), status=SessionStatus.READY, mode=mode,
             max_duration_seconds=max_duration_seconds, max_replans=max_replans,
+            dry_run=dry_run,
         )
         return self.store.create(session)
 
@@ -339,7 +342,7 @@ class AutopilotEngine:
         self.store.start_tool_call(call_id, session_id, step.id, step.attempts,
                                    step.action, arguments, step.idempotency_key)
         call = ToolCall(step.action, arguments, call_id)
-        if decision.dry_run:
+        if decision.dry_run or self.store.get(session_id).dry_run:
             execution = ActionExecution(call_id, step.action, arguments, True,
                                         {"dry_run": True, "action": step.action})
         else:
@@ -459,6 +462,7 @@ class AutopilotEngine:
         step.status = StepStatus.FAILED
         session.status, session.error = SessionStatus.FAILED, error
         self.store.save(session, "step_failed", step.id, {"error": error, "error_code": code})
+        self.store.finish_workflow_runs(session.id, session.status.value)
 
     def _ready_steps(self, session):
         now = datetime.now(UTC)
@@ -490,13 +494,17 @@ class AutopilotEngine:
     def _finish_or_block(self, session):
         if all(step.status in SUCCESS_STEPS for step in session.plan.steps):
             session.status, session.current_step_id = SessionStatus.COMPLETED, None
-            return self.store.save(session, "session_completed")
+            result = self.store.save(session, "session_completed")
+            self.store.finish_workflow_runs(session.id, session.status.value)
+            return result
         if any(step.status in ACTIVE_STEPS for step in session.plan.steps):
             return self.store.save(session)
         failed = next((step for step in session.plan.steps if step.status is StepStatus.FAILED), None)
         session.status = SessionStatus.FAILED
         session.error = failed.error if failed else "Plan cannot make progress"
-        return self.store.save(session, "session_failed", failed.id if failed else None)
+        result = self.store.save(session, "session_failed", failed.id if failed else None)
+        self.store.finish_workflow_runs(session.id, session.status.value)
+        return result
 
     def _finish_cancellation(self, session):
         for step in session.plan.steps:
@@ -505,7 +513,9 @@ class AutopilotEngine:
         session.current_step_id = None
         session.pending_confirmation = None
         session.status = SessionStatus.CANCELLED
-        return self.store.save(session, "session_cancelled")
+        result = self.store.save(session, "session_cancelled")
+        self.store.finish_workflow_runs(session.id, session.status.value)
+        return result
 
     def _execute_compensations(self, session):
         failures = []
@@ -579,6 +589,8 @@ class AutopilotEngine:
         if isinstance(value, list):
             return [self._resolve(item, session) for item in value]
         if not isinstance(value, str) or not value.startswith("${steps.") or not value.endswith("}"):
+            if isinstance(value, str) and value.startswith("${secrets.") and value.endswith("}"):
+                return self.secret_provider.get(value[10:-1])
             return value
         expression = value[2:-1].split(".")
         if len(expression) < 3 or expression[2] != "output":

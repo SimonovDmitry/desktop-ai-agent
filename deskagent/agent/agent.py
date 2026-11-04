@@ -34,11 +34,33 @@ class DesktopAgent:
         event_bus=None,
         proactive_rules=None,
         skills=None,
+        autopilot=None,
+        workflows=None,
     ):
         self.graph = graph
         self.conversation = conversation or ConversationManager()
         self.context_collector, self.memory = context_collector, memory
         self.event_bus, self.proactive_rules, self.skills = event_bus, proactive_rules, skills
+        self.autopilot, self.workflows = autopilot, workflows
+
+    def create_task(self, goal: str, mode=None):
+        if not self.autopilot:
+            raise RuntimeError("Autopilot is not configured")
+        if mode is None:
+            from deskagent.autopilot import AutopilotMode
+
+            mode = AutopilotMode.GUIDED
+        return self.autopilot.create_from_goal(goal, mode)
+
+    def start_task(self, session_id: str):
+        if not self.autopilot:
+            raise RuntimeError("Autopilot is not configured")
+        return self.autopilot.start(session_id)
+
+    def run_workflow(self, name: str, inputs=None, **options):
+        if not self.workflows or not self.autopilot:
+            raise RuntimeError("Workflows are not configured")
+        return self.workflows.run(self.autopilot, name, inputs, **options)
 
     def ask(
         self, request: str, session: AgentSession | None = None, screen_context=None, system_context=None

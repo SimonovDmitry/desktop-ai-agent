@@ -25,6 +25,7 @@ class SessionStore:
         "max_duration_seconds": "REAL NOT NULL DEFAULT 3600",
         "started_at": "TEXT",
         "approved_plan_hash": "TEXT",
+        "dry_run": "INTEGER NOT NULL DEFAULT 0",
         "owner_id": "TEXT",
         "lease_expires_at": "TEXT",
     }
@@ -145,7 +146,7 @@ class SessionStore:
                 """UPDATE sessions SET goal=?, status=?, mode=?, current_step_id=?,
                    pending_confirmation_json=?, error=?, updated_at=?, action_count=?,
                    replan_count=?, max_replans=?, max_duration_seconds=?, started_at=?,
-                   approved_plan_hash=?, owner_id=?, lease_expires_at=? WHERE id=?""",
+                   approved_plan_hash=?, dry_run=?, owner_id=?, lease_expires_at=? WHERE id=?""",
                 self._session_update_values(session),
             )
             if not cursor.rowcount:
@@ -406,6 +407,14 @@ class SessionStore:
             )
             return int(cursor.lastrowid)
 
+    def finish_workflow_runs(self, session_id: str, status: str):
+        with self._lock, self._connection:
+            self._connection.execute(
+                """UPDATE workflow_runs SET status=?, finished_at=?
+                   WHERE session_id=? AND finished_at IS NULL""",
+                (status, utc_now(), session_id),
+            )
+
     def close(self):
         with self._lock:
             self._connection.close()
@@ -415,13 +424,15 @@ class SessionStore:
             """INSERT INTO sessions
                (id, goal, status, mode, current_step_id, pending_confirmation_json,
                 error, created_at, updated_at, action_count, replan_count, max_replans,
-                max_duration_seconds, started_at, approved_plan_hash, owner_id, lease_expires_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                max_duration_seconds, started_at, approved_plan_hash, dry_run,
+                owner_id, lease_expires_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (session.id, session.goal, session.status.value, session.mode.value,
              session.current_step_id, None, session.error, session.created_at,
              session.updated_at, session.action_count, session.replan_count,
              session.max_replans, session.max_duration_seconds, session.started_at,
-             session.approved_plan_hash, session.owner_id, session.lease_expires_at),
+             session.approved_plan_hash, int(session.dry_run), session.owner_id,
+             session.lease_expires_at),
         )
 
     def _session_update_values(self, session: Session) -> tuple[Any, ...]:
@@ -430,7 +441,7 @@ class SessionStore:
             session.goal, session.status.value, session.mode.value, session.current_step_id,
             pending, session.error, session.updated_at, session.action_count,
             session.replan_count, session.max_replans, session.max_duration_seconds,
-            session.started_at, session.approved_plan_hash, session.owner_id,
+            session.started_at, session.approved_plan_hash, int(session.dry_run), session.owner_id,
             session.lease_expires_at, session.id,
         )
 

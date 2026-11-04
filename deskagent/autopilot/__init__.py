@@ -13,6 +13,8 @@ from deskagent.autopilot.models import (
 )
 from deskagent.autopilot.store import SessionStore
 from deskagent.autopilot.scheduler import AutopilotWorker
+from deskagent.autopilot.secrets import EnvironmentSecretProvider, SecretProvider
+from deskagent.autopilot.planning import LLMPlanService, PlanService
 from deskagent.autopilot.validation import PlanValidationError, PlanValidator
 from deskagent.autopilot.workflows import WorkflowRegistry
 
@@ -21,13 +23,17 @@ __all__ = [
     "AutopilotMode",
     "AutopilotWorker",
     "FailurePolicy",
+    "EnvironmentSecretProvider",
     "Plan",
+    "LLMPlanService",
+    "PlanService",
     "PlanValidationError",
     "PlanValidator",
     "RetryPolicy",
     "Session",
     "SessionStatus",
     "SessionStore",
+    "SecretProvider",
     "Step",
     "StepStatus",
     "WorkflowRegistry",

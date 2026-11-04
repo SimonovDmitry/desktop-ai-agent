@@ -239,6 +239,7 @@ class Session:
     max_duration_seconds: float = 3600.0
     started_at: str | None = None
     approved_plan_hash: str | None = None
+    dry_run: bool = False
     owner_id: str | None = None
     lease_expires_at: str | None = None
     created_at: str = field(default_factory=utc_now)
@@ -260,6 +261,7 @@ class Session:
             "max_duration_seconds": self.max_duration_seconds,
             "started_at": self.started_at,
             "approved_plan_hash": self.approved_plan_hash,
+            "dry_run": self.dry_run,
             "owner_id": self.owner_id,
             "lease_expires_at": self.lease_expires_at,
             "created_at": self.created_at,
@@ -283,6 +285,7 @@ class Session:
             max_duration_seconds=float(value.get("max_duration_seconds", 3600.0)),
             started_at=value.get("started_at"),
             approved_plan_hash=value.get("approved_plan_hash"),
+            dry_run=bool(value.get("dry_run", False)),
             owner_id=value.get("owner_id"),
             lease_expires_at=value.get("lease_expires_at"),
             created_at=value["created_at"],
