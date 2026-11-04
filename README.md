@@ -98,3 +98,17 @@ python scripts/run_workflow.py status <session-id>
 Секретные входы workflow содержат только имя секрета. Значение разрешается во
 время выполнения из переменной `DESKAGENT_SECRET_<NAME>` и не записывается в план,
 журнал событий или историю запусков.
+
+## Accessibility на macOS
+
+Модуль `deskagent.perception.accessibility` читает семантическое дерево интерфейса
+через `AXUIElement`, ищет элементы по роли и тексту (включая fuzzy-поиск), возвращает
+координаты, AX actions, confidence и повторно используемый `ax://` locator. Доступны
+действия чтения, изменения состояния и отменяемые ожидания с таймаутом, например
+`find_ui_element`, `press_ui_element`, `wait_for_ui_element` и
+`verify_ui_element_state`.
+
+Перед первым использованием вызовите `request_accessibility_permission`, затем
+разрешите приложению доступ в **System Settings → Privacy & Security →
+Accessibility**. Подробности контракта и внутренней архитектуры находятся в
+[`deskagent/perception/accessibility/README.md`](deskagent/perception/accessibility/README.md).

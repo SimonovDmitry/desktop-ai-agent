@@ -1,6 +1,7 @@
 import platform
 from dataclasses import dataclass
 
+from deskagent.perception.accessibility import AccessibilityClient
 from deskagent.platform.base.application import (
     ApplicationDocuments,
     ApplicationFocus,
@@ -273,6 +274,7 @@ class MacOSFileServices(FileServices):
 
 @dataclass
 class Services:
+    accessibility: AccessibilityClient | None = None
     system: SystemServices | None = None
     application: ApplicationServices | None = None
     window: WindowServices | None = None
@@ -296,6 +298,7 @@ class ServicesFactory:
 
         if platform_name == "macos":
             return Services(
+                accessibility=AccessibilityClient(),
                 system=MacOSSystemServices(),
                 application=MacOSApplicationServices(),
                 window=MacOSWindowServices(),

@@ -12,6 +12,7 @@ class RiskLevel(Enum):
 
 
 class ActionCategory(Enum):
+    ACCESSIBILITY = "accessibility"
     SYSTEM = "system"
     APPLICATION = "application"
     WINDOW = "window"
