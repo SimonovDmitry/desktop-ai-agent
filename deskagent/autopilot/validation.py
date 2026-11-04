@@ -115,4 +115,11 @@ class PlanValidator:
             value = arguments[name]
             if expected and (isinstance(value, bool) != (expected is bool) or not isinstance(value, expected)):
                 errors.append(f"step {step_id!r} argument {name!r} has invalid type")
+                continue
+            if "enum" in parameter and value not in parameter["enum"]:
+                errors.append(f"step {step_id!r} argument {name!r} is not an allowed value")
+            if "minimum" in parameter and value < parameter["minimum"]:
+                errors.append(f"step {step_id!r} argument {name!r} is below minimum")
+            if "maximum" in parameter and value > parameter["maximum"]:
+                errors.append(f"step {step_id!r} argument {name!r} is above maximum")
         return errors

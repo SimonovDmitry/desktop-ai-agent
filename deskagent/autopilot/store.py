@@ -261,6 +261,15 @@ class SessionStore:
             ).fetchone()
         return self._loads(row["result_json"]) if row else None
 
+    def active_tool_call(self, session_id: str, step_id: str) -> str | None:
+        with self._lock:
+            row = self._connection.execute(
+                """SELECT id FROM tool_calls WHERE session_id=? AND step_id=?
+                   AND status='running' ORDER BY started_at DESC LIMIT 1""",
+                (session_id, step_id),
+            ).fetchone()
+        return row["id"] if row else None
+
     def add_verification(self, session_id: str, step_id: str, attempt: int,
                          kind: str, success: bool, details: dict[str, Any]):
         with self._lock, self._connection:
@@ -271,6 +280,46 @@ class SessionStore:
                 (session_id, step_id, attempt, kind, int(success),
                  self._json(details, redact_value=True), utc_now()),
             )
+
+    def add_artifact(self, session_id: str, kind: str, uri: str,
+                     step_id: str | None = None, metadata: dict[str, Any] | None = None) -> int:
+        with self._lock, self._connection:
+            cursor = self._connection.execute(
+                """INSERT INTO artifacts
+                   (session_id, step_id, kind, uri, metadata_json, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
+                (session_id, step_id, kind, uri, self._json(metadata or {}, redact_value=True), utc_now()),
+            )
+            return int(cursor.lastrowid)
+
+    def artifacts(self, session_id: str) -> list[dict[str, Any]]:
+        with self._lock:
+            rows = self._connection.execute(
+                "SELECT * FROM artifacts WHERE session_id=? ORDER BY id", (session_id,)
+            ).fetchall()
+        return [
+            {**dict(row), "metadata": self._loads(row["metadata_json"])}
+            for row in rows
+        ]
+
+    def metrics(self) -> dict[str, Any]:
+        with self._lock:
+            sessions = self._connection.execute(
+                "SELECT status, COUNT(*) AS count FROM sessions GROUP BY status"
+            ).fetchall()
+            attempts = self._connection.execute("SELECT COUNT(*) AS count FROM step_attempts").fetchone()
+            retries = self._connection.execute(
+                "SELECT COUNT(*) AS count FROM session_events WHERE event='step_retry_scheduled'"
+            ).fetchone()
+        by_status = {row["status"]: row["count"] for row in sessions}
+        total = sum(by_status.values())
+        return {
+            "sessions_total": total,
+            "sessions_by_status": by_status,
+            "completion_rate": by_status.get("completed", 0) / total if total else 0.0,
+            "step_attempts": attempts["count"],
+            "retries": retries["count"],
+        }
 
     def put_approval(self, confirmation_id: str, session_id: str, step_id: str | None,
                      plan_version: int, scope_hash: str, request: dict[str, Any]):

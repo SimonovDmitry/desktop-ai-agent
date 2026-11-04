@@ -166,11 +166,15 @@ class AutopilotEngine:
 
     def cancel(self, session_id: str, compensate: bool = False) -> Session:
         session = self.store.get(session_id)
-        if session.status in TERMINAL_SESSIONS:
-            return session
         if compensate and any(step.compensation and step.status is StepStatus.SUCCEEDED
                               for step in session.plan.steps):
             return self.request_compensation(session_id)
+        if session.status in TERMINAL_SESSIONS:
+            return session
+        if session.current_step_id:
+            call_id = self.store.active_tool_call(session.id, session.current_step_id)
+            if call_id:
+                self.catalog.cancel(call_id)
         session.status = SessionStatus.CANCELLING
         self.store.save(session, "session_cancelling")
         return self._finish_cancellation(self.store.get(session_id))
@@ -238,6 +242,7 @@ class AutopilotEngine:
             raise InvalidSessionTransition("Replanning limit exceeded")
         replacement = Plan.from_dict(plan) if isinstance(plan, dict) else plan
         self.validator.validate(replacement)
+        diff = self._plan_diff(session.plan, replacement)
         old = {step.id: step for step in session.plan.steps}
         for step in replacement.steps:
             previous = old.get(step.id)
@@ -250,7 +255,9 @@ class AutopilotEngine:
         session.status, session.current_step_id = SessionStatus.READY, None
         session.pending_confirmation = None
         session.approved_plan_hash = None
-        return self.store.save_plan(session, reason)
+        result = self.store.save_plan(session, reason)
+        self.store.save(result, "plan_diff", payload=diff)
+        return result
 
     def recover_incomplete(self) -> list[Session]:
         statuses = tuple(item.value for item in (
@@ -280,7 +287,7 @@ class AutopilotEngine:
                     kind="uncertain_result",
                 )
             else:
-                session.status = SessionStatus.READY
+                session.status = SessionStatus.RUNNING
                 self.store.save(session, "session_recovered")
             recovered.append(self.store.get(session.id))
         return recovered
@@ -320,6 +327,9 @@ class AutopilotEngine:
             try:
                 execution = future.result(timeout=timeout)
             except TimeoutError:
+                active_call = self.store.active_tool_call(session.id, step.id)
+                if active_call:
+                    self.catalog.cancel(active_call)
                 execution = ActionExecution(
                     f"timeout:{session.id}:{step.id}", step.action,
                     self._resolve(step.arguments, session), False,
@@ -363,6 +373,7 @@ class AutopilotEngine:
                 step.error = step.error_code = None
                 session.current_step_id = None
                 self.store.finish_attempt(session.id, step.id, step.attempts, "succeeded")
+                self._record_artifacts(session.id, step.id, execution.data)
                 self.store.save(session, "step_completed", step.id, {"output": execution.data})
                 return
             execution = ActionExecution(**{
@@ -615,3 +626,23 @@ class AutopilotEngine:
     def _expired(session):
         deadline = session.deadline()
         return bool(deadline and datetime.now(UTC) >= deadline)
+
+    def _record_artifacts(self, session_id, step_id, data):
+        if not isinstance(data, dict):
+            return
+        for key in ("path", "file", "uri", "url", "destination", "new_path"):
+            value = data.get(key)
+            if isinstance(value, str) and value:
+                kind = "url" if value.startswith(("http://", "https://")) else "file"
+                self.store.add_artifact(session_id, kind, value, step_id, {"source_key": key})
+
+    @staticmethod
+    def _plan_diff(previous, replacement):
+        old = {step.id: step.definition_dict() for step in previous.steps}
+        new = {step.id: step.definition_dict() for step in replacement.steps}
+        return {
+            "added": sorted(set(new) - set(old)),
+            "removed": sorted(set(old) - set(new)),
+            "changed": sorted(step_id for step_id in set(old) & set(new)
+                              if old[step_id] != new[step_id]),
+        }

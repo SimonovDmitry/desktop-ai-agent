@@ -1,4 +1,5 @@
 import logging
+import threading
 from collections.abc import Callable
 from typing import Any
 
@@ -13,11 +14,18 @@ class ActionExecutor:
         self.registry = registry
         self.permission_checker = permission_checker
         self.confirmation_handler = confirmation_handler
+        self._active = {}
+        self._active_lock = threading.RLock()
 
-    def execute(self, action_name: str, context, parameters: dict[str, Any] = None) -> ActionResult:
+    def execute(self, action_name: str, context, parameters: dict[str, Any] = None,
+                execution_id: str | None = None) -> ActionResult:
         params = parameters or {}
+        action = None
         try:
             action = self.registry.create(action_name)
+            if execution_id:
+                with self._active_lock:
+                    self._active[execution_id] = action
             self._log(context, logging.INFO, "Action started: %s", action.name)
 
             result = self._validate_parameters(action, params)
@@ -40,6 +48,19 @@ class ActionExecutor:
         except Exception as exc:
             self._get_logger(context).exception("Action execution exception: %s", action_name)
             return ActionResult(success=False, error=str(exc), error_code="EXECUTION_ERROR")
+        finally:
+            if execution_id:
+                with self._active_lock:
+                    self._active.pop(execution_id, None)
+
+    def cancel(self, execution_id: str) -> bool:
+        with self._active_lock:
+            action = self._active.get(execution_id)
+        cancel = getattr(action, "cancel", None)
+        if not callable(cancel):
+            return False
+        cancel()
+        return True
 
     def _validate_parameters(self, action, params: dict[str, Any]) -> ActionResult | None:
         schema = getattr(action, "parameters_schema", {})

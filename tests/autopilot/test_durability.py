@@ -9,6 +9,7 @@ from deskagent.actions.types import ActionCategory, ActionResult
 from deskagent.agent.capabilities.policy import ActionPolicy, PolicyConfig
 from deskagent.agent.capabilities.tools import ActionToolCatalog
 from deskagent.autopilot import AutopilotEngine, Plan, SessionStatus, SessionStore, Step, StepStatus
+from deskagent.autopilot.models import Compensation, Verification, VerificationType
 
 
 class Count(Action):
@@ -49,9 +50,31 @@ class Parallel(Action):
         return ActionResult(True)
 
 
+class Undo(Action):
+    name = "undo"
+    description = "Undo count"
+    category = ActionCategory.SYSTEM
+    parameters_schema = {}
+
+    def execute(self, context, parameters):
+        context.count -= 1
+        return ActionResult(True)
+
+
+class Slow(Action):
+    name = "slow"
+    description = "Slow action"
+    category = ActionCategory.SYSTEM
+    parameters_schema = {}
+
+    def execute(self, context, parameters):
+        time.sleep(0.05)
+        return ActionResult(True)
+
+
 def make_engine(tmp_path, policy=None):
     registry = ActionRegistry()
-    for action in (Count, Camera, Parallel):
+    for action in (Count, Camera, Parallel, Undo, Slow):
         registry.register(action)
     context = SimpleNamespace(
         logger=logging.getLogger("durability"), count=0,
@@ -83,7 +106,7 @@ def test_recovery_handles_verifying_retry_and_cancelling(tmp_path):
     recovered = {item.id: item for item in engine.recover_incomplete()}
 
     assert recovered[verifying.id].status is SessionStatus.WAITING_FOR_USER
-    assert recovered[retry.id].status is SessionStatus.READY
+    assert recovered[retry.id].status is SessionStatus.RUNNING
     assert recovered[retry.id].plan.step("s").status is StepStatus.RETRY_SCHEDULED
     assert recovered[cancelling.id].status is SessionStatus.CANCELLED
 
@@ -161,4 +184,43 @@ def test_plan_revision_reason_is_not_overwritten(tmp_path):
         "SELECT reason FROM plan_versions WHERE session_id=? AND version=2", (session.id,)
     ).fetchone()
     assert row["reason"] == "new approach"
+    store.close()
+
+
+def test_timeout_and_declarative_verification(tmp_path):
+    engine, store, _ = make_engine(tmp_path)
+    timed = engine.create_session(
+        "timeout", Plan([Step("slow", "Slow", "slow", timeout_seconds=0.001)])
+    )
+    assert engine.start(timed.id).plan.step("slow").error_code == "TIMEOUT"
+
+    checked = engine.create_session(
+        "verify",
+        Plan([Step(
+            "count", "Count", "count",
+            verifications=(Verification(
+                VerificationType.OUTPUT_EQUALS,
+                {"path": "count", "expected": 999},
+            ),),
+        )]),
+    )
+    result = engine.start(checked.id)
+    assert result.status is SessionStatus.FAILED
+    assert result.plan.step("count").error_code == "VERIFICATION_FAILED"
+    store.close()
+
+
+def test_compensation_requires_confirmation_and_runs_in_reverse(tmp_path):
+    engine, store, context = make_engine(tmp_path)
+    session = engine.create_session(
+        "compensate",
+        Plan([Step("count", "Count", "count", compensation=Compensation("undo"))]),
+    )
+    completed = engine.start(session.id)
+    assert completed.status is SessionStatus.COMPLETED
+    pending = engine.cancel(session.id, compensate=True)
+    assert pending.status is SessionStatus.WAITING_FOR_USER
+    result = engine.approve(session.id, True)
+    assert result.status is SessionStatus.CANCELLED
+    assert context.count == 0
     store.close()
