@@ -43,8 +43,27 @@ class PlanValidator:
                                                     step.arguments))
             if step.retry.max_attempts < 1:
                 errors.append(f"step {step.id!r} max_attempts must be positive")
+            if step.timeout_seconds is not None and step.timeout_seconds <= 0:
+                errors.append(f"step {step.id!r} timeout must be positive")
+            if step.retry.jitter_seconds < 0:
+                errors.append(f"step {step.id!r} retry jitter cannot be negative")
             if step.retry.strategy not in {"fixed", "linear", "exponential"}:
                 errors.append(f"step {step.id!r} has unsupported retry strategy")
+            if step.compensation and self.registry:
+                if not self.registry.contains(step.compensation.action):
+                    errors.append(
+                        f"step {step.id!r} uses unknown compensation action "
+                        f"{step.compensation.action!r}"
+                    )
+                else:
+                    errors.extend(self._argument_errors(
+                        f"{step.id}.compensation",
+                        self.registry.get(step.compensation.action).parameters_schema,
+                        step.compensation.arguments,
+                    ))
+            for verification in step.verifications:
+                if verification.timeout_seconds < 0 or verification.interval_seconds < 0:
+                    errors.append(f"step {step.id!r} verification timing cannot be negative")
 
         errors.extend(self._cycle_errors(plan))
         if errors:

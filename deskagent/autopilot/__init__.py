@@ -12,12 +12,14 @@ from deskagent.autopilot.models import (
     StepStatus,
 )
 from deskagent.autopilot.store import SessionStore
+from deskagent.autopilot.scheduler import AutopilotWorker
 from deskagent.autopilot.validation import PlanValidationError, PlanValidator
 from deskagent.autopilot.workflows import WorkflowRegistry
 
 __all__ = [
     "AutopilotEngine",
     "AutopilotMode",
+    "AutopilotWorker",
     "FailurePolicy",
     "Plan",
     "PlanValidationError",
