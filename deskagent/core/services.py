@@ -1,5 +1,11 @@
+from __future__ import annotations
+
 import platform
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from deskagent.actions.browser import BrowserManager
 
 from deskagent.perception.accessibility import AccessibilityClient
 from deskagent.platform.base.application import (
@@ -280,6 +286,7 @@ class Services:
     window: WindowServices | None = None
     input: InputServices | None = None
     file: FileServices | None = None
+    browser: BrowserManager | None = None
 
 
 class ServicesFactory:
@@ -294,6 +301,10 @@ class ServicesFactory:
 
     @staticmethod
     def create() -> Services:
+        # Imported lazily to avoid coupling the core service model to Action during
+        # action-registry bootstrap.
+        from deskagent.actions.browser import BrowserManager
+
         platform_name = ServicesFactory.get_platform()
 
         if platform_name == "macos":
@@ -304,6 +315,7 @@ class ServicesFactory:
                 window=MacOSWindowServices(),
                 input=MacOSInputServices(),
                 file=MacOSFileServices(),
+                browser=BrowserManager(),
             )
 
         raise RuntimeError(f"Unsupported platform: {platform_name}")
