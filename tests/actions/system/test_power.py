@@ -57,6 +57,6 @@ def test_logout_requires_confirmation():
     assert LogoutComputer.requires_confirmation is True
 
 
-def test_lock_and_sleep_do_not_require_confirmation():
-    assert LockScreen.requires_confirmation is False
-    assert SleepComputer.requires_confirmation is False
+def test_lock_and_sleep_require_confirmation():
+    assert LockScreen.requires_confirmation is True
+    assert SleepComputer.requires_confirmation is True
