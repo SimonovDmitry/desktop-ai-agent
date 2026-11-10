@@ -3,19 +3,35 @@ import re
 
 class ToolRouter:
     KEYWORDS = {
+        "accessibility": "ui interface element target dialog button field интерфейс элемент цель кнопк диалог поле",
         "system": (
-            "battery charge volume sound display network notification system заряд громк звук экран сеть уведомлен"
+            "battery charge volume sound display network notification system image photo png jpeg "
+            "screenshot capture ocr recognize заряд громк звук экран сеть уведомлен "
+            "изображен фото снимок скриншот распознай"
         ),
         "application": "app application launch open quit running active приложение открыть запусти закрой",
         "window": "window focus minimize maximize move resize окно сверни разверни перемести размер",
         "input": "click type keyboard mouse shortcut paste select нажми введи клавиат мышь вставь выдели",
-        "file": "file folder directory search read write delete copy move файл папк найди прочитай запиши удали копир",
+        "file": (
+            "file folder directory search read write delete copy move document pdf markdown text "
+            "файл папк найди прочитай запиши удали копир документ пдф текст страниц"
+        ),
         "browser": "browser tab page url website браузер вкладк страниц сайт",
-        "notes": "note notes заметк",
+        "notes": "note notes notebook folder memo заметк конспект блокнот папк",
         "calendar": "calendar event meeting reminder календар встреч напомин",
-        "media": "music video spotify player playlist музык видео плейлист",
+        "media": (
+            "music video spotify player playlist audio wav sound speech voice tone noise "
+            "музык видео плейлист аудио звук речь голос тон шум запись"
+        ),
         "communication": "mail email message telegram slack send письмо сообщен отправ",
-        "code": "code git test terminal command project код тест терминал команд проект",
+        "code": (
+            "code git test terminal command project source python import branch commit diff "
+            "код тест терминал команд проект исходник импорт ветк коммит"
+        ),
+        "productivity": (
+            "task workflow progress plan approval session step retry verification artifact "
+            "задача сценарий прогресс план подтвержден сесси шаг повтор проверк артефакт"
+        ),
     }
     INTENTS = {
         "open launch запуст открой": "open launch activate",
