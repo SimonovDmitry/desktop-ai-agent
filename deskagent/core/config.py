@@ -77,17 +77,6 @@ class AudioSettings:
     tts_provider: str = "system"
 
 
-@dataclass
-class BrowserSettings:
-    preferred_browser: str = ""
-    command_timeout: float = 15.0
-    allow_javascript: bool = False
-    javascript_allowed_origins: list[str] = field(default_factory=list)
-    allow_private_networks: bool = False
-    allowed_download_dirs: list[str] = field(default_factory=lambda: ["~/Downloads"])
-    profile_root: str = "~/.deskagent/browser-profiles"
-
-
 class BaseConfig:
     def to_dict(self):
         return asdict(self)
@@ -101,7 +90,6 @@ class Settings(BaseConfig):
     storage: StorageSettings = field(default_factory=StorageSettings)
     vision: VisionSettings = field(default_factory=VisionSettings)
     audio: AudioSettings = field(default_factory=AudioSettings)
-    browser: BrowserSettings = field(default_factory=BrowserSettings)
 
     SECTIONS: ClassVar = {
         "llm": LLMSettings,
@@ -110,7 +98,6 @@ class Settings(BaseConfig):
         "storage": StorageSettings,
         "vision": VisionSettings,
         "audio": AudioSettings,
-        "browser": BrowserSettings,
     }
     ENV_ALIASES: ClassVar = {
         "MODEL": "llm.model",
@@ -138,13 +125,6 @@ class Settings(BaseConfig):
         "MAX_TOOLS": "agent.max_tools",
         "VISION_ENABLED": "vision.enabled",
         "AUDIO_ENABLED": "audio.enabled",
-        "BROWSER": "browser.preferred_browser",
-        "BROWSER_TIMEOUT": "browser.command_timeout",
-        "BROWSER_ALLOW_JAVASCRIPT": "browser.allow_javascript",
-        "BROWSER_JAVASCRIPT_ALLOWED_ORIGINS": "browser.javascript_allowed_origins",
-        "BROWSER_ALLOW_PRIVATE_NETWORKS": "browser.allow_private_networks",
-        "BROWSER_ALLOWED_DOWNLOAD_DIRS": "browser.allowed_download_dirs",
-        "BROWSER_PROFILE_ROOT": "browser.profile_root",
     }
 
     @classmethod
@@ -164,8 +144,6 @@ class Settings(BaseConfig):
             raise ValueError("Security rate and repeat limits must be positive")
         if self.llm.context_window < 1 or self.llm.max_tokens < 1:
             raise ValueError("LLM token limits must be positive")
-        if self.browser.command_timeout <= 0:
-            raise ValueError("browser.command_timeout must be positive")
         return self
 
     def _apply_environment(self, environ):
