@@ -1,8 +1,8 @@
 ## DeskAgent
 
-Desktop-агент с LangGraph и сменными локальными и API LLM-провайдерами
+Desktop-агент с LangGraph и сменными локальными и API LLM-провайдерами.
 
-Архитектура политик, подтверждений, audit log и аварийной остановки описана в [SECURITY.md](SECURITY.md)
+Архитектура политик, подтверждений, audit log и аварийной остановки описана в [SECURITY.md](SECURITY.md).
 
 ```bash
 # Локальная модель через Ollama
