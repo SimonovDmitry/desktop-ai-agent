@@ -34,7 +34,8 @@ def git(project, *args):
 def project(tmp_path):
     git(tmp_path, "init", "-q")
     (tmp_path / "sample.py").write_text(
-        "import os\n\nclass Widget:\n    def show(self):\n        return run_task()\n\ndef run_task():\n    return os.getcwd()  # TODO improve\n",
+        "import os\n\nclass Widget:\n    def show(self):\n        return run_task()\n"
+        "\ndef run_task():\n    return os.getcwd()  # TODO improve\n",
         encoding="utf-8",
     )
     (tmp_path / "copy.py").write_text((tmp_path / "sample.py").read_text(), encoding="utf-8")
