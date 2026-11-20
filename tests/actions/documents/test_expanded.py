@@ -38,7 +38,9 @@ def test_text_inspection_and_structure(tmp_path):
     ctx = context(tmp_path)
     path = str(source)
     assert InspectTextDocument().execute(ctx, {"path": path}).data["paragraphs"] == 4
-    assert ReadTextLines().execute(ctx, {"path": path, "start_line": 1, "line_count": 2}).data["lines"][0]["text"] == "# Title"
+    assert ReadTextLines().execute(
+        ctx, {"path": path, "start_line": 1, "line_count": 2}
+    ).data["lines"][0]["text"] == "# Title"
     assert GetDocumentHeadings().execute(ctx, {"path": path}).data["headings"][0]["title"] == "Title"
     assert len(GetDocumentParagraphs().execute(ctx, {"path": path}).data["paragraphs"]) == 4
     assert GetDocumentWordFrequencies().execute(ctx, {"path": path}).data["words"][0]["word"] == "alpha"
