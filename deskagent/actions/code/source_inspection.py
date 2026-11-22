@@ -461,7 +461,9 @@ class GetPythonTestInventory(CodeAction):
                                       "name": node.name})
                     elif isinstance(node, ast.ClassDef) and node.name.startswith("Test"):
                         for child in node.body:
-                            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)) and child.name.startswith("test_"):
+                            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)) and child.name.startswith(
+                                "test_"
+                            ):
                                 tests.append({"path": str(path.relative_to(project)), "line": child.lineno,
                                               "name": f"{node.name}.{child.name}"})
                     if len(tests) >= 1000:

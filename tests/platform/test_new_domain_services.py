@@ -14,13 +14,31 @@ from deskagent.platform.base.notes import NotesService
 from deskagent.platform.base.vision import VisionService
 
 
-def test_factory_wires_new_platform_contracts():
+def test_factory_wires_new_platform_contracts(monkeypatch):
+    monkeypatch.setattr(ServicesFactory, "get_platform", staticmethod(lambda: "macos"))
     services = ServicesFactory.create()
     assert isinstance(services.media_audio, AudioService)
     assert isinstance(services.music, MusicService)
     assert isinstance(services.notes, NotesService)
     assert isinstance(services.vision, VisionService)
     assert isinstance(services.image, ImageService)
+
+
+def test_image_action_uses_context_service(tmp_path):
+    from deskagent.actions.vision.image_files import GetImageDimensions
+
+    source = tmp_path / "image.png"
+    calls = []
+    image = SimpleNamespace(properties=lambda context, path: (
+        calls.append(path) or (source, {"pixelWidth": "4", "pixelHeight": "3"})
+    ))
+    context = SimpleNamespace(services=SimpleNamespace(image=image))
+    result = GetImageDimensions().execute(context, {"path": str(source)})
+    assert result.success
+    assert result.data["width"] == 4
+    assert result.data["height"] == 3
+    assert result.data["orientation"] == "landscape"
+    assert calls == [str(source)]
 
 
 def test_music_and_notes_actions_use_context_services():

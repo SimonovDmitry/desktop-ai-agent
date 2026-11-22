@@ -95,9 +95,11 @@ class GetDocumentParagraphs(DocumentAction):
 class GetDocumentWordFrequencies(DocumentAction):
     name = "get_document_word_frequencies"
     description = "Count frequent casefolded words in a UTF-8 document"
-    parameters_schema = {**PATH, "limit": {"type": "integer", "required": False, "default": 30, "minimum": 1, "maximum": 200},
-                         "min_length": {"type": "integer", "required": False, "default": 3,
-                                        "minimum": 1, "maximum": 30}}
+    parameters_schema = {
+        **PATH,
+        "limit": {"type": "integer", "required": False, "default": 30, "minimum": 1, "maximum": 200},
+        "min_length": {"type": "integer", "required": False, "default": 3, "minimum": 1, "maximum": 30},
+    }
     discoverable = True
 
     def execute(self, context, parameters):
