@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 from deskagent.actions.base import Action
 from deskagent.actions.registry import discover_actions
 from deskagent.actions.types import ActionCategory, ActionResult
-from deskagent.autopilot.store import SessionStore
+from deskagent.actions.productivity._common import with_session
 from deskagent.privacy.confirmation import redact
 from deskagent.ui.autopilot import SessionPresenter
 
@@ -14,14 +12,7 @@ SESSION_SCHEMA = {"session_id": {"type": "string", "required": True}}
 
 
 def _session(context, session_id):
-    path = Path(context.settings.storage.autopilot).expanduser()
-    if not path.is_file():
-        raise FileNotFoundError(f"Autopilot session store does not exist: {path}")
-    store = SessionStore(path)
-    try:
-        return store.get(session_id)
-    finally:
-        store.close()
+    return with_session(context, session_id, lambda store, session: session)
 
 
 class GetTaskProgress(Action):

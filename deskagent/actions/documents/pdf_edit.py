@@ -27,7 +27,7 @@ class MergePdfFiles(DocumentWriteAction):
             paths = parameters["paths"]
             if not 2 <= len(paths) <= 20:
                 raise ValueError("Provide 2 to 20 PDF files")
-            writer = pdf_writer()
+            writer = pdf_writer(context)
             total = 0
             for path in paths:
                 _, reader = pdf_reader(context, path)
@@ -53,7 +53,7 @@ class ExtractPdfPages(DocumentWriteAction):
             start, count = parameters["start_page"], parameters["page_count"]
             if start < 1 or count < 1 or start + count - 1 > len(reader.pages):
                 raise ValueError("Page range is outside the PDF")
-            writer = pdf_writer()
+            writer = pdf_writer(context)
             for index in range(start - 1, start - 1 + count):
                 writer.add_page(reader.pages[index])
             return {**_save_pdf(context, parameters["output_path"], writer), "pages": count}
@@ -78,7 +78,7 @@ class RemovePdfPages(DocumentWriteAction):
             selected = set(removed)
             if len(selected) == len(reader.pages):
                 raise ValueError("At least one page must remain")
-            writer = pdf_writer()
+            writer = pdf_writer(context)
             for number, page in enumerate(reader.pages, 1):
                 if number not in selected:
                     writer.add_page(page)
@@ -100,7 +100,7 @@ class ReorderPdfPages(DocumentWriteAction):
             order = parameters["page_order"]
             if len(order) != len(reader.pages) or sorted(order) != list(range(1, len(reader.pages) + 1)):
                 raise ValueError("Page order must contain every page exactly once")
-            writer = pdf_writer()
+            writer = pdf_writer(context)
             for number in order:
                 writer.add_page(reader.pages[number - 1])
             return {**_save_pdf(context, parameters["output_path"], writer), "pages": len(order)}
@@ -124,7 +124,7 @@ class RotatePdfPages(DocumentWriteAction):
                 type(number) is not int or number < 1 or number > len(reader.pages) for number in selected
             ):
                 raise ValueError("Invalid rotation or page list")
-            writer = pdf_writer()
+            writer = pdf_writer(context)
             for number, page in enumerate(reader.pages, 1):
                 writer.add_page(page)
                 if number in selected:
@@ -151,7 +151,7 @@ class SetPdfMetadata(DocumentWriteAction):
                       ("title", "author", "subject", "keywords") if key in parameters}
             if not fields or any(len(value) > 1000 for value in fields.values()):
                 raise ValueError("Provide metadata fields of at most 1000 characters")
-            writer = pdf_writer()
+            writer = pdf_writer(context)
             for page in reader.pages:
                 writer.add_page(page)
             writer.add_metadata(fields)

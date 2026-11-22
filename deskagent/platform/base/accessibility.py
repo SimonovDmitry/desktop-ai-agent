@@ -1,0 +1,49 @@
+"""Semantic Accessibility service contract."""
+from typing import Protocol
+
+
+class AccessibilityService(Protocol):
+    def status(self):
+        ...
+
+    def request_permission(self, prompt=True):
+        ...
+
+    def application_tree(self, application=None, max_depth=None, max_nodes=None):
+        ...
+
+    def window_tree(self, application=None, window=None, max_depth=None, max_nodes=None):
+        ...
+
+    def focused_element(self):
+        ...
+
+    def find_all(self, query, limit=None, max_depth=None, max_nodes=None):
+        ...
+
+    def find(self, query, max_depth=None, max_nodes=None):
+        ...
+
+    def get(self, identifier, application=None):
+        ...
+
+    def refresh(self, identifier):
+        ...
+
+    def perform(self, identifier, action):
+        ...
+
+    def set_value(self, identifier, value):
+        ...
+
+    def set_focused(self, identifier, focused=True):
+        ...
+
+    def set_selected(self, identifier, selected=True):
+        ...
+
+    def set_expanded(self, identifier, expanded):
+        ...
+
+    def scroll(self, identifier, direction, amount=0.8):
+        ...

@@ -1,0 +1,12 @@
+# Set llm.model for your installation, or pass --model on the CLI.
+audio:
+  enabled: true
+  stt_provider: local
+  stt_model_path: models/t-one
+  tts_provider: local
+  tts_model_path: models/silero/v5_ru.pt
+  speaker: xenia
+  sample_rate: 16000
+  tts_sample_rate: 48000
+  silence_seconds: 0.8
+  max_record_seconds: 20.0

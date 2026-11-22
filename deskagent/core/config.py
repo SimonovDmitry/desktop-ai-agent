@@ -74,7 +74,49 @@ class AudioSettings:
     enabled: bool = False
     wake_word: str = ""
     stt_provider: str = "local"
-    tts_provider: str = "system"
+    tts_provider: str = "local"
+    language: str = "ru"
+    stt_model_path: str = "models/t-one"
+    tts_model_path: str = "models/silero/v5_ru.pt"
+    stt_base_url: str = "https://api.openai.com/v1"
+    tts_base_url: str = "https://api.openai.com/v1"
+    stt_api_key: str = field(default="", repr=False)
+    tts_api_key: str = field(default="", repr=False)
+    stt_model: str = "whisper-1"
+    tts_model: str = "tts-1"
+    api_voice: str = "alloy"
+    api_timeout: float = 60.0
+    speaker: str = "xenia"
+    device: str = "cpu"
+    sample_rate: int = 16000
+    tts_sample_rate: int = 48000
+    input_device: str = ""
+    output_device: str = ""
+    energy_threshold: float = 0.015
+    silence_seconds: float = 0.8
+    min_speech_seconds: float = 0.15
+    listen_timeout: float = 10.0
+    max_record_seconds: float = 20.0
+    speak_responses: bool = True
+
+    def validate(self):
+        import math
+        for name in ("stt_provider", "tts_provider"):
+            if getattr(self, name) not in {"local", "openai", "openai_compatible"}:
+                raise ValueError(f"audio.{name}: expected local, openai or openai_compatible")
+        if self.sample_rate not in {8000, 16000, 24000, 48000}:
+            raise ValueError("Unsupported audio.sample_rate")
+        if self.tts_sample_rate not in {8000, 24000, 48000}:
+            raise ValueError("Silero supports 8000, 24000 or 48000 Hz")
+        for name in ("api_timeout", "silence_seconds", "min_speech_seconds", "listen_timeout", "max_record_seconds"):
+            value = getattr(self, name)
+            if not math.isfinite(value) or value <= 0:
+                raise ValueError(f"audio.{name} must be finite and positive")
+        if not 0 < self.energy_threshold < 1:
+            raise ValueError("audio.energy_threshold must be between 0 and 1")
+        if self.min_speech_seconds > self.max_record_seconds:
+            raise ValueError("Minimum speech duration exceeds recording limit")
+        return self
 
 
 class BaseConfig:
@@ -136,6 +178,7 @@ class Settings(BaseConfig):
         return settings
 
     def validate(self):
+        self.audio.validate()
         if self.agent.max_iterations < 1 or self.agent.max_tools < 1:
             raise ValueError("Agent limits must be positive")
         if self.security.max_actions < 1:
