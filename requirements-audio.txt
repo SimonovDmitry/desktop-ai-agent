@@ -1,0 +1,5 @@
+# Optional voice dependencies; core/text mode remains lightweight.
+numpy>=1.26,<3
+sounddevice>=0.5,<1
+onnx-asr[cpu,hub]>=0.12,<1
+torch>=2.2,<3
