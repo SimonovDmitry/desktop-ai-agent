@@ -13,6 +13,7 @@ PATH = {"path": {"type": "string", "required": False}}
 
 def _recognize(context, value=None):
     temporary = None
+    service = getattr(getattr(context, "services", None), "vision", None)
     try:
         if value:
             path = Path(value).expanduser().resolve()
@@ -22,7 +23,7 @@ def _recognize(context, value=None):
             if path.suffix.lower() != ".png" or not path.is_file() or path.stat().st_size > 50_000_000:
                 raise ValueError("OCR requires a PNG file under 50 MB")
         else:
-            temporary = _capture()
+            temporary = service.capture() if service else _capture()
             path = Path(temporary["path"])
         with path.open("rb") as stream:
             header = stream.read(24)
@@ -31,7 +32,7 @@ def _recognize(context, value=None):
         width, height = struct.unpack(">II", header[16:24])
         if width < 1 or height < 1 or width * height > 100_000_000:
             raise ValueError("Image dimensions exceed the OCR limit")
-        lines = _ocr(str(path))
+        lines = service.read_text(str(path)) if service else _ocr(str(path))
         if len(lines) > 5000:
             raise ValueError("OCR returned more than 5000 lines")
         return {"path": None if temporary else str(path), "width": width,

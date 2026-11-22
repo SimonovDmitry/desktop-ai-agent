@@ -22,8 +22,8 @@ class GetGitRepositoryRoot(CodeAction):
     def execute(self, context, parameters):
         def operation():
             project = _project(context, parameters)
-            root, _ = git(project, "rev-parse", "--show-toplevel")
-            branch, _ = git(project, "branch", "--show-current")
+            root, _ = git(context, project, "rev-parse", "--show-toplevel")
+            branch, _ = git(context, project, "branch", "--show-current")
             return {"directory": str(project), "root": root.strip(), "branch": branch.strip() or None}
         return self.run(operation)
 
@@ -37,11 +37,11 @@ class GetGitBranchInfo(CodeAction):
     def execute(self, context, parameters):
         def operation():
             project = _project(context, parameters)
-            head, _ = git(project, "rev-parse", "HEAD")
-            branch, _ = git(project, "branch", "--show-current")
+            head, _ = git(context, project, "rev-parse", "HEAD")
+            branch, _ = git(context, project, "branch", "--show-current")
             upstream = None
             try:
-                upstream, _ = git(project, "rev-parse", "--abbrev-ref", "@{upstream}")
+                upstream, _ = git(context, project, "rev-parse", "--abbrev-ref", "@{upstream}")
                 upstream = upstream.strip()
             except RuntimeError:
                 pass
@@ -59,7 +59,7 @@ class ListGitBranches(CodeAction):
     def execute(self, context, parameters):
         def operation():
             project = _project(context, parameters)
-            output, truncated = git(project, "for-each-ref", "--format=%(refname:short)%09%(objectname)",
+            output, truncated = git(context, project, "for-each-ref", "--format=%(refname:short)%09%(objectname)",
                                     "refs/heads", max_output=100_000)
             branches = []
             for line in output.splitlines()[:200]:
@@ -80,7 +80,7 @@ class ListGitTags(CodeAction):
     def execute(self, context, parameters):
         def operation():
             project = _project(context, parameters)
-            output, truncated = git(project, "tag", "--list", max_output=100_000)
+            output, truncated = git(context, project, "tag", "--list", max_output=100_000)
             tags = output.splitlines()
             return {"directory": str(project), "tags": tags[:200],
                     "truncated": truncated or len(tags) > 200}
@@ -100,7 +100,7 @@ class GetRecentGitCommits(CodeAction):
             limit = parameters.get("limit", 20)
             if not 1 <= limit <= 100:
                 raise ValueError("Commit limit must be 1-100")
-            output, truncated = git(project, "log", f"-{limit}",
+            output, truncated = git(context, project, "log", f"-{limit}",
                                     "--format=%H%x09%aI%x09%an%x09%s", max_output=100_000)
             commits = []
             for line in output.splitlines():
@@ -121,7 +121,7 @@ class GetGitCommitInfo(CodeAction):
         def operation():
             project = _project(context, parameters)
             commit = commit_id(parameters["commit"])
-            output, _ = git(project, "show", "--no-patch",
+            output, _ = git(context, project, "show", "--no-patch",
                             "--format=%H%x09%aI%x09%an%x09%s", commit, max_output=5000)
             pieces = output.strip().split("\t", 3)
             names, excluded = git_names(context, project, "diff-tree", "--root", "--no-commit-id",
@@ -212,7 +212,7 @@ class GetGitDiffSummary(CodeAction):
             args = ["diff", "--numstat", "-z", "--no-ext-diff", "--no-textconv"]
             if parameters.get("staged"):
                 args.append("--cached")
-            output, truncated = git(project, *args, "--", *names)
+            output, truncated = git(context, project, *args, "--", *names)
             entries = []
             records = [record for record in output.split("\0") if record]
             for line in records[:500]:
@@ -256,7 +256,7 @@ class GetGitFileHistory(CodeAction):
             limit = parameters.get("limit", 20)
             if not 1 <= limit <= 100:
                 raise ValueError("History limit must be 1-100")
-            output, truncated = git(project, "log", "--follow", f"-{limit}",
+            output, truncated = git(context, project, "log", "--follow", f"-{limit}",
                                     "--format=%H%x09%aI%x09%s", "--",
                                     str(path.relative_to(project)), max_output=100_000)
             commits = []
@@ -284,7 +284,7 @@ class GetGitBlameLines(CodeAction):
             start, end = parameters["start_line"], parameters["end_line"]
             if start < 1 or end < start or end - start >= 200:
                 raise ValueError("Blame range must contain 1-200 lines")
-            output, truncated = git(project, "blame", "--line-porcelain",
+            output, truncated = git(context, project, "blame", "--line-porcelain",
                                     "-L", f"{start},{end}", "--",
                                     str(path.relative_to(project)), max_output=100_000)
             return {"directory": str(project), "path": str(path.relative_to(project)),
@@ -302,14 +302,11 @@ class CheckGitIgnored(CodeAction):
         def operation():
             project = _project(context, parameters)
             path = safe_file(context, project, parameters["path"], required=False)
-            # check-ignore uses exit status 1 for a non-ignored path.
-            import subprocess
-            process = subprocess.run(["git", "-C", str(project), "check-ignore", "-q", "--",
-                                      str(path.relative_to(project))], capture_output=True, timeout=20)
-            if process.returncode not in {0, 1}:
-                raise RuntimeError(process.stderr.decode(errors="replace")[:1000])
+            from deskagent.actions.code.project import _service
+
+            ignored = _service(context).check_ignored(context, project, path)
             return {"directory": str(project), "path": str(path.relative_to(project)),
-                    "ignored": process.returncode == 0}
+                    "ignored": ignored}
         return self.run(operation)
 
 
@@ -323,10 +320,10 @@ class GetGitAheadBehind(CodeAction):
         def operation():
             project = _project(context, parameters)
             try:
-                upstream, _ = git(project, "rev-parse", "--abbrev-ref", "@{upstream}")
+                upstream, _ = git(context, project, "rev-parse", "--abbrev-ref", "@{upstream}")
             except RuntimeError:
                 return {"directory": str(project), "upstream": None, "ahead": None, "behind": None}
-            output, _ = git(project, "rev-list", "--left-right", "--count", "HEAD...@{upstream}")
+            output, _ = git(context, project, "rev-list", "--left-right", "--count", "HEAD...@{upstream}")
             ahead, behind = map(int, output.split())
             return {"directory": str(project), "upstream": upstream.strip(),
                     "ahead": ahead, "behind": behind}

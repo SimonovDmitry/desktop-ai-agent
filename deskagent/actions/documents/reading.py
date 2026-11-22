@@ -4,25 +4,15 @@ import difflib
 import re
 from pathlib import Path
 
+from deskagent.platform.common.documents import DocumentService
+
 from deskagent.actions.base import Action
 from deskagent.actions.types import ActionCategory, ActionResult
 
 
-def _pages(path: str, limit: int = 100):
-    source = Path(path).expanduser().resolve()
-    if not source.is_file():
-        raise FileNotFoundError(source)
-    if source.suffix.lower() == ".pdf":
-        try:
-            from pypdf import PdfReader
-        except ImportError as exc:
-            raise RuntimeError("Install pypdf to read PDF documents") from exc
-        reader = PdfReader(source)
-        return [{"page": index + 1, "text": page.extract_text() or ""}
-                for index, page in enumerate(reader.pages[:limit])]
-    if source.suffix.lower() in {".txt", ".md", ".rst", ".csv"}:
-        return [{"page": 1, "text": source.read_text(encoding="utf-8")}]
-    raise ValueError(f"Unsupported document type: {source.suffix}")
+def _pages(context, path, limit=100):
+    service = getattr(getattr(context, "services", None), "documents", None) or DocumentService()
+    return service.pages(path, limit)
 
 
 class ReadPDFPages(Action):
@@ -42,7 +32,7 @@ class ReadPDFPages(Action):
                 raise ValueError("A PDF file is required")
             start = parameters.get("start_page", 1)
             count = parameters.get("page_count", 5)
-            pages = _pages(str(path), start + count - 1)
+            pages = _pages(context, str(path), start + count - 1)
             selected = pages[start - 1:start - 1 + count]
             return ActionResult(True, {"path": str(path), "pages": selected, "page_count": len(selected)})
         except Exception as exc:
@@ -65,7 +55,7 @@ class SearchInDocument(Action):
             if not query:
                 raise ValueError("Search query is empty")
             matches = []
-            for page in _pages(parameters["path"]):
+            for page in _pages(context, parameters["path"]):
                 text, lowered = page["text"], page["text"].casefold()
                 start = 0
                 while len(matches) < parameters.get("max_results", 20):
@@ -120,7 +110,7 @@ class GetDocumentSummary(Action):
     def execute(self, context, parameters):
         try:
             excerpts = []
-            for page in _pages(parameters["path"]):
+            for page in _pages(context, parameters["path"]):
                 sentences = re.split(r"(?<=[.!?])\s+", re.sub(r"\s+", " ", page["text"]).strip())
                 for sentence in sentences:
                     if len(sentence) >= 40:
@@ -146,8 +136,8 @@ class CompareDocumentVersions(Action):
 
     def execute(self, context, parameters):
         try:
-            left = "\n".join(page["text"] for page in _pages(parameters["source"]))
-            right = "\n".join(page["text"] for page in _pages(parameters["destination"]))
+            left = "\n".join(page["text"] for page in _pages(context, parameters["source"]))
+            right = "\n".join(page["text"] for page in _pages(context, parameters["destination"]))
             diff = list(difflib.unified_diff(
                 left.splitlines(), right.splitlines(),
                 fromfile=parameters["source"], tofile=parameters["destination"], lineterm="",

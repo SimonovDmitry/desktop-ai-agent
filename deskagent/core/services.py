@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import platform
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from deskagent.actions.browser import BrowserManager
-
-from deskagent.perception.accessibility import AccessibilityClient
+from deskagent.platform.base.accessibility import AccessibilityService
+from deskagent.platform.base.browser import BrowserService
+from deskagent.platform.base.code import CodeService
+from deskagent.platform.base.documents import DocumentService
+from deskagent.platform.base.productivity import ProductivityService
+from deskagent.platform.base.wav import WavService
+from deskagent.platform.macos.accessibility import MacOSAccessibilityService
+from deskagent.platform.macos.browser.manager import BrowserManager
 from deskagent.platform.base.application import (
     ApplicationDocuments,
     ApplicationFocus,
@@ -290,18 +293,22 @@ class MacOSFileServices(FileServices):
 
 @dataclass
 class Services:
-    accessibility: AccessibilityClient | None = None
+    accessibility: AccessibilityService | None = None
     system: SystemServices | None = None
     application: ApplicationServices | None = None
     window: WindowServices | None = None
     input: InputServices | None = None
     file: FileServices | None = None
-    browser: BrowserManager | None = None
+    browser: BrowserService | None = None
     media_audio: AudioService | None = None
     image: ImageService | None = None
     music: MusicService | None = None
     notes: NotesService | None = None
     vision: VisionService | None = None
+    code: CodeService | None = None
+    documents: DocumentService | None = None
+    productivity: ProductivityService | None = None
+    wav: WavService | None = None
 
 
 class ServicesFactory:
@@ -316,14 +323,16 @@ class ServicesFactory:
 
     @staticmethod
     def create() -> Services:
-        # Import lazily so registry bootstrap does not depend on browser actions.
-        from deskagent.actions.browser import BrowserManager
+        from deskagent.platform.common.code import CodeService as PortableCodeService
+        from deskagent.platform.common.documents import DocumentService as PortableDocumentService
+        from deskagent.platform.common.productivity import ProductivityService as PortableProductivityService
+        from deskagent.platform.common.audio import WavService as PortableWavService
 
         platform_name = ServicesFactory.get_platform()
 
         if platform_name == "macos":
             return Services(
-                accessibility=AccessibilityClient(),
+                accessibility=MacOSAccessibilityService(),
                 system=MacOSSystemServices(),
                 application=MacOSApplicationServices(),
                 window=MacOSWindowServices(),
@@ -335,6 +344,10 @@ class ServicesFactory:
                 music=MusicBackend(),
                 notes=NotesBackend(),
                 vision=MacOSVisionService(),
+                code=PortableCodeService(),
+                documents=PortableDocumentService(),
+                productivity=PortableProductivityService(),
+                wav=PortableWavService(),
             )
 
         raise RuntimeError(f"Unsupported platform: {platform_name}")

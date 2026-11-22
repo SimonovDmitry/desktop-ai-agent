@@ -1,24 +1,9 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-
+from deskagent.platform.base.browser import BrowserBackend  # noqa: F401
 from deskagent.actions.base import Action
 from deskagent.actions.browser.models import BrowserError
 from deskagent.actions.types import ActionCategory, ActionResult, RiskLevel
-
-
-class BrowserBackend(ABC):
-    @abstractmethod
-    def available(self) -> bool:
-        pass
-
-    @abstractmethod
-    def list_tabs(self):
-        pass
-
-    @abstractmethod
-    def command(self, method: str, params: dict | None = None, tab_id: str | None = None):
-        pass
 
 
 class BrowserAction(Action):
