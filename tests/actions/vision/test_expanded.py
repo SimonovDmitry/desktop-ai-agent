@@ -1,6 +1,9 @@
+import platform
 import struct
 import zlib
 from types import SimpleNamespace
+
+import pytest
 
 from deskagent.actions.registry import create_action_registry
 from deskagent.actions.vision import ocr_inspection
@@ -38,6 +41,7 @@ def png(path, width=4, height=3):
     return path
 
 
+@pytest.mark.skipif(platform.system() != "Darwin", reason="macOS sips integration test")
 def test_native_image_inspection_and_transforms(tmp_path):
     source = png(tmp_path / "source.png")
     ctx = context(tmp_path)
@@ -74,6 +78,7 @@ def test_native_image_inspection_and_transforms(tmp_path):
     assert quality.success, quality.error
 
 
+@pytest.mark.skipif(platform.system() != "Darwin", reason="macOS sips integration test")
 def test_image_output_collision_and_allowed_path(tmp_path):
     source = png(tmp_path / "source.png")
     ctx = context(tmp_path)

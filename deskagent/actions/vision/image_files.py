@@ -174,7 +174,10 @@ class RotateImage(ImageTransformAction):
 class FlipImage(ImageTransformAction):
     name = "flip_image"
     description = "Flip an image horizontally or vertically"
-    parameters_schema = {**PATH_OUTPUT, "direction": {"type": "string", "required": True, "enum": ["horizontal", "vertical"]}}
+    parameters_schema = {
+        **PATH_OUTPUT,
+        "direction": {"type": "string", "required": True, "enum": ["horizontal", "vertical"]},
+    }
     discoverable = True
 
     def options(self, context, parameters):
