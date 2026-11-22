@@ -1,5 +1,11 @@
+from __future__ import annotations
+
 import platform
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from deskagent.actions.browser import BrowserManager
 
 from deskagent.perception.accessibility import AccessibilityClient
 from deskagent.platform.base.application import (
@@ -38,6 +44,11 @@ from deskagent.platform.base.input import (
     InputShortcuts,
     InputState,
 )
+from deskagent.platform.base.audio import AudioService
+from deskagent.platform.base.image import ImageService
+from deskagent.platform.base.music import MusicService
+from deskagent.platform.base.notes import NotesService
+from deskagent.platform.base.vision import VisionService
 from deskagent.platform.base.system import (
     SystemAudio,
     SystemClipboard,
@@ -97,6 +108,11 @@ from deskagent.platform.macos.input import (
     MacOSInputShortcuts,
     MacOSInputState,
 )
+from deskagent.platform.macos.audio import MacOSAudioService
+from deskagent.platform.macos.image import MacOSImageService
+from deskagent.platform.macos.music import MusicBackend
+from deskagent.platform.macos.notes import NotesBackend
+from deskagent.platform.macos.vision import MacOSVisionService
 from deskagent.platform.macos.system import (
     MacOSSystemAudio,
     MacOSSystemClipboard,
@@ -280,6 +296,12 @@ class Services:
     window: WindowServices | None = None
     input: InputServices | None = None
     file: FileServices | None = None
+    browser: BrowserManager | None = None
+    media_audio: AudioService | None = None
+    image: ImageService | None = None
+    music: MusicService | None = None
+    notes: NotesService | None = None
+    vision: VisionService | None = None
 
 
 class ServicesFactory:
@@ -294,6 +316,9 @@ class ServicesFactory:
 
     @staticmethod
     def create() -> Services:
+        # Import lazily so registry bootstrap does not depend on browser actions.
+        from deskagent.actions.browser import BrowserManager
+
         platform_name = ServicesFactory.get_platform()
 
         if platform_name == "macos":
@@ -304,6 +329,12 @@ class ServicesFactory:
                 window=MacOSWindowServices(),
                 input=MacOSInputServices(),
                 file=MacOSFileServices(),
+                browser=BrowserManager(),
+                media_audio=MacOSAudioService(),
+                image=MacOSImageService(),
+                music=MusicBackend(),
+                notes=NotesBackend(),
+                vision=MacOSVisionService(),
             )
 
         raise RuntimeError(f"Unsupported platform: {platform_name}")
