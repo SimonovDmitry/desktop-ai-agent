@@ -254,7 +254,7 @@ def test_compensation_requires_confirmation_and_runs_in_reverse(tmp_path):
     store.close()
 
 
-def test_cancel_propagates_to_active_cancellable_action(tmp_path):
+def test_cancel_propagates_to_active_cancellable_action(tmp_path, monkeypatch):
     engine, store, context = make_engine(tmp_path)
     session = engine.create_session(
         "cancel running", Plan([Step("active", "Active", "cancellable")])
@@ -262,11 +262,23 @@ def test_cancel_propagates_to_active_cancellable_action(tmp_path):
     thread = threading.Thread(target=engine.start, args=(session.id,))
     thread.start()
     assert context.started.wait(1)
+    cancel_action = engine.catalog.cancel
+
+    def cancel_and_wait(call_id):
+        assert store.get(session.id).status is SessionStatus.CANCELLING
+        result = cancel_action(call_id)
+        thread.join(1)
+        assert not thread.is_alive()
+        assert store.get(session.id).status is SessionStatus.CANCELLING
+        return result
+
+    monkeypatch.setattr(engine.catalog, "cancel", cancel_and_wait)
     cancelled = engine.cancel(session.id)
     thread.join(1)
     assert cancelled.status is SessionStatus.CANCELLED
     assert context.cancelled.is_set()
     assert store.get(session.id).status is SessionStatus.CANCELLED
+    assert store.get(session.id).plan.step("active").status is StepStatus.CANCELLED
     store.close()
 
 

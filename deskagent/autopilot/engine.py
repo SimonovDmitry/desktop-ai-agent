@@ -177,12 +177,12 @@ class AutopilotEngine:
             return self.request_compensation(session_id)
         if session.status in TERMINAL_SESSIONS:
             return session
+        session.status = SessionStatus.CANCELLING
+        self.store.save(session, "session_cancelling")
         if session.current_step_id:
             call_id = self.store.active_tool_call(session.id, session.current_step_id)
             if call_id:
                 self.catalog.cancel(call_id)
-        session.status = SessionStatus.CANCELLING
-        self.store.save(session, "session_cancelling")
         return self._finish_cancellation(self.store.get(session_id))
 
     def approve(self, session_id: str, answer: bool | dict[str, Any], text: str | None = None) -> Session:
@@ -344,7 +344,7 @@ class AutopilotEngine:
             finally:
                 self.store.release_resources(session.id, step.id, self.owner_id)
             current = self.store.get(session_id)
-            if current.status is SessionStatus.CANCELLED:
+            if current.status in {SessionStatus.CANCELLING, SessionStatus.CANCELLED}:
                 continue
             step = current.plan.step(step_id)
             self._apply_execution(current, step, execution)
